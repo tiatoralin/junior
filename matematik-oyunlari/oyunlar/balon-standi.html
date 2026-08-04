@@ -1,0 +1,560 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F3F7FE">
+<title>Mathmazel'in Balon Standı</title>
+<link rel="stylesheet" href="../shared/theme.css">
+<style>
+  /* Bu oyuna özel — ortak stiller shared/theme.css içinde */
+  :root{
+    --bg:#F3F7FE; --surface:#FFFFFF; --ink:#2C2A44; --muted:#6E6A88;
+    --line:#E3E8F4; --soft:#EDF1FA;
+    --berry:#E24B7A; --berry-dk:#A32D53;
+    --sky:#378ADD; --sky-dk:#185FA5;
+    --amber:#EF9F27; --amber-dk:#854F0B;
+    --grass:#5DA828; --grass-dk:#3B6D11;
+    --grape:#8B5CD6; --grape-dk:#5A3A9A;
+  }
+  .hero .maz{width:84px;height:84px;flex:none}
+
+  .groups{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin:14px 0 8px}
+  .grp{border:2px dashed var(--sky); border-radius:14px; padding:8px; background:#F2F8FF;
+       display:grid; gap:5px}
+  .grp svg{width:26px;height:30px}
+  .array{display:inline-grid; gap:6px; margin:12px auto; justify-content:center}
+  .array svg{width:26px;height:30px}
+
+  /* "Mathmazel göstersin" ipucu — cevabı vermeden grup modelini gösterir */
+  .hintbox{margin-top:6px; padding:12px 10px 10px; border-radius:16px;
+    background:#F7FAFF; border:1.5px dashed var(--line)}
+  .hintbox .groups{margin:0 0 8px}
+  .hintbox .grp svg{width:20px;height:24px}
+  .hintbox .skiphint{margin-top:0; font-size:14px; color:var(--muted)}
+  .hintbox .addline{font-family:var(--disp); font-weight:700; text-align:center;
+    font-size:clamp(20px,5.5vw,28px); color:var(--ink); margin-top:6px}
+  .hintbox .addline .op{color:var(--berry)}
+
+  .balloons{display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin:14px 0 4px; min-height:150px; align-items:flex-end}
+  .balloon{position:relative; border:none; background:none; padding:0; width:96px}
+  .balloon svg{width:96px; height:132px; display:block}
+  .balloon .val{position:absolute; top:44px; left:0; width:96px; text-align:center;
+    font-family:var(--disp); font-weight:700; font-size:30px; color:#fff; pointer-events:none;
+    text-shadow:0 1px 2px rgba(0,0,0,.18)}
+  .balloon.float{animation:bob 2.4s ease-in-out infinite}
+  .balloon:nth-child(2).float{animation-delay:.5s}
+  .balloon:nth-child(3).float{animation-delay:1s}
+  .balloon:nth-child(4).float{animation-delay:.25s}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+  .balloon.pop{animation:pop .5s cubic-bezier(.3,1.2,.5,1) forwards}
+  @keyframes pop{45%{transform:scale(1.45)}100%{transform:scale(0); opacity:0}}
+  .balloon.nope{animation:nope .4s ease}
+  @keyframes nope{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+
+  .conf{top:40%; left:50%}
+
+  @media (max-width:520px){
+    .balloon{width:80px} .balloon svg{width:80px;height:112px} .balloon .val{width:80px;top:36px;font-size:26px}
+    .hero .maz{width:66px;height:66px}
+  }
+  /* dar ekranda üç balon yan yana sığsın */
+  @media (max-width:380px){
+    .balloons{gap:8px}
+    .balloon{width:70px} .balloon svg{width:70px;height:98px}
+    .balloon .val{width:70px;top:31px;font-size:23px}
+  }
+</style>
+
+<div class="wrap">
+  <div id="hud"></div>
+  <header>
+    <span class="logo" id="logo"></span>
+    <div><b>Balon Standı</b><span>Mathmazel ile çarpma</span></div>
+    <div class="starcount"><span class="s" id="sIcon"></span><b id="starTotal">0</b></div>
+  </header>
+  <div class="flags" id="flags"></div>
+
+  <!-- MAP -->
+  <section id="map">
+    <div class="hero">
+      <span class="maz" id="maz"></span>
+      <div><h1>Karnavala hoş geldin!</h1>
+      <p>Balonları doğru cevapla patlat, yıldız topla, prizleri kazan. Kolaydan başla, standları bir bir aç.</p></div>
+    </div>
+    <div class="booths" id="booths"></div>
+    <div class="shelf"><h3>Ödül Rafım</h3><div class="prizes" id="shelf"></div></div>
+    <p class="note">Yıldızların ve ödüllerin bu cihazda saklanır — yarın kaldığın yerden devam edebilirsin.</p>
+  </section>
+
+  <!-- PLAY -->
+  <section id="play" class="hidden">
+    <div class="plhead">
+      <button class="back" id="back">‹ Standlara dön</button>
+      <button class="listen" id="listenBtn"></button>
+      <span class="lvlpill" id="lvlpill"></span>
+    </div>
+    <div class="diffbar" id="diffbar"></div>
+    <div class="board">
+      <div class="meterrow"><div class="meter" id="meter"></div><span class="sectbadge" id="sectionBadge"></span></div>
+      <div id="stage"></div>
+      <div class="balloons" id="balloons"></div>
+      <div class="cheer" id="cheer"></div>
+    </div>
+  </section>
+
+  <!-- WIN -->
+  <section id="winScreen" class="hidden">
+    <div class="win">
+      <div class="prizebig" id="winPrize"></div>
+      <div class="ribbon" id="winPrizeName"></div>
+      <p class="added" id="winAdded">Ödül Rafına eklendi ✓</p>
+      <h2 id="winTitle">Stant tamamlandı!</h2>
+      <p id="winMsg"></p>
+      <p class="winsug hidden" id="winSuggest"></p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="primary" id="winNext">Sonraki stant ›</button>
+        <button class="ghost" id="winMap">Haritaya dön</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="../shared/storage.js"></script>
+<script src="../shared/audio.js"></script>
+<script src="../shared/celebrate.js"></script>
+<script>
+/* ---------- state ---------- */
+var GAME_ID = 'balon-standi';
+var S = Progress.load(GAME_ID, {
+  stars:0, unlocked:1, prizes:[], levelStars:[0,0,0,0,0], diff:'kolay', tierDone:[{},{},{},{},{}]
+});
+function persist(){ Progress.save(GAME_ID, S); }
+var totalEl=document.getElementById('starTotal');
+var scEl=document.querySelector('.starcount');
+/* Durum hemen artar, GÖRÜNEN sayı uçan yıldız sayaca varınca artar —
+   çocuk yıldızının nereye gittiğini görsün diye. */
+function addStar(){ S.stars++; persist(); }
+function paintStars(){ totalEl.textContent=S.stars; }
+function catchStar(){
+  paintStars();
+  Celebrate.bump(scEl);
+  scEl.classList.add('caught');
+  setTimeout(function(){ scEl.classList.remove('caught'); }, 550);
+}
+paintStars();
+
+/* ---------- svg bits ---------- */
+function mathmazel(sz){return '<svg viewBox="0 0 100 100" width="'+sz+'" height="'+sz+'" aria-hidden="true">'
+  +'<path d="M50 14 L64 34 H36 Z" fill="#E24B7A"/><circle cx="50" cy="12" r="5" fill="#EF9F27"/>'
+  +'<circle cx="50" cy="58" r="30" fill="#FBDDE7"/><circle cx="50" cy="58" r="30" fill="none" stroke="#E24B7A" stroke-width="3"/>'
+  +'<circle cx="40" cy="54" r="5" fill="#2C2A44"/><circle cx="60" cy="54" r="5" fill="#2C2A44"/>'
+  +'<circle cx="42" cy="52.5" r="1.6" fill="#fff"/><circle cx="62" cy="52.5" r="1.6" fill="#fff"/>'
+  +'<circle cx="36" cy="65" r="4" fill="#F0997B" opacity=".55"/><circle cx="64" cy="65" r="4" fill="#F0997B" opacity=".55"/>'
+  +'<path d="M42 68 Q50 75 58 68" stroke="#2C2A44" stroke-width="3" fill="none" stroke-linecap="round"/>'
+  +'<text x="50" y="45" font-family="Baloo 2,sans-serif" font-size="12" font-weight="700" fill="#E24B7A" text-anchor="middle">×</text></svg>';}
+function balloonSvg(color){return '<svg viewBox="0 0 96 132" aria-hidden="true">'
+  +'<path d="M48 96 C40 108 44 118 48 132 C52 118 56 108 48 96 Z" fill="none" stroke="#B9BED1" stroke-width="2"/>'
+  +'<ellipse cx="48" cy="48" rx="40" ry="46" fill="'+color+'"/>'
+  +'<ellipse cx="34" cy="34" rx="10" ry="14" fill="#ffffff" opacity=".35"/>'
+  +'<path d="M43 92 L53 92 L48 100 Z" fill="'+color+'"/></svg>';}
+function miniBalloon(color){return '<svg viewBox="0 0 26 30" aria-hidden="true">'
+  +'<ellipse cx="13" cy="12" rx="11" ry="12" fill="'+color+'"/>'
+  +'<ellipse cx="9" cy="8" rx="3" ry="4" fill="#fff" opacity=".4"/>'
+  +'<path d="M11 23 L15 23 L13 28 Z" fill="'+color+'"/><path d="M13 24 q3 3 0 6" stroke="#B9BED1" stroke-width="1" fill="none"/></svg>';}
+function starIcon(){return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.1 6.6.8-4.9 4.5 1.3 6.6L12 17.8 6.1 20.6l1.3-6.6L2.5 8.9l6.6-.8z"/></svg>';}
+function lockIcon(){return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 0 1 6 0v3z"/></svg>';}
+function tickIcon(){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#EAF3DE" stroke="#5DA828"/><path d="M7 12.5l3.5 3.5L17 9"/></svg>';}
+/* prize glyphs */
+function prizeSvg(id){
+  var p={
+    lolli:'<svg viewBox="0 0 48 48"><circle cx="24" cy="18" r="13" fill="#E24B7A"/><path d="M24 18 A9 9 0 0 1 33 18" fill="none" stroke="#fff" stroke-width="3"/><path d="M24 18 A5 5 0 0 0 19 13" fill="none" stroke="#fff" stroke-width="3"/><rect x="22" y="30" width="4" height="14" rx="2" fill="#8B5CD6"/></svg>',
+    teddy:'<svg viewBox="0 0 48 48"><circle cx="14" cy="14" r="6" fill="#B47B4E"/><circle cx="34" cy="14" r="6" fill="#B47B4E"/><circle cx="24" cy="26" r="15" fill="#C98F5E"/><circle cx="19" cy="24" r="2.4" fill="#2C2A44"/><circle cx="29" cy="24" r="2.4" fill="#2C2A44"/><circle cx="24" cy="30" r="4" fill="#FBEFE4"/><circle cx="24" cy="29" r="1.6" fill="#2C2A44"/></svg>',
+    medal:'<svg viewBox="0 0 48 48"><path d="M17 6 L24 22 L14 22 Z" fill="#378ADD"/><path d="M31 6 L34 22 L24 22 Z" fill="#E24B7A"/><circle cx="24" cy="32" r="12" fill="#EF9F27"/><circle cx="24" cy="32" r="12" fill="none" stroke="#854F0B" stroke-width="2"/><path d="M24 26l1.6 3.3 3.6.4-2.7 2.5.7 3.6-3.2-1.6-3.2 1.6.7-3.6-2.7-2.5 3.6-.4z" fill="#fff"/></svg>',
+    balloons:'<svg viewBox="0 0 48 48"><ellipse cx="18" cy="18" rx="10" ry="12" fill="#E24B7A"/><ellipse cx="31" cy="21" rx="9" ry="11" fill="#378ADD"/><path d="M18 30 q3 6 6 12" stroke="#B9BED1" stroke-width="1.5" fill="none"/><path d="M31 32 q-2 5 -6 10" stroke="#B9BED1" stroke-width="1.5" fill="none"/></svg>',
+    crown:'<svg viewBox="0 0 48 48"><path d="M8 34 L10 16 L19 26 L24 12 L29 26 L38 16 L40 34 Z" fill="#EF9F27" stroke="#854F0B" stroke-width="1.5" stroke-linejoin="round"/><circle cx="24" cy="12" r="2.5" fill="#E24B7A"/><rect x="8" y="34" width="32" height="5" rx="2" fill="#D98A17"/></svg>',
+    usta:'<svg viewBox="0 0 48 48"><path d="M16 30 L11 46 L20 40 Z" fill="#E24B7A"/><path d="M32 30 L37 46 L28 40 Z" fill="#378ADD"/><circle cx="24" cy="20" r="14" fill="#EF9F27" stroke="#854F0B" stroke-width="2"/><path d="M24 10l2.9 6 6.5.7-4.8 4.4 1.3 6.4L24 30.6 18.1 27.9 19.4 21.5 14.6 17.1 21.1 16.4z" fill="#fff"/></svg>'
+  };
+  return p[id]||p.medal;
+}
+
+document.getElementById('logo').innerHTML=mathmazel(40);
+document.getElementById('maz').innerHTML=mathmazel(84);
+document.getElementById('sIcon').innerHTML=starIcon();
+(function(){var f=document.getElementById('flags');for(var i=0;i<20;i++)f.appendChild(document.createElement('i'));})();
+
+/* ---------- levels ---------- */
+var BALLOON_COLORS=['#E24B7A','#378ADD','#5DA828','#EF9F27','#8B5CD6','#E8733C'];
+var VT={ kolay:{gMin:2,gMax:3,nMin:2,nMax:4}, orta:{gMin:2,gMax:4,nMin:2,nMax:5}, zor:{gMin:2,gMax:5,nMin:2,nMax:5} };
+var LEVELS=[
+  {name:'Grupları Say', sub:'Eşit gruplarda kaç balon var?', color:'#5DA828', prize:'lolli', mode:'count', tiers:VT},
+  {name:'Tekrarlı Toplama', sub:'Grupları toplayarak bul', color:'#378ADD', prize:'balloons', mode:'add', tiers:VT},
+  {name:'Çarpmaya Köprü', sub:'Aynı resim, şimdi çarpma', color:'#8B5CD6', prize:'teddy', mode:'bridge', tiers:VT},
+  {name:'Çarpımlar', sub:'Doğru cevaplı balonu patlat', color:'#EF9F27', prize:'medal', mode:'facts',
+    /* bMin:2 -> "5 x 1" gibi bos gecen sorular uretilmesin */
+    tiers:{ kolay:{pool:[2,5,10],bMin:2,bMax:5}, orta:{pool:[2,3,4,5],bMin:2,bMax:8}, zor:{pool:[2,3,4,5,10],bMin:2,bMax:10} }},
+  {name:'Karışık Karnaval', sub:'Sonsuz bölüm — istediğin kadar oyna!', color:'#E24B7A', prize:'crown', mode:'mixed',
+    /* 1 ile carpma mufredatta var ama 2. sinifa fazla kolay; sorularin yarisini
+       kaplamasin. bMin:2 b=1 yolunu kapatir; kolay havuzu 10'ar ritmik saymayla
+       genisletilince 1'in payi 1/3'ten 1/4'e iner; zor'da 1 hic cikmaz. */
+    tiers:{ kolay:{pool:[1,2,5,10],bMin:2,bMax:5}, orta:{pool:[1,2,3,4,5],bMin:2,bMax:8}, zor:{pool:[2,3,4,5,10],bMin:2,bMax:10} }}
+];
+var GOAL=5; // correct answers per section
+
+/* Ödüllerin adı ve nasıl kazanıldığı. İsimsiz ikon ödül değil süstür. */
+var PRIZES={
+  lolli:   {ad:'Şeker Çubuğu',  nasil:'1. standı bitir'},
+  balloons:{ad:'Balon Demeti',  nasil:'2. standı bitir'},
+  teddy:   {ad:'Oyuncak Ayı',   nasil:'3. standı bitir'},
+  medal:   {ad:'Madalya',       nasil:'4. standı bitir'},
+  crown:   {ad:'Karnaval Tacı', nasil:'5. standı bitir'},
+  usta:    {ad:'Usta Rozeti',   nasil:'Karışık Karnaval\'ı üç zorlukta da bitir'}
+};
+function prizeAd(id){ return (PRIZES[id]||{}).ad || 'Ödül'; }
+function prizeNasil(id){ return (PRIZES[id]||{}).nasil || ''; }
+
+/* ---------- map render ---------- */
+var mapEl=document.getElementById('map'), playEl=document.getElementById('play'), winEl=document.getElementById('winScreen');
+function showMap(){ paintStars(); playEl.classList.add('hidden'); winEl.classList.add('hidden'); mapEl.classList.remove('hidden'); renderMap(); window.scrollTo(0,0); }
+function renderMap(){
+  var b=document.getElementById('booths'); b.innerHTML='';
+  LEVELS.forEach(function(L,i){
+    var open = (i+1)<=S.unlocked;
+    var done = S.levelStars[i]>=GOAL;
+    var bt=document.createElement('button'); bt.className='booth'; if(!open) bt.disabled=true;
+    var right = done
+      ? '<span class="tick">'+tickIcon()+'</span>'
+      : open ? '<span class="stars">'+starRow(S.levelStars[i])+'</span>'
+             : '<span class="lock">'+lockIcon()+'</span>';
+    var td=S.tierDone[i]||{};
+    var pips = open ? '<span class="tierpips" title="Kolay / Orta / Zor">'
+      +'<i class="'+(td.kolay?'on kolay':'')+'"></i><i class="'+(td.orta?'on orta':'')+'"></i><i class="'+(td.zor?'on zor':'')+'"></i></span>' : '';
+    bt.innerHTML='<span class="badge" style="background:'+L.color+'">'+(i+1)+'</span>'
+      +'<div><h3>'+L.name+'</h3><p>'+L.sub+'</p>'+pips+'</div>'+right;
+    if(open) bt.onclick=function(){ startLevel(i); };
+    b.appendChild(bt);
+  });
+  var sh=document.getElementById('shelf'); sh.innerHTML='';
+  function prizeCell(id, extraCls){
+    var got=S.prizes.indexOf(id)>-1;
+    var cell=document.createElement('div'); cell.className='prizecell';
+    var d=document.createElement('div');
+    d.className='prize '+(extraCls||'')+' '+(got?'got':'empty');
+    d.innerHTML=prizeSvg(id) + (got?'':'<span class="lockdot">'+lockIcon()+'</span>');
+    var nm=document.createElement('span');
+    nm.className='pname'+(got?'':' locked');
+    nm.textContent = got ? prizeAd(id) : prizeNasil(id);
+    if(!got) d.setAttribute('aria-label', prizeAd(id)+' — henüz kazanılmadı');
+    cell.appendChild(d); cell.appendChild(nm);
+    sh.appendChild(cell);
+    return d;
+  }
+  LEVELS.forEach(function(L){ prizeCell(L.prize); });
+  prizeCell('usta','master');
+  /* yeni kazanılan ödül gözden kaçmasın */
+  if(justWonPrize){
+    var cells=sh.querySelectorAll('.prize');
+    var order=LEVELS.map(function(L){return L.prize;}).concat(['usta']);
+    var ix=order.indexOf(justWonPrize);
+    if(ix>-1 && cells[ix]) Celebrate.pulse(cells[ix]);
+    justWonPrize=null;
+  }
+}
+function masterEarned(){ var t=S.tierDone[LEVELS.length-1]||{}; return t.kolay&&t.orta&&t.zor; }
+function markTierAndMaster(){
+  var was=masterEarned();
+  if(!S.tierDone[curLevel]) S.tierDone[curLevel]={};
+  S.tierDone[curLevel][S.diff]=true;
+  if(!was && masterEarned() && S.prizes.indexOf('usta')<0){ S.prizes.push('usta'); persist(); return true; }
+  persist();
+  return false;
+}
+function starRow(n){var s='';for(var i=0;i<GOAL;i++){s+='<i class="'+(i<n?'on':'')+'">'+starIcon()+'</i>';}return s;}
+
+/* ---------- play ---------- */
+var curLevel=0, correctCount=0, curAnswer=0, sectionNo=1, curQ=null, autoRead=false;
+var missedThisQ=false;   /* bu soruda ilk denemede yanlış yapıldı mı */
+var justWonPrize=null;   /* haritada parlatılacak yeni ödül */
+function startLevel(i){
+  curLevel=i; correctCount=0; sectionNo=1;
+  mapEl.classList.add('hidden'); winEl.classList.add('hidden'); playEl.classList.remove('hidden'); window.scrollTo(0,0);
+  var L=LEVELS[i];
+  document.getElementById('lvlpill').textContent=L.name;
+  document.getElementById('lvlpill').style.background=L.color;
+  renderDiffBar();
+  updateSectionBadge();
+  ensureSound();
+  nextQuestion();
+}
+function renderDiffBar(){
+  var bar=document.getElementById('diffbar'); bar.innerHTML='';
+  [['kolay','Kolay'],['orta','Orta'],['zor','Zor']].forEach(function(d){
+    var b=document.createElement('button'); b.className=d[0]+(S.diff===d[0]?' on':'');
+    b.textContent=d[1];
+    b.onclick=function(){ if(S.diff===d[0]) return; S.diff=d[0]; persist(); Sfx.click();
+      Array.prototype.forEach.call(bar.children,function(x){x.classList.remove('on');}); b.classList.add('on');
+      nextQuestion(); };
+    bar.appendChild(b);
+  });
+}
+function updateSectionBadge(){
+  var el=document.getElementById('sectionBadge'); if(!el) return;
+  if(LEVELS[curLevel] && LEVELS[curLevel].mode==='mixed'){ el.style.display=''; el.textContent='Bölüm '+sectionNo; }
+  else el.style.display='none';
+}
+function sectionDone(){
+  var L=LEVELS[curLevel];
+  var first = S.prizes.indexOf(L.prize)<0;
+  if(first) S.prizes.push(L.prize);
+  if(S.levelStars[curLevel]<GOAL) S.levelStars[curLevel]=GOAL;
+  var gotMaster=markTierAndMaster();
+  var cheer=document.getElementById('cheer'); cheer.style.color='var(--berry-dk)';
+  cheer.textContent = gotMaster ? 'USTA ROZETİ senin! Üç zorluğu da bitirdin!'
+    : (first ? 'Tacı kazandın! Bölüm 1 tamam — devam!' : 'Bölüm '+sectionNo+' tamam! Devam!');
+  /* Sonsuz bölümün de bir "sonu" var: her bölüm tamamlanışı kutlanmalı.
+     Usta Rozeti kazanıldıysa tam salvo, normal bölümde daha ölçülü. */
+  Sfx.pop(); Sfx.win();
+  Celebrate.finale({count: gotMaster ? 110 : 60});
+  sectionNo++; correctCount=0; updateMeter(); updateSectionBadge();
+  setTimeout(nextQuestion, 2200);
+}
+function ensureSound(){ Sfx.unlock(); }
+function playPop(good){ if(good){ Sfx.pop(); setTimeout(function(){ Sfx.good(); }, 70); } else { Sfx.bad(); } }
+
+function updateMeter(popIndex){
+  var m=document.getElementById('meter'); m.innerHTML='';
+  for(var i=0;i<GOAL;i++){
+    var el=document.createElement('i');
+    el.className=(i<correctCount?'on':'') + (i===popIndex?' pop':'');
+    el.innerHTML=starIcon(); m.appendChild(el);
+  }
+}
+/* CSS animasyonu aynı elemanda tekrar oynasın diye yeniden başlat */
+function restartAnim(el){ if(!el) return; el.style.animation='none'; void el.offsetWidth; el.style.animation=''; }
+function rint(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+function makeQuestion(L){
+  var T=(L.tiers&&L.tiers[S.diff])||(L.tiers&&L.tiers.kolay);
+  var g,n,ans,visual='',sentence='',q='';
+  if(L.mode==='facts'||L.mode==='mixed'){
+    var a=pick(T.pool), b=rint(T.bMin,T.bMax);
+    /* MÜFREDAT SINIRI (MEB 2. sınıf): "10'a kadar olan sayıları 1, 2, 3, 4 ve 5 ile
+       çarpmaları istenir." Yani çarpanlardan biri 1-5 arasında, diğeri en çok 10 olmalı.
+       10 havuzdayken b de 10'a çıkabildiği için 10×10 gibi kapsam dışı sorular oluşuyordu. */
+    if(a>5) b=Math.min(b,5);
+    if(b>5) a=Math.min(a,5);
+    if(Math.random()<0.5){ var t=a; a=b; b=t; }   // vary order
+    g=a; n=b; ans=a*b;
+    sentence='<span>'+a+'</span> <span class="op">×</span> <span>'+b+'</span> <span class="op">=</span> ?';
+    q='Doğru cevabı taşıyan balonu patlat';
+  } else {
+    g=rint(T.gMin,T.gMax); n=rint(T.nMin,T.nMax); ans=g*n;
+    visual=groupsHTML(g,n);
+    if(L.mode==='count'){ q=g+' grup, her grupta '+n+' balon'; sentence='Kaç balon var?'; }
+    else if(L.mode==='add'){ var add=[]; for(var k=0;k<g;k++) add.push(n); q=g+' grup, her grupta '+n;
+      sentence=add.join(' <span class="op">+</span> ')+' <span class="op">=</span> ?'; }
+    else { q=g+' grup × '+n+' balon'; sentence='<span>'+g+'</span> <span class="op">×</span> <span>'+n+'</span> <span class="op">=</span> ?'; }
+  }
+  return {ans:ans, visual:visual, sentence:sentence, q:q, g:g, n:n, mode:L.mode};
+}
+function groupsHTML(g,n){
+  var s='<div class="groups">';
+  for(var i=0;i<g;i++){
+    s+='<div class="grp" style="grid-template-columns:repeat('+Math.min(n,3)+',1fr)">';
+    for(var j=0;j<n;j++) s+=miniBalloon(BALLOON_COLORS[i%BALLOON_COLORS.length]);
+    s+='</div>';
+  }
+  return s+'</div>';
+}
+function options(ans,g,n){
+  var set={}; set[ans]=1; var opts=[ans];
+  /* 2. sınıfta en sık görülen hata "bir grubu eksik ya da fazla saymak".
+     Bu yüzden çeldiricilerden en az biri garanti olarak cevap ± bir grup olsun
+     (3×4 için 9 veya 15). ±1 komşuları çocuğu düşündürmüyor, elemesi kolay. */
+  var oneGroupOff=[ans+n, ans-n, ans+g, ans-g].filter(function(v){ return v>0 && v!==ans; });
+  shuffle(oneGroupOff);
+  if(oneGroupOff.length){ set[oneGroupOff[0]]=1; opts.push(oneGroupOff[0]); }
+
+  var cand=[ans+n, ans-n, ans+g, ans-g, ans+2, ans-2, g+n, ans+1, ans-1];
+  shuffle(cand);
+  for(var i=0;i<cand.length && opts.length<3;i++){ var v=cand[i]; if(v>0 && !set[v]){set[v]=1;opts.push(v);} }
+  /* son çare: hâlâ eksikse benzersiz bir değer üret (sonsuz döngüye girmeden) */
+  for(var f=1; opts.length<3; f++){ var w=ans+f*3; if(w>0 && !set[w]){set[w]=1;opts.push(w);} }
+  return shuffle(opts);
+}
+
+function nextQuestion(){
+  var stageEl=document.getElementById('stage'); if(!stageEl) return;
+  var L=LEVELS[curLevel];
+  var Q=makeQuestion(L); curAnswer=Q.ans; curQ=Q; missedThisQ=false;
+  updateMeter();
+  document.getElementById('cheer').textContent='';
+  var showHint = (L.mode==='facts'||L.mode==='mixed');
+  stageEl.innerHTML='<div class="prompt"><div class="q">'+Q.q+'</div></div>'
+    + (Q.visual||'')
+    + '<div class="sentence">'+Q.sentence+'</div>'
+    + (showHint? '<div class="hintwrap"><button class="hintbtn" id="hintBtn">'
+        + '<span class="m">'+mathmazel(24)+'</span> Mathmazel göstersin</button></div>'
+        + '<div id="hintArea"></div>' : '');
+  if(showHint){
+    document.getElementById('hintBtn').onclick=function(){
+      this.parentNode.style.display='none';
+      /* İpucu cevabı SÖYLEMEZ. Çarpımı 1-3. bölümlerdeki gibi grup modeliyle
+         gösterir: g grup, her grupta n balon. Çocuk grupları görür, sayar ya da
+         tekrarlı toplamayı kendi yapar. Eski "Say: 4 → 8 → 12" biçimi son
+         adımda cevabı veriyordu, çocuk düşünmeden okuyup geçebiliyordu. */
+      var add=[]; for(var k=0;k<Q.g;k++) add.push(Q.n);
+      /* Tek grup varsa toplama satırı "5 = ?" gibi hem anlamsız hem de cevabı
+         söyleyen bir şeye dönüşüyor. O durumda sadece grubu göster; çocuk
+         balonları sayarak bulsun (1 × n = n zaten öğretilmek istenen şey). */
+      document.getElementById('hintArea').innerHTML=
+          '<div class="hintbox">'
+        +   groupsHTML(Q.g, Q.n)
+        +   '<div class="skiphint">'+Q.g+' grup, her grupta '+Q.n+' balon</div>'
+        +   (Q.g>1 ? '<div class="addline">'+add.join(' <span class="op">+</span> ')
+                     +' <span class="op">=</span> ?</div>' : '')
+        + '</div>';
+    };
+  }
+  // balloons
+  var wrap=document.getElementById('balloons'); wrap.innerHTML='';
+  var opts=options(Q.ans,Q.g,Q.n);
+  var cols=shuffle(BALLOON_COLORS.slice());
+  opts.forEach(function(v,i){
+    var btn=document.createElement('button'); btn.className='balloon float';
+    btn.setAttribute('aria-label', v+' balonu');
+    btn.innerHTML=balloonSvg(cols[i%cols.length])+'<span class="val">'+v+'</span>';
+    btn.onclick=function(){ choose(btn, v===Q.ans); };
+    wrap.appendChild(btn);
+  });
+  if(autoRead) speakQuestion();
+}
+
+function setBalloonsLocked(locked){
+  /* pointer-events:none yetmez — buton klavyeyle (Enter/Space) hâlâ tetiklenir.
+     disabled hem dokunmayı hem klavyeyi hem de odağı kapatır. */
+  Array.prototype.forEach.call(document.getElementById('balloons').children,function(b){
+    b.disabled = !!locked;
+  });
+}
+
+function choose(btn, correct){
+  if(correct){
+    btn.classList.remove('float'); btn.classList.add('pop');
+    playPop(true);
+    /* Puanlama önce, süsleme sonra: konfeti gibi kozmetik bir şey patlarsa
+       oyun ilerlemesi durmasın. */
+    /* öğretmene dönük kayıt: bu çarpımı ilk denemede bildi mi? */
+    if(curQ) { if(missedThisQ) Progress.logMiss(curQ.g, curQ.n); else Progress.logHit(curQ.g, curQ.n); }
+    addStar(); correctCount++; updateMeter(correctCount-1);
+    burst(btn);
+    Celebrate.flyStar(btn, scEl, catchStar);
+    var cheer=document.getElementById('cheer');
+    cheer.textContent = missedThisQ
+      ? pick(['Buldun! 👏','İşte bu!','Doğru! Vazgeçmedin.'])
+      : pick(['Harika! 🎈','Bravo!','Süper!','Doğru! ⭐','Çok iyi!']);
+    setBalloonsLocked(true);
+    if(correctCount>=GOAL){
+      if(LEVELS[curLevel].mode==='mixed') setTimeout(sectionDone, 1250);
+      else setTimeout(winLevel, 1200);
+    }
+    else setTimeout(nextQuestion, 1250);
+  } else {
+    missedThisQ = true;
+    btn.classList.remove('float'); void btn.offsetWidth; btn.classList.add('nope');
+    playPop(false);
+    /* Rastgele dokunup geçmeyi engelle: kısa süre tüm balonları kilitle.
+       Ceza değil — düşünmek için duraklama. */
+    setBalloonsLocked(true);
+    document.getElementById('cheer').style.color='var(--muted)';
+    document.getElementById('cheer').textContent='Olmadı, bir daha bak.';
+    setTimeout(function(){ btn.classList.remove('nope'); btn.classList.add('float');
+      setBalloonsLocked(false);
+      document.getElementById('cheer').style.color=''; document.getElementById('cheer').textContent=''; }, 900);
+  }
+}
+
+function burst(near){
+  var board=near.closest('.board'); if(!board) return;
+  var rect=board.getBoundingClientRect(), br=near.getBoundingClientRect();
+  var x=br.left-rect.left+br.width/2, y=br.top-rect.top+20;
+  var cols=['#E24B7A','#378ADD','#5DA828','#EF9F27','#8B5CD6'];
+  for(var i=0;i<26;i++){
+    var c=document.createElement('div'); c.className='conf';
+    c.style.background=cols[i%cols.length]; c.style.left=x+'px'; c.style.top=y+'px';
+    board.appendChild(c);
+    var ang=Math.random()*Math.PI*2, dist=40+Math.random()*70;
+    var dx=Math.cos(ang)*dist, dy=Math.sin(ang)*dist-30;
+    /* Web Animations API eski tarayıcılarda (iOS 13 öncesi Safari, eski Android
+       WebView) yok. Zıp Zıp'ta bu koruma vardı, burada yoktu. */
+    if(c.animate) c.animate([{transform:'translate(0,0) rotate(0)',opacity:1},
+               {transform:'translate('+dx+'px,'+dy+'px) rotate('+(Math.random()*360)+'deg)',opacity:0}],
+              {duration:950+Math.random()*450, easing:'cubic-bezier(.2,.6,.3,1)'});
+    (function(node){ setTimeout(function(){ if(node.parentNode) node.parentNode.removeChild(node); }, 1500); })(c);
+  }
+}
+
+/* Kolay'da bir standı bitiren çocuğa Orta'yı teklif et — çocuklar
+   kendiliğinden zorluk yükseltmiyor, Usta Rozeti de üç zorluğu şart koşuyor. */
+function tierSuggestion(){
+  var td=S.tierDone[curLevel]||{};
+  if(S.diff==='kolay' && !td.orta) return 'Bunu bir de <b>Orta</b>\'da denemek ister misin?';
+  if(S.diff==='orta'  && !td.zor)  return 'Bunu bir de <b>Zor</b>\'da denemek ister misin?';
+  return '';
+}
+function winLevel(){
+  var L=LEVELS[curLevel];
+  S.levelStars[curLevel]=GOAL;
+  if(S.prizes.indexOf(L.prize)<0) S.prizes.push(L.prize);
+  markTierAndMaster();
+  if(curLevel+2>S.unlocked && curLevel+1<LEVELS.length) S.unlocked=curLevel+2;
+  persist();
+  paintStars();
+  Sfx.pop(); Sfx.win();
+  Celebrate.finale();          /* bölüm sonu konfeti patlaması */
+  justWonPrize=L.prize;
+  playEl.classList.add('hidden'); winEl.classList.remove('hidden'); window.scrollTo(0,0);
+  document.getElementById('winPrize').innerHTML=prizeSvg(L.prize);
+  document.getElementById('winPrizeName').textContent=prizeAd(L.prize);
+  ['winPrize','winPrizeName','winAdded'].forEach(function(id){ restartAnim(document.getElementById(id)); });
+  document.getElementById('winTitle').textContent=L.name+' tamam!';
+  var last = curLevel===LEVELS.length-1;
+  document.getElementById('winMsg').textContent = last
+    ? 'Tüm standları bitirdin ve tacı kazandın! Sen bir karnaval şampiyonusun.'
+    : 'Yeni bir prizin var ve yeni stant açıldı!';
+  var sug=tierSuggestion();
+  var sEl=document.getElementById('winSuggest');
+  if(sEl){ sEl.innerHTML=sug; sEl.classList.toggle('hidden', !sug); }
+  var nb=document.getElementById('winNext');
+  if(last){ nb.classList.add('hidden'); } else { nb.classList.remove('hidden'); }
+}
+document.getElementById('winNext').onclick=function(){ var nx=curLevel+1; if(nx<LEVELS.length) startLevel(nx); else showMap(); };
+document.getElementById('winMap').onclick=showMap;
+document.getElementById('back').onclick=function(){ Speech.cancel(); Sfx.click(); showMap(); };
+
+/* ---------- read-aloud (shared/audio.js) ---------- */
+function speakerIcon(){return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M15.5 8.5a4 4 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';}
+function speakText(t){ Speech.speak(t); }
+function speakQuestion(){
+  if(!curQ) return; var Q=curQ, t='';
+  if(Q.mode==='count'){ t=Q.g+' grup var, her grupta '+Q.n+' balon. Kaç balon var? Doğru balonu patlat.'; }
+  else if(Q.mode==='add'){ var p=[]; for(var k=0;k<Q.g;k++) p.push(Q.n); t=p.join(' artı ')+' kaç eder? Doğru balonu patlat.'; }
+  else { t=Q.g+' kere '+Q.n+' kaç eder? Doğru balonu patlat.'; }
+  speakText(t);
+}
+(function(){
+  var lb=document.getElementById('listenBtn'); if(!lb) return;
+  if(!Speech.supported){ lb.style.display='none'; return; }
+  autoRead = !!Settings.get('autoRead', false);
+  function paint(){ lb.classList.toggle('on', autoRead); lb.innerHTML=speakerIcon()+(autoRead?' Açık':' Dinle'); }
+  paint();
+  lb.onclick=function(){
+    autoRead=!autoRead;
+    Settings.set('autoRead', autoRead);
+    paint();
+    if(autoRead) speakQuestion(); else Speech.cancel();
+  };
+})();
+
+renderMap();
+</script>
+<script src="../shared/hud.js"></script>

@@ -1,0 +1,769 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EEF8F1">
+<title>Zıp Zıp Karnavalı</title>
+<link rel="stylesheet" href="../shared/theme.css">
+<style>
+  /* Bu oyuna özel — ortak stiller shared/theme.css içinde */
+  :root{
+    --bg:#EEF8F1; --surface:#FFFFFF; --ink:#243A2E; --muted:#5E7268;
+    --line:#DBEDE2; --soft:#E7F4EC;
+    --grass:#4FA03A; --grass-dk:#2E6B22;
+    --sky:#3E97C9; --sky-dk:#1F6B95;
+    --carrot:#EF7D2A; --carrot-dk:#B4531A;
+    --berry:#E24B7A; --berry-dk:#A32D53;
+    --amber:#EFB227; --amber-dk:#8A6410;
+    --grape:#8B5CD6; --grape-dk:#5A3A9A;
+  }
+  body{background:radial-gradient(1000px 380px at 50% -120px,#DFF3E6 0,var(--bg) 60%)}
+
+  /* bayrak renkleri bu oyunda farklı sırada */
+  .flags i:nth-child(5n+1){border-top:15px solid var(--grass)}
+  .flags i:nth-child(5n+2){border-top:15px solid var(--carrot)}
+  .flags i:nth-child(5n+3){border-top:15px solid var(--sky)}
+  .flags i:nth-child(5n+4){border-top:15px solid var(--berry)}
+  .flags i:nth-child(5n+5){border-top:15px solid var(--grape)}
+
+  .hero{margin-bottom:14px}
+  .hero .maz{width:80px;height:80px;flex:none}
+  .hero h1{font-size:23px}
+  .booths{margin:16px 0 18px}
+  .booth .tick{color:var(--grass)}
+  .prize.got{background:#FFF8E8}
+  .win .prizebig{background:#FFF8E8}
+  .primary{background:var(--carrot); box-shadow:0 5px 0 var(--carrot-dk)}
+  .primary:active{box-shadow:0 3px 0 var(--carrot-dk)}
+  .sentence{margin:4px 0 2px; font-size:clamp(24px,6.5vw,34px)}
+  .sentence .op{color:var(--carrot)}
+  .board{padding:18px 16px}
+  .meter{margin-bottom:4px}
+  .prompt{margin:6px 0}
+  .skiphint{margin-top:8px; text-align:left}
+  .hintwrap{margin-top:8px}
+  .cheer{margin-top:8px}
+
+  /* karakter seçici */
+  .picker{background:var(--surface); border:1.5px solid var(--line); border-radius:18px;
+    padding:14px 16px; margin-bottom:16px; box-shadow:0 3px 0 var(--soft)}
+  .picker h3{font-size:15px; margin-bottom:10px}
+  .critters{display:flex; gap:10px; flex-wrap:wrap}
+  .critter{width:74px; border:2px solid var(--line); background:#fff; border-radius:16px; padding:8px 4px 6px;
+    display:flex; flex-direction:column; align-items:center; gap:2px; min-height:var(--tap)}
+  .critter svg{width:52px;height:52px}
+  .critter small{font-weight:800; font-size:11px; color:var(--muted)}
+  .critter.on{border-color:var(--grass); background:#F1FAF0; box-shadow:0 2px 0 var(--soft)}
+
+  .runsum{text-align:center; font-family:var(--disp); font-weight:600; font-size:18px; color:var(--sky-dk); min-height:24px}
+
+  /* sayı doğrusu pisti */
+  .track{position:relative; height:150px; margin:6px 0 2px}
+  .ground{position:absolute; left:0; right:0; bottom:26px; height:10px; background:#CDEBD6; border-radius:6px}
+  .stones{position:absolute; left:0; right:0; bottom:16px; display:flex; gap:6px}
+  .stone{flex:1; height:30px; border-radius:10px 10px 8px 8px; background:#E3F1E8; border:1.5px solid #C9E6D3;
+    display:flex; align-items:center; justify-content:center; font-family:var(--disp); font-weight:700; font-size:13px; color:var(--muted); position:relative}
+  .stone.hit{background:#DCF0E2; color:var(--grass-dk)}
+  .stone .carrot{position:absolute; bottom:28px; left:50%; transform:translateX(-50%); width:28px;height:34px}
+  .stone.path{height:38px}
+  .stone .snum{font-family:var(--disp); font-weight:700; font-size:13px; color:var(--grass-dk); min-height:13px}
+  .stone.path.hit{background:#CDEBD6}
+  /* şıklar gerçek <button> — tarayıcı varsayılanlarını sıfırla */
+  .stone.choice{cursor:pointer; height:64px; align-items:flex-end; background:#F3FAF4;
+    font:inherit; color:var(--muted); margin:0; padding:0 0 4px; -webkit-appearance:none; appearance:none}
+  .stone.choice .cnum{font-size:18px; color:var(--carrot-dk)}
+  .stone.choice.wrong{background:#FBE7E7; border-color:#E8A0A0}
+  .stone.choice.right{background:#EAF6E4; border-color:var(--grass)}
+  .stone.choice:focus-visible{outline:3px solid var(--sky); outline-offset:2px}
+  .stone.choice:disabled{cursor:default}
+  .runner{position:absolute; bottom:44px; width:64px; transition:left .38s cubic-bezier(.3,1.4,.5,1); transform:translateX(-50%)}
+  .runner .hopwrap{width:64px;height:64px}
+  .runner.hop .hopwrap{animation:hop .38s ease}
+  @keyframes hop{0%,100%{transform:translateY(0)}45%{transform:translateY(-30px)}}
+  .runner.cheerjump .hopwrap{animation:hop .38s ease 2}
+  .runner.stumble .hopwrap{animation:stumble .4s ease}
+  @keyframes stumble{0%,100%{transform:translateY(0) rotate(0)}30%{transform:translateY(-8px) rotate(-12deg)}60%{transform:rotate(8deg)}}
+
+  .controls{display:flex; gap:10px; justify-content:center; margin-top:12px; flex-wrap:wrap}
+  .jump{border:none; border-radius:16px; background:var(--grass); color:#fff; font-family:var(--disp); font-weight:700;
+    font-size:19px; padding:14px 22px; box-shadow:0 5px 0 var(--grass-dk); min-height:var(--tap)}
+  .jump:active{transform:translateY(3px); box-shadow:0 2px 0 var(--grass-dk)}
+  .jump:disabled{background:var(--line); box-shadow:0 5px 0 #cfe3d6; color:var(--muted)}
+  .jump.back{background:var(--sky); box-shadow:0 5px 0 var(--sky-dk)}
+  .jump.back:active{box-shadow:0 2px 0 var(--sky-dk)}
+  .arrive{border:none; border-radius:16px; background:var(--carrot); color:#fff; font-family:var(--disp); font-weight:700;
+    font-size:18px; padding:14px 22px; box-shadow:0 5px 0 var(--carrot-dk); min-height:var(--tap)}
+  .arrive:active{transform:translateY(3px); box-shadow:0 2px 0 var(--carrot-dk)}
+  .reset{border:1.5px solid var(--line); background:#fff; border-radius:16px; font-weight:800; font-size:14px;
+    padding:12px 16px; color:var(--ink); min-height:var(--tap)}
+
+  /* "Zıpla ile say" ipucu — cevabı vermeden sıçramaları gösterir */
+  .hintbox{margin-top:8px; padding:10px 8px 8px; border-radius:16px;
+    background:#F5FBF7; border:1.5px dashed var(--line)}
+  .hintbox .hophint{display:block; width:100%; max-width:420px; height:auto; margin:0 auto}
+  .hintbox .skiphint{margin-top:2px; text-align:center; font-size:14px; color:var(--muted)}
+
+  .groups{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:8px}
+  .grp{border:2px dashed var(--carrot); border-radius:12px; padding:6px; background:#FFF4EC; display:grid; gap:4px}
+  .grp svg{width:20px;height:24px}
+
+  @media (max-width:520px){
+    .hero .maz{width:64px;height:64px} .hero h1{font-size:20px}
+    .critter{width:64px} .critter svg{width:44px;height:44px}
+  }
+  /* Dar ekranda sayı doğrusu sıkışıyor: "Zor"da 14 taşa kadar çıkabiliyor,
+     360px'lik ekranda taş başına ~19px kalıyor. Havucu ve rakamı küçült. */
+  @media (max-width:420px){
+    .stones{gap:3px}
+    .stone{font-size:11px; border-radius:8px 8px 6px 6px}
+    .stone .carrot{width:20px;height:24px; bottom:24px}
+    .stone .snum{font-size:10px}
+    .stone.choice .cnum{font-size:16px}
+    .runner,.runner .hopwrap{width:52px}
+    .runner .hopwrap{height:52px}
+    .track{height:132px}
+    .controls{gap:8px}
+    .jump,.arrive{font-size:17px; padding:13px 16px}
+  }
+  @media (max-width:340px){
+    .stone .carrot{width:16px;height:20px}
+    .stone .snum{font-size:9px}
+  }
+</style>
+
+<div class="wrap">
+  <div id="hud"></div>
+  <header>
+    <span class="logo" id="logo"></span>
+    <div><b>Zıp Zıp Karnavalı</b><span>Zıplaya zıplaya çarpma</span></div>
+    <div class="starcount"><span class="s" id="sIcon"></span><b id="starTotal">0</b></div>
+  </header>
+  <div class="flags" id="flags"></div>
+
+  <!-- MAP -->
+  <section id="map">
+    <div class="hero">
+      <span class="maz" id="maz"></span>
+      <div><h1>Zıplamaya hazır mısın?</h1>
+      <p>Bir karakter seç, eşit zıplayışlarla havuca ulaş. Kolaydan başla, standları aç, ödülleri topla.</p></div>
+    </div>
+    <div class="picker">
+      <h3>Karakterini seç</h3>
+      <div class="critters" id="critters"></div>
+    </div>
+    <div class="booths" id="booths"></div>
+    <div class="shelf"><h3>Ödül Rafım</h3><div class="prizes" id="shelf"></div></div>
+    <p class="note">Yıldızların ve ödüllerin bu cihazda saklanır — yarın kaldığın yerden devam edebilirsin.</p>
+  </section>
+
+  <!-- PLAY -->
+  <section id="play" class="hidden">
+    <div class="plhead">
+      <button class="back" id="back">‹ Standlara dön</button>
+      <button class="listen" id="listenBtn"></button>
+      <span class="lvlpill" id="lvlpill"></span>
+    </div>
+    <div class="diffbar" id="diffbar"></div>
+    <div class="board">
+      <div class="meterrow"><div class="meter" id="meter"></div><span class="sectbadge" id="sectionBadge"></span></div>
+      <div class="prompt"><div class="q" id="q"></div></div>
+      <div class="sentence" id="sentence"></div>
+      <div class="runsum" id="runsum"></div>
+      <div class="track" id="track">
+        <div class="ground"></div>
+        <div class="stones" id="stones"></div>
+        <div class="runner" id="runner"><div class="hopwrap" id="hopwrap"></div></div>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="hintwrap" id="hintwrap"></div>
+      <div class="cheer" id="cheer"></div>
+    </div>
+  </section>
+
+  <!-- WIN -->
+  <section id="winScreen" class="hidden">
+    <div class="win">
+      <div class="prizebig" id="winPrize"></div>
+      <div class="ribbon" id="winPrizeName"></div>
+      <p class="added" id="winAdded">Ödül Rafına eklendi ✓</p>
+      <h2 id="winTitle"></h2>
+      <p id="winMsg"></p>
+      <p class="winsug hidden" id="winSuggest"></p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="primary" id="winNext">Sonraki stant ›</button>
+        <button class="ghost" id="winMap">Haritaya dön</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="../shared/storage.js"></script>
+<script src="../shared/audio.js"></script>
+<script src="../shared/celebrate.js"></script>
+<script>
+/* ---------- state ---------- */
+var GAME_ID='zip-zip-karnavali';
+var S=Progress.load(GAME_ID, {
+  stars:0, unlocked:1, prizes:[], levelStars:[0,0,0,0,0], animal:'rabbit', diff:'kolay', tierDone:[{},{},{},{},{}]
+});
+function persist(){ Progress.save(GAME_ID, S); }
+var totalEl=document.getElementById('starTotal');
+var scEl=document.querySelector('.starcount');
+/* Durum hemen artar, GÖRÜNEN sayı uçan yıldız sayaca varınca artar. */
+function addStar(){ S.stars++; persist(); }
+function paintStars(){ totalEl.textContent=S.stars; }
+function catchStar(){
+  paintStars();
+  Celebrate.bump(scEl);
+  scEl.classList.add('caught');
+  setTimeout(function(){ scEl.classList.remove('caught'); }, 550);
+}
+paintStars();
+
+/* ---------- svg ---------- */
+function mathmazel(sz){return '<svg viewBox="0 0 100 100" width="'+sz+'" height="'+sz+'" aria-hidden="true">'
+  +'<path d="M50 14 L64 34 H36 Z" fill="#E24B7A"/><circle cx="50" cy="12" r="5" fill="#EFB227"/>'
+  +'<circle cx="50" cy="58" r="30" fill="#FBDDE7"/><circle cx="50" cy="58" r="30" fill="none" stroke="#E24B7A" stroke-width="3"/>'
+  +'<circle cx="40" cy="54" r="5" fill="#243A2E"/><circle cx="60" cy="54" r="5" fill="#243A2E"/>'
+  +'<circle cx="42" cy="52.5" r="1.6" fill="#fff"/><circle cx="62" cy="52.5" r="1.6" fill="#fff"/>'
+  +'<path d="M42 68 Q50 75 58 68" stroke="#243A2E" stroke-width="3" fill="none" stroke-linecap="round"/>'
+  +'<text x="50" y="45" font-family="Baloo 2,sans-serif" font-size="12" font-weight="700" fill="#E24B7A" text-anchor="middle">×</text></svg>';}
+
+function animalSvg(type){
+  var s='<svg viewBox="0 0 80 80" width="100%" height="100%" aria-hidden="true">';
+  if(type==='rabbit'){
+    s+='<ellipse cx="31" cy="20" rx="6" ry="16" fill="#EFEFF4" stroke="#D6D6E0" stroke-width="1.5"/>'
+      +'<ellipse cx="47" cy="20" rx="6" ry="16" fill="#EFEFF4" stroke="#D6D6E0" stroke-width="1.5"/>'
+      +'<ellipse cx="31" cy="22" rx="2.6" ry="9" fill="#F7C4D6"/><ellipse cx="47" cy="22" rx="2.6" ry="9" fill="#F7C4D6"/>'
+      +'<ellipse cx="40" cy="52" rx="22" ry="20" fill="#EFEFF4" stroke="#D6D6E0" stroke-width="1.5"/>'
+      +'<circle cx="32" cy="48" r="3" fill="#243A2E"/><circle cx="48" cy="48" r="3" fill="#243A2E"/>'
+      +'<path d="M37 56 h6" stroke="#E58AA8" stroke-width="3" stroke-linecap="round"/>'
+      +'<ellipse cx="30" cy="72" rx="6" ry="4" fill="#EFEFF4" stroke="#D6D6E0" stroke-width="1.5"/>'
+      +'<ellipse cx="50" cy="72" rx="6" ry="4" fill="#EFEFF4" stroke="#D6D6E0" stroke-width="1.5"/>';
+  } else if(type==='frog'){
+    s+='<circle cx="28" cy="26" r="9" fill="#7CC043"/><circle cx="52" cy="26" r="9" fill="#7CC043"/>'
+      +'<circle cx="28" cy="24" r="4" fill="#fff"/><circle cx="52" cy="24" r="4" fill="#fff"/>'
+      +'<circle cx="28" cy="24" r="2" fill="#243A2E"/><circle cx="52" cy="24" r="2" fill="#243A2E"/>'
+      +'<ellipse cx="40" cy="50" rx="26" ry="22" fill="#7CC043"/>'
+      +'<path d="M26 54 Q40 66 54 54" stroke="#3E6B1E" stroke-width="3" fill="none" stroke-linecap="round"/>'
+      +'<ellipse cx="20" cy="70" rx="8" ry="4" fill="#69A838"/><ellipse cx="60" cy="70" rx="8" ry="4" fill="#69A838"/>';
+  } else if(type==='cat'){
+    s+='<path d="M24 20 L30 40 L16 36 Z" fill="#F2A65A"/><path d="M56 20 L50 40 L64 36 Z" fill="#F2A65A"/>'
+      +'<path d="M25 24 L28 35 L21 33 Z" fill="#F7CBA0"/><path d="M55 24 L52 35 L59 33 Z" fill="#F7CBA0"/>'
+      +'<ellipse cx="40" cy="50" rx="23" ry="21" fill="#F2A65A"/>'
+      +'<circle cx="32" cy="47" r="3" fill="#243A2E"/><circle cx="48" cy="47" r="3" fill="#243A2E"/>'
+      +'<path d="M40 53 l-3 3 h6 z" fill="#C9642B"/>'
+      +'<path d="M18 50 h12 M18 55 h12 M62 50 h-12 M62 55 h-12" stroke="#E1935090" stroke-width="1.5"/>'
+      +'<path d="M62 60 q12 -2 8 -14" stroke="#F2A65A" stroke-width="7" fill="none" stroke-linecap="round"/>';
+  } else if(type==='squirrel'){
+    s+='<path d="M60 62 Q80 50 66 24 Q60 14 54 24 Q64 40 52 58 Z" fill="#C0703A"/>'
+      +'<path d="M60 58 Q72 48 62 30" stroke="#E0A878" stroke-width="4" fill="none" stroke-linecap="round"/>'
+      +'<path d="M28 24 L32 34 L24 32 Z" fill="#C0703A"/><path d="M50 24 L46 34 L54 32 Z" fill="#C0703A"/>'
+      +'<ellipse cx="38" cy="50" rx="21" ry="20" fill="#C0703A"/>'
+      +'<circle cx="31" cy="47" r="3" fill="#243A2E"/><circle cx="45" cy="47" r="3" fill="#243A2E"/>'
+      +'<path d="M38 53 l-2.5 3 h5 z" fill="#7A3F17"/>'
+      +'<ellipse cx="38" cy="60" rx="8" ry="6" fill="#E8C6A6"/>';
+  } else { /* kangaroo */
+    s+='<path d="M52 66 Q78 66 66 40 Q60 30 54 42 Q60 56 46 62 Z" fill="#D9A05B"/>'
+      +'<path d="M34 22 L37 36 L30 32 Z" fill="#D9A05B"/><path d="M46 22 L43 36 L50 32 Z" fill="#D9A05B"/>'
+      +'<ellipse cx="40" cy="46" rx="16" ry="17" fill="#D9A05B"/>'
+      +'<ellipse cx="40" cy="40" rx="12" ry="12" fill="#E7C094"/>'
+      +'<circle cx="35" cy="40" r="2.6" fill="#243A2E"/><circle cx="45" cy="40" r="2.6" fill="#243A2E"/>'
+      +'<path d="M38 45 h4" stroke="#8A5A22" stroke-width="2.5" stroke-linecap="round"/>'
+      +'<ellipse cx="34" cy="70" rx="9" ry="4" fill="#C68A45"/><ellipse cx="50" cy="70" rx="7" ry="4" fill="#C68A45"/>';
+  }
+  return s+'</svg>';
+}
+var ANIMALS=[{id:'rabbit',name:'Tavşan'},{id:'frog',name:'Kurbağa'},{id:'cat',name:'Kedi'},{id:'squirrel',name:'Sincap'},{id:'kangaroo',name:'Kanguru'}];
+
+function carrotSvg(){return '<svg viewBox="0 0 34 40" aria-hidden="true">'
+  +'<path d="M17 12 C11 16 7 30 12 38 C17 40 19 40 22 38 C27 30 23 16 17 12 Z" fill="#EF7D2A"/>'
+  +'<path d="M13 34 h9 M12 28 h11 M13 22 h8" stroke="#C9611C" stroke-width="1.2"/>'
+  +'<path d="M17 12 L13 4 M17 12 L17 2 M17 12 L22 5" stroke="#4FA03A" stroke-width="3.5" stroke-linecap="round"/></svg>';}
+function starIcon(){return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.1 6.6.8-4.9 4.5 1.3 6.6L12 17.8 6.1 20.6l1.3-6.6L2.5 8.9l6.6-.8z"/></svg>';}
+function lockIcon(){return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 0 1 6 0v3z"/></svg>';}
+function tickIcon(){return '<svg viewBox="0 0 24 24" fill="none" stroke="#4FA03A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#EAF6E4" stroke="#4FA03A"/><path d="M7 12.5l3.5 3.5L17 9"/></svg>';}
+function miniCarrot(){return '<svg viewBox="0 0 20 24" aria-hidden="true"><path d="M10 8 C6 11 4 19 7 23 C10 24 11 24 13 23 C16 19 14 11 10 8 Z" fill="#EF7D2A"/><path d="M10 8 L7 3 M10 8 L10 2 M10 8 L14 4" stroke="#4FA03A" stroke-width="2.4" stroke-linecap="round"/></svg>';}
+function prizeSvg(id){
+  var p={
+    carrot:'<svg viewBox="0 0 48 48"><path d="M24 14 C16 20 12 38 18 46 C24 48 24 48 30 46 C36 38 32 20 24 14 Z" fill="#EF7D2A"/><path d="M18 40 h12 M17 33 h14 M18 26 h10" stroke="#C9611C" stroke-width="1.6"/><path d="M24 14 L18 4 M24 14 L24 2 M24 14 L31 5" stroke="#4FA03A" stroke-width="4" stroke-linecap="round"/></svg>',
+    medal:'<svg viewBox="0 0 48 48"><path d="M17 6 L24 22 L14 22 Z" fill="#3E97C9"/><path d="M31 6 L34 22 L24 22 Z" fill="#E24B7A"/><circle cx="24" cy="32" r="12" fill="#EFB227"/><circle cx="24" cy="32" r="12" fill="none" stroke="#8A6410" stroke-width="2"/><path d="M24 26l1.6 3.3 3.6.4-2.7 2.5.7 3.6-3.2-1.6-3.2 1.6.7-3.6-2.7-2.5 3.6-.4z" fill="#fff"/></svg>',
+    trophy:'<svg viewBox="0 0 48 48"><path d="M14 8h20v8a10 10 0 0 1-20 0z" fill="#EFB227"/><path d="M14 10H9a4 4 0 0 0 4 6M34 10h5a4 4 0 0 1-4 6" fill="none" stroke="#C99A17" stroke-width="2.5"/><rect x="21" y="26" width="6" height="8" fill="#C99A17"/><rect x="15" y="34" width="18" height="5" rx="2" fill="#8A6410"/></svg>',
+    ribbon:'<svg viewBox="0 0 48 48"><circle cx="24" cy="18" r="12" fill="#E24B7A"/><circle cx="24" cy="18" r="12" fill="none" stroke="#A32D53" stroke-width="2"/><path d="M24 12l1.6 3.3 3.6.4-2.7 2.5.7 3.6-3.2-1.6-3.2 1.6.7-3.6-2.7-2.5 3.6-.4z" fill="#fff"/><path d="M18 28 L14 44 L22 38 Z" fill="#E24B7A"/><path d="M30 28 L34 44 L26 38 Z" fill="#C0355F"/></svg>',
+    crown:'<svg viewBox="0 0 48 48"><path d="M8 34 L10 16 L19 26 L24 12 L29 26 L38 16 L40 34 Z" fill="#EFB227" stroke="#8A6410" stroke-width="1.5" stroke-linejoin="round"/><circle cx="24" cy="12" r="2.5" fill="#E24B7A"/><rect x="8" y="34" width="32" height="5" rx="2" fill="#D9A017"/></svg>',
+    usta:'<svg viewBox="0 0 48 48"><path d="M16 30 L11 46 L20 40 Z" fill="#E24B7A"/><path d="M32 30 L37 46 L28 40 Z" fill="#3E97C9"/><circle cx="24" cy="20" r="14" fill="#EFB227" stroke="#8A6410" stroke-width="2"/><path d="M24 10l2.9 6 6.5.7-4.8 4.4 1.3 6.4L24 30.6 18.1 27.9 19.4 21.5 14.6 17.1 21.1 16.4z" fill="#fff"/></svg>'
+  };
+  return p[id]||p.medal;
+}
+
+document.getElementById('logo').innerHTML=mathmazel(40);
+document.getElementById('maz').innerHTML=mathmazel(80);
+document.getElementById('sIcon').innerHTML=starIcon();
+(function(){var f=document.getElementById('flags');for(var i=0;i<20;i++)f.appendChild(document.createElement('i'));})();
+
+/* character picker */
+(function(){
+  var c=document.getElementById('critters');
+  ANIMALS.forEach(function(a){
+    var b=document.createElement('button'); b.className='critter'+(a.id===S.animal?' on':'');
+    b.innerHTML=animalSvg(a.id)+'<small>'+a.name+'</small>';
+    b.onclick=function(){ S.animal=a.id; persist(); Sfx.hop();
+      Array.prototype.forEach.call(c.children,function(x){x.classList.remove('on');}); b.classList.add('on'); };
+    c.appendChild(b);
+  });
+})();
+
+/* ---------- levels ---------- */
+var HOPT={ kolay:{steps:[2,5,10],gMin:2,gMax:5}, orta:{steps:[2,3,4,5],gMin:2,gMax:8}, zor:{steps:[2,3,4,5],gMin:2,gMax:10} };
+var LEVELS=[
+  {name:'Zıpla ve Say', sub:'Eşit zıplayışlarla havuca ulaş', color:'#4FA03A', prize:'carrot', mode:'hop', frame:'count', tiers:HOPT},
+  {name:'Tekrarlı Toplama', sub:'Zıpladıkça topla', color:'#3E97C9', prize:'medal', mode:'hop', frame:'add', tiers:HOPT},
+  {name:'Çarpmaya Köprü', sub:'Aynı zıplayış, artık çarpma', color:'#8B5CD6', prize:'trophy', mode:'hop', frame:'mult', tiers:HOPT},
+  {name:'Çarpımlar', sub:'Doğru sayıdaki havucu bul', color:'#EFB227', prize:'ribbon', mode:'choose',
+    /* bMin:2 -> "5 x 1" gibi bos gecen sorular uretilmesin */
+    tiers:{ kolay:{pool:[2,5,10],bMin:2,bMax:5}, orta:{pool:[2,3,4,5],bMin:2,bMax:8}, zor:{pool:[2,3,4,5,10],bMin:2,bMax:10} }},
+  {name:'Karışık Karnaval', sub:'Sonsuz bölüm — istediğin kadar oyna!', color:'#E24B7A', prize:'crown', mode:'choose', endless:true,
+    /* 1 ile carpma mufredatta var ama 2. sinifa fazla kolay; sorularin yarisini
+       kaplamasin. bMin:2 b=1 yolunu kapatir; kolay havuzu 10'ar ritmik saymayla
+       genisletilince 1'in payi 1/3'ten 1/4'e iner; zor'da 1 hic cikmaz. */
+    tiers:{ kolay:{pool:[1,2,5,10],bMin:2,bMax:5}, orta:{pool:[1,2,3,4,5],bMin:2,bMax:8}, zor:{pool:[2,3,4,5,10],bMin:2,bMax:10} }}
+];
+var GOAL=5;
+
+/* Ödüllerin adı ve nasıl kazanıldığı */
+var PRIZES={
+  carrot:{ad:'Altın Havuç',    nasil:'1. standı bitir'},
+  medal: {ad:'Madalya',        nasil:'2. standı bitir'},
+  trophy:{ad:'Kupa',           nasil:'3. standı bitir'},
+  ribbon:{ad:'Şeref Kurdelesi',nasil:'4. standı bitir'},
+  crown: {ad:'Karnaval Tacı',  nasil:'5. standı bitir'},
+  usta:  {ad:'Usta Rozeti',    nasil:'Karışık Karnaval\'ı üç zorlukta da bitir'}
+};
+function prizeAd(id){ return (PRIZES[id]||{}).ad || 'Ödül'; }
+function prizeNasil(id){ return (PRIZES[id]||{}).nasil || ''; }
+
+/* ---------- map ---------- */
+var mapEl=document.getElementById('map'), playEl=document.getElementById('play'), winEl=document.getElementById('winScreen');
+function showMap(){ paintStars(); playEl.classList.add('hidden'); winEl.classList.add('hidden'); mapEl.classList.remove('hidden'); renderMap(); window.scrollTo(0,0); }
+function starRow(n){var s='';for(var i=0;i<GOAL;i++)s+='<i class="'+(i<n?'on':'')+'">'+starIcon()+'</i>';return s;}
+function renderMap(){
+  var b=document.getElementById('booths'); b.innerHTML='';
+  LEVELS.forEach(function(L,i){
+    var open=(i+1)<=S.unlocked, done=S.levelStars[i]>=GOAL;
+    var bt=document.createElement('button'); bt.className='booth'; if(!open) bt.disabled=true;
+    var right = done ? '<span class="tick">'+tickIcon()+'</span>'
+      : open ? '<span class="stars">'+starRow(S.levelStars[i])+'</span>'
+             : '<span class="lock">'+lockIcon()+'</span>';
+    var td=S.tierDone[i]||{};
+    var pips = open ? '<span class="tierpips" title="Kolay / Orta / Zor">'
+      +'<i class="'+(td.kolay?'on kolay':'')+'"></i><i class="'+(td.orta?'on orta':'')+'"></i><i class="'+(td.zor?'on zor':'')+'"></i></span>' : '';
+    bt.innerHTML='<span class="badge" style="background:'+L.color+'">'+(i+1)+'</span>'
+      +'<div><h3>'+L.name+'</h3><p>'+L.sub+'</p>'+pips+'</div>'+right;
+    if(open) bt.onclick=function(){ startLevel(i); };
+    b.appendChild(bt);
+  });
+  var sh=document.getElementById('shelf'); sh.innerHTML='';
+  function prizeCell(id, extraCls){
+    var got=S.prizes.indexOf(id)>-1;
+    var cell=document.createElement('div'); cell.className='prizecell';
+    var d=document.createElement('div');
+    d.className='prize '+(extraCls||'')+' '+(got?'got':'empty');
+    d.innerHTML=prizeSvg(id) + (got?'':'<span class="lockdot">'+lockIcon()+'</span>');
+    var nm=document.createElement('span');
+    nm.className='pname'+(got?'':' locked');
+    nm.textContent = got ? prizeAd(id) : prizeNasil(id);
+    if(!got) d.setAttribute('aria-label', prizeAd(id)+' — henüz kazanılmadı');
+    cell.appendChild(d); cell.appendChild(nm);
+    sh.appendChild(cell);
+  }
+  LEVELS.forEach(function(L){ prizeCell(L.prize); });
+  prizeCell('usta','master');
+  if(justWonPrize){
+    var cells=sh.querySelectorAll('.prize');
+    var order=LEVELS.map(function(L){return L.prize;}).concat(['usta']);
+    var ix=order.indexOf(justWonPrize);
+    if(ix>-1 && cells[ix]) Celebrate.pulse(cells[ix]);
+    justWonPrize=null;
+  }
+}
+function masterEarned(){ var t=S.tierDone[LEVELS.length-1]||{}; return t.kolay&&t.orta&&t.zor; }
+function markTierAndMaster(){
+  var was=masterEarned();
+  if(!S.tierDone[curLevel]) S.tierDone[curLevel]={};
+  S.tierDone[curLevel][S.diff]=true;
+  if(!was && masterEarned() && S.prizes.indexOf('usta')<0){ S.prizes.push('usta'); persist(); return true; }
+  persist();
+  return false;
+}
+function updateSectionBadge(){
+  var el=document.getElementById('sectionBadge'); if(!el) return;
+  if(LEVELS[curLevel] && LEVELS[curLevel].endless){ el.style.display=''; el.textContent='Bölüm '+sectionNo; }
+  else el.style.display='none';
+}
+function sectionDone(){
+  var L=LEVELS[curLevel];
+  var first=S.prizes.indexOf(L.prize)<0;
+  if(first) S.prizes.push(L.prize);
+  if(S.levelStars[curLevel]<GOAL) S.levelStars[curLevel]=GOAL;
+  var gotMaster=markTierAndMaster();
+  var cheer=document.getElementById('cheer'); cheer.style.color='';
+  cheer.textContent = gotMaster ? 'USTA ROZETİ senin! Üç zorluğu da bitirdin!'
+    : (first ? 'Tacı kazandın! Bölüm 1 tamam — devam!' : 'Bölüm '+sectionNo+' tamam! Devam!');
+  /* Sonsuz bölümün de bir "sonu" var: her bölüm tamamlanışı kutlanmalı.
+     Usta Rozeti kazanıldıysa tam salvo, normal bölümde daha ölçülü. */
+  Sfx.pop(); Sfx.win();
+  Celebrate.finale({count: gotMaster ? 110 : 60});
+  sectionNo++; correctCount=0; updateMeter(); updateSectionBadge();
+  setTimeout(nextQuestion, 2200);
+}
+
+/* ---------- play ---------- */
+var curLevel=0, correctCount=0, sectionNo=1, autoRead=false;
+var missedThisQ=false;   /* bu soruda ilk denemede yanlış yapıldı mı */
+var justWonPrize=null;   /* haritada parlatılacak yeni ödül */
+var Q=null, cur=0; // cur = current hop index (hop mode)
+function rint(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+function ensureSound(){ Sfx.unlock(); }
+function tone(n){ Sfx.tone(n); }
+
+function startLevel(i){
+  curLevel=i; correctCount=0; sectionNo=1;
+  mapEl.classList.add('hidden'); winEl.classList.add('hidden'); playEl.classList.remove('hidden'); window.scrollTo(0,0);
+  document.getElementById('lvlpill').textContent=LEVELS[i].name;
+  document.getElementById('lvlpill').style.background=LEVELS[i].color;
+  document.getElementById('runner').querySelector('.hopwrap').innerHTML=animalSvg(S.animal);
+  renderDiffBar();
+  updateSectionBadge();
+  ensureSound();
+  nextQuestion();
+}
+function renderDiffBar(){
+  var bar=document.getElementById('diffbar'); bar.innerHTML='';
+  [['kolay','Kolay'],['orta','Orta'],['zor','Zor']].forEach(function(d){
+    var b=document.createElement('button'); b.className=d[0]+(S.diff===d[0]?' on':'');
+    b.textContent=d[1];
+    b.onclick=function(){ if(S.diff===d[0]) return; S.diff=d[0]; persist(); Sfx.click();
+      Array.prototype.forEach.call(bar.children,function(x){x.classList.remove('on');}); b.classList.add('on');
+      nextQuestion(); };
+    bar.appendChild(b);
+  });
+}
+function updateMeter(popIndex){ var m=document.getElementById('meter'); m.innerHTML='';
+  for(var i=0;i<GOAL;i++){var e=document.createElement('i');
+    e.className=(i<correctCount?'on':'')+(i===popIndex?' pop':'');
+    e.innerHTML=starIcon(); m.appendChild(e);} }
+/* CSS animasyonu aynı elemanda tekrar oynasın diye yeniden başlat */
+function restartAnim(el){ if(!el) return; el.style.animation='none'; void el.offsetWidth; el.style.animation=''; }
+
+/* MÜFREDAT SINIRI (MEB 2. sınıf): "10'a kadar olan sayıları 1, 2, 3, 4 ve 5 ile
+   çarpmaları istenir." Çarpanlardan biri 1-5 arasında, diğeri en çok 10 olmalı. */
+function scopeClamp(a,b){
+  if(a>5) b=Math.min(b,5);
+  if(b>5) a=Math.min(a,5);
+  return [a,b];
+}
+function makeQuestion(L){
+  var T=(L.tiers&&L.tiers[S.diff])||(L.tiers&&L.tiers.kolay);
+  if(L.mode==='hop'){
+    var step=pick(T.steps), g=rint(T.gMin,T.gMax);
+    var sc=scopeClamp(step,g); step=sc[0]; g=sc[1];
+    return {mode:'hop', frame:L.frame, step:step, g:g, ans:step*g};
+  } else {
+    var a=pick(T.pool), b=rint(T.bMin,T.bMax);
+    var c=scopeClamp(a,b); a=c[0]; b=c[1];
+    if(Math.random()<0.5){var t=a;a=b;b=t;}
+    return {mode:'choose', a:a, b:b, step:a, g:b, ans:a*b};
+  }
+}
+/* Üleştirme eki sayıya göre değişir: 2'şer ama 3'er, 9'ar, 10'ar.
+   Ritmik sayma müfredatın kendi terimi, doğru ekle yazılmalı. */
+function ulestir(n){
+  var ek={1:'er',2:'şer',3:'er',4:'er',5:'er',6:'şar',7:'şer',8:'er',9:'ar',10:'ar'};
+  return n + "'" + (ek[n] || 'er');
+}
+
+/* İpucu için mini sayı doğrusu: b tane a'lık sıçrama.
+   Varış noktası "?" — cevabı vermez, son adımı çocuk atar. */
+function hopHintSvg(step, hops){
+  var W=320, H=76, padL=16, padR=16, baseY=54;
+  var dx=(W-padL-padR)/hops;
+  var tickFont = hops>7 ? 8.5 : 10;
+  var labelEvery = hops<=6;                       /* kalabalıkta her yaya yazma */
+  var s='<svg viewBox="0 0 '+W+' '+H+'" class="hophint" role="img" aria-label="'
+      + hops+' kez '+step+' ilerleyen sayı doğrusu, varış noktası bilinmiyor">';
+  s+='<line x1="'+padL+'" y1="'+baseY+'" x2="'+(W-padR)+'" y2="'+baseY
+    +'" stroke="#C9E6D3" stroke-width="2" stroke-linecap="round"/>';
+  for(var i=0;i<=hops;i++){
+    var x=padL+dx*i, last=(i===hops);
+    s+='<line x1="'+x+'" y1="'+(baseY-5)+'" x2="'+x+'" y2="'+(baseY+5)
+      +'" stroke="'+(last?'#EF7D2A':'#9CC9AC')+'" stroke-width="2"/>';
+    s+='<text x="'+x+'" y="'+(baseY+18)+'" text-anchor="middle" font-size="'+tickFont
+      +'" font-weight="700" font-family="Baloo 2,sans-serif" fill="'
+      +(last?'#B4531A':'#2E6B22')+'">'+(last?'?':(step*i))+'</text>';
+    if(i<hops){
+      var x2=padL+dx*(i+1), mid=(x+x2)/2;
+      s+='<path d="M'+x+' '+(baseY-6)+' Q '+mid+' '+(baseY-26)+' '+x2+' '+(baseY-6)
+        +'" fill="none" stroke="#EF7D2A" stroke-width="2" stroke-linecap="round"/>';
+      if(labelEvery || i===0)
+        s+='<text x="'+mid+'" y="'+(baseY-24)+'" text-anchor="middle" font-size="9"'
+          +' font-weight="800" font-family="Nunito,sans-serif" fill="#B4531A">+'+step+'</text>';
+    }
+  }
+  return s+'</svg>';
+}
+
+function optionSet(ans,a,b){
+  var set={}; set[ans]=1; var o=[ans];
+  /* en az bir çeldirici garanti "cevap ± bir grup" olsun — 2. sınıfın tipik hatası */
+  var oneGroupOff=[ans+a,ans-a,ans+b,ans-b].filter(function(v){ return v>0 && v!==ans; });
+  shuffle(oneGroupOff);
+  if(oneGroupOff.length){ set[oneGroupOff[0]]=1; o.push(oneGroupOff[0]); }
+
+  var cand=[ans+a,ans-a,ans+b,ans-b,ans+2,ans-2,a+b,ans+1,ans-1]; shuffle(cand);
+  for(var i=0;i<cand.length&&o.length<3;i++){var v=cand[i]; if(v>0&&!set[v]){set[v]=1;o.push(v);}}
+  for(var f=1;o.length<3;f++){var w=ans+f*3; if(w>0&&!set[w]){set[w]=1;o.push(w);}}
+  return shuffle(o);
+}
+function placeRunner(idx, count){
+  var pct=((idx+0.5)/count)*100;
+  document.getElementById('runner').style.left=pct+'%';
+}
+function groupsHTML(g,n){ var s='<div class="groups">';
+  for(var i=0;i<g;i++){ s+='<div class="grp" style="grid-template-columns:repeat('+Math.min(n,3)+',1fr)">';
+    for(var j=0;j<n;j++) s+=miniCarrot(); s+='</div>'; } return s+'</div>'; }
+
+function nextQuestion(){
+  var stagePresent=document.getElementById('stones'); if(!stagePresent) return;
+  Q=makeQuestion(LEVELS[curLevel]); cur=0; missedThisQ=false;
+  updateMeter();
+  document.getElementById('cheer').textContent='';
+  document.getElementById('runsum').textContent='';
+  document.getElementById('hintwrap').innerHTML='';
+  var qEl=document.getElementById('q'), sEl=document.getElementById('sentence'), ctrl=document.getElementById('controls');
+  var runner=document.getElementById('runner'); runner.className='runner';
+
+  if(Q.mode==='hop'){
+    // place 3 carrots on consecutive landing stones; the answer sits in a RANDOM slot
+    // (left / middle / right) so it isn't always the middle one
+    var slot=rint(0,2), startIdx=Q.g-slot; if(startIdx<1) startIdx=1;
+    var carrotIdx=[startIdx, startIdx+1, startIdx+2];
+    var carrotSet={}; carrotIdx.forEach(function(ix){carrotSet[ix]=1;});
+    Q.maxIndex=startIdx+3;   // track runs one stone past the furthest carrot
+    if(Q.frame==='count'){
+      qEl.textContent='Her zıplayışta '+Q.step+' ilerle.';
+      sEl.innerHTML='Havuç <span class="op">'+Q.ans+'</span> sayısında';
+    } else if(Q.frame==='add'){
+      qEl.textContent='Zıplaya zıplaya topla, doğru havuca in.';
+      var parts=[]; for(var k=0;k<Q.g;k++) parts.push(Q.step);
+      sEl.innerHTML=parts.join(' <span class="op">+</span> ')+' <span class="op">=</span> ?';
+    } else {
+      qEl.textContent='Zıplaya zıplaya çöz, doğru havuca in.';
+      sEl.innerHTML='<span>'+Q.g+'</span> <span class="op">×</span> <span>'+Q.step+'</span> <span class="op">=</span> ?';
+    }
+    var count=Q.maxIndex+1, stones=document.getElementById('stones'); stones.innerHTML='';
+    for(var i=0;i<count;i++){ var st=document.createElement('div'); st.className='stone path';
+      st.dataset.val=(i*Q.step); st.dataset.idx=i;
+      st.innerHTML=(carrotSet[i]?'<span class="carrot">'+carrotSvg()+'</span>':'')+'<span class="snum"></span>';
+      stones.appendChild(st); }
+    stones.children[0].querySelector('.snum').textContent='0'; stones.children[0].classList.add('hit');
+    placeRunner(0, count);
+    ctrl.innerHTML='<button class="jump back" id="backHopBtn">◀ Geri</button>'
+      +'<button class="jump" id="jumpBtn">İleri ▶</button>'
+      +'<button class="arrive" id="arriveBtn">Vardım!</button>'
+      +'<button class="reset" id="resetBtn">Baştan</button>';
+    document.getElementById('backHopBtn').onclick=doHopBack;
+    document.getElementById('jumpBtn').onclick=doHop;
+    document.getElementById('arriveBtn').onclick=doArrive;
+    document.getElementById('resetBtn').onclick=resetHops;
+  } else {
+    qEl.textContent='Doğru havucun üstündeki taşa zıpla';
+    sEl.innerHTML='<span>'+Q.a+'</span> <span class="op">×</span> <span>'+Q.b+'</span> <span class="op">=</span> ?';
+    var opts=optionSet(Q.ans,Q.a,Q.b);
+    var count2=opts.length+1, stones2=document.getElementById('stones'); stones2.innerHTML='';
+    var st0=document.createElement('div'); st0.className='stone'; stones2.appendChild(st0); // start pad
+    /* Gerçek <button>: klavyeyle ve ekran okuyucuyla oynanabilsin */
+    opts.forEach(function(v){ var st=document.createElement('button'); st.type='button'; st.className='stone choice';
+      st.setAttribute('aria-label', v+' yazan havuç');
+      st.innerHTML='<span class="carrot">'+carrotSvg()+'</span><span class="cnum">'+v+'</span>';
+      st.dataset.val=v; st.onclick=function(){ chooseCarrot(st, v===Q.ans, st0Index(this)); }; stones2.appendChild(st); });
+    placeRunner(0, count2);
+    ctrl.innerHTML='';
+    document.getElementById('hintwrap').innerHTML='<button class="hintbtn" id="hintBtn"><span class="m">'+mathmazel(22)+'</span> Zıpla ile say</button>';
+    document.getElementById('hintBtn').onclick=function(){ this.style.display='none';
+      /* İpucu cevabı SÖYLEMEZ. 4-5. bölümlerde zıplama yok, sadece şık seçiliyor;
+         eski "Say: 5 → 10 → 15" biçimi son adımda doğrudan cevabı veriyordu.
+         Onun yerine 1-3. bölümlerin sayı doğrusunu çiz: sıçramalar işaretli,
+         varış noktası "?" — çocuk son adımı kendi atar. */
+      document.getElementById('hintwrap').insertAdjacentHTML('beforeend',
+          '<div class="hintbox">'
+        +   hopHintSvg(Q.a, Q.b)
+        +   '<div class="skiphint">'+Q.b+' kez '+ulestir(Q.a)+' ilerle</div>'
+        + '</div>'); };
+  }
+  if(autoRead) speakQuestion();
+}
+function st0Index(node){ var kids=document.getElementById('stones').children; for(var i=0;i<kids.length;i++) if(kids[i]===node) return i; return 0; }
+
+function doHop(){
+  if(!Q||Q.mode!=='hop') return;
+  if(cur>=Q.maxIndex){ nudge('Yolun sonu! Baştan alıp doğru havuca in.'); return; }
+  cur++;
+  var count=Q.maxIndex+1;
+  placeRunner(cur,count);
+  var runner=document.getElementById('runner'); runner.classList.remove('hop'); void runner.offsetWidth; runner.classList.add('hop');
+  var st=document.getElementById('stones').children[cur];
+  if(st){ st.classList.add('hit'); var sn=st.querySelector('.snum'); if(sn) sn.textContent=(cur*Q.step); }
+  tone(['C4','D4','E4','F4','G4','A4','B4','C5','D5','E5','F5','C5','D5'][Math.min(cur,12)]);
+}
+function doHopBack(){
+  if(!Q||Q.mode!=='hop') return;
+  if(cur<=0){ nudge('Başlangıçtasın — ileri zıpla!'); return; }
+  cur--;
+  placeRunner(cur, Q.maxIndex+1);
+  var runner=document.getElementById('runner'); runner.classList.remove('hop'); void runner.offsetWidth; runner.classList.add('hop');
+  tone(['C4','D4','E4','F4','G4','A4','B4','C5','D5','E5','F5','C5','D5'][Math.min(cur,12)]);
+}
+function doArrive(){
+  if(!Q||Q.mode!=='hop') return;
+  var stones=document.getElementById('stones').children;
+  var onCarrot = stones[cur] && stones[cur].querySelector('.carrot');
+  if(cur===Q.g){ succeed(); }
+  else if(onCarrot){ missedThisQ=true; nudge('Bu havuç '+(cur*Q.step)+'. Doğru sayıya zıpla!'); }
+  else if(cur===0){ nudge('Önce zıplamaya başla!'); }
+  else { nudge('Burada havuç yok — havucun üstüne in.'); }
+}
+function resetHops(){
+  if(!Q||Q.mode!=='hop') return; cur=0;
+  var ss=document.getElementById('stones').children;
+  for(var i=0;i<ss.length;i++){ ss[i].classList.remove('hit'); var sn=ss[i].querySelector('.snum'); if(sn) sn.textContent=(i===0?'0':''); }
+  ss[0].classList.add('hit');
+  placeRunner(0, Q.maxIndex+1);
+  document.getElementById('cheer').textContent='';
+}
+function setChoicesLocked(locked){
+  var kids=document.getElementById('stones').children;
+  for(var i=0;i<kids.length;i++){
+    if(kids[i].classList.contains('choice')) kids[i].disabled = !!locked;
+  }
+}
+function chooseCarrot(node, correct, idx){
+  if(node.classList.contains('right')||node.classList.contains('wrong')) return;
+  var count=document.getElementById('stones').children.length;
+  placeRunner(idx,count);
+  var runner=document.getElementById('runner'); runner.classList.remove('hop'); void runner.offsetWidth; runner.classList.add('hop');
+  if(correct){
+    setChoicesLocked(true);
+    node.classList.add('right'); setTimeout(succeed, 260);
+  }
+  else { missedThisQ=true;
+    node.classList.add('wrong'); Sfx.bad();
+    runner.classList.add('stumble');
+    /* rastgele dokunup geçmeyi engelle — ceza değil, düşünmek için duraklama */
+    setChoicesLocked(true);
+    document.getElementById('cheer').style.color='var(--muted)';
+    document.getElementById('cheer').textContent='Olmadı, bir daha bak.';
+    (function(n){ setTimeout(function(){ n.classList.remove('wrong'); placeRunner(0,count);
+      setChoicesLocked(false);
+      document.getElementById('cheer').textContent=''; document.getElementById('cheer').style.color=''; }, 900); })(node);
+  }
+}
+function nudge(msg){ document.getElementById('cheer').style.color='var(--muted)';
+  document.getElementById('cheer').textContent=msg;
+  setTimeout(function(){ document.getElementById('cheer').textContent=''; document.getElementById('cheer').style.color=''; }, 1200); }
+
+function succeed(){
+  Sfx.good();
+  /* öğretmene dönük kayıt: bu çarpımı ilk denemede bildi mi? */
+  if(Q){ if(missedThisQ) Progress.logMiss(Q.step, Q.g); else Progress.logHit(Q.step, Q.g); }
+  addStar(); correctCount++; updateMeter(correctCount-1);
+  Celebrate.flyStar(document.getElementById('runner'), scEl, catchStar);
+  document.getElementById('cheer').style.color='';
+  document.getElementById('cheer').textContent=pick(['Havuç yakalandı! 🥕','Harika zıpladın!','Bravo!','Süper!','Çok iyi!']);
+  var runner=document.getElementById('runner'); runner.classList.remove('hop'); void runner.offsetWidth; runner.classList.add('cheerjump');
+  burst();
+  if(correctCount>=GOAL){ if(LEVELS[curLevel].endless) setTimeout(sectionDone, 1300); else setTimeout(winLevel, 1250); }
+  else setTimeout(nextQuestion, 1300);
+}
+function burst(){
+  var board=document.querySelector('.board'); if(!board) return;
+  var cols=['#EF7D2A','#4FA03A','#3E97C9','#E24B7A','#EFB227'];
+  var runner=document.getElementById('runner');
+  var x=50, y=40;
+  for(var i=0;i<26;i++){ var c=document.createElement('div'); c.className='conf';
+    c.style.background=cols[i%cols.length]; c.style.left=x+'%'; c.style.top=y+'%'; board.appendChild(c);
+    var ang=Math.random()*Math.PI*2, dist=40+Math.random()*70, dx=Math.cos(ang)*dist, dy=Math.sin(ang)*dist-30;
+    if(c.animate) c.animate([{transform:'translate(0,0)',opacity:1},
+      {transform:'translate('+dx+'px,'+dy+'px) rotate('+(Math.random()*360)+'deg)',opacity:0}],
+      {duration:950+Math.random()*450,easing:'cubic-bezier(.2,.6,.3,1)'});
+    (function(n){setTimeout(function(){if(n.parentNode)n.parentNode.removeChild(n);},1500);})(c);
+  }
+}
+/* Kolay'da bir standı bitiren çocuğa Orta'yı teklif et — çocuklar
+   kendiliğinden zorluk yükseltmiyor, Usta Rozeti de üç zorluğu şart koşuyor. */
+function tierSuggestion(){
+  var td=S.tierDone[curLevel]||{};
+  if(S.diff==='kolay' && !td.orta) return 'Bunu bir de <b>Orta</b>\'da denemek ister misin?';
+  if(S.diff==='orta'  && !td.zor)  return 'Bunu bir de <b>Zor</b>\'da denemek ister misin?';
+  return '';
+}
+function winLevel(){
+  var L=LEVELS[curLevel]; S.levelStars[curLevel]=GOAL;
+  if(S.prizes.indexOf(L.prize)<0) S.prizes.push(L.prize);
+  markTierAndMaster();
+  if(curLevel+2>S.unlocked && curLevel+1<LEVELS.length) S.unlocked=curLevel+2;
+  persist();
+  Sfx.win();
+  playEl.classList.add('hidden'); winEl.classList.remove('hidden'); window.scrollTo(0,0);
+  paintStars();
+  Sfx.pop();
+  Celebrate.finale();          /* bölüm sonu konfeti patlaması */
+  justWonPrize=L.prize;
+  document.getElementById('winPrize').innerHTML=prizeSvg(L.prize);
+  document.getElementById('winPrizeName').textContent=prizeAd(L.prize);
+  ['winPrize','winPrizeName','winAdded'].forEach(function(id){ restartAnim(document.getElementById(id)); });
+  document.getElementById('winTitle').textContent=L.name+' tamam!';
+  var last=curLevel===LEVELS.length-1;
+  document.getElementById('winMsg').textContent=last
+    ? 'Tüm standları bitirdin ve tacı kazandın! Sen bir zıplama şampiyonusun.'
+    : 'Yeni bir ödülün var ve yeni stant açıldı!';
+  var sug=tierSuggestion();
+  var sEl=document.getElementById('winSuggest');
+  if(sEl){ sEl.innerHTML=sug; sEl.classList.toggle('hidden', !sug); }
+  document.getElementById('winNext').classList.toggle('hidden', last);
+}
+document.getElementById('winNext').onclick=function(){ var nx=curLevel+1; if(nx<LEVELS.length) startLevel(nx); else showMap(); };
+document.getElementById('winMap').onclick=showMap;
+document.getElementById('back').onclick=function(){ Speech.cancel(); Sfx.click(); showMap(); };
+
+/* ---------- read-aloud (shared/audio.js) ---------- */
+function speakerIcon(){return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M15.5 8.5a4 4 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';}
+function speakText(t){ Speech.speak(t); }
+function speakQuestion(){
+  if(!Q) return; var t='';
+  if(Q.mode==='hop'){
+    if(Q.frame==='count') t='Her zıplayışta '+Q.step+' ilerle. Havuç '+Q.ans+' sayısında.';
+    else if(Q.frame==='add'){ var p=[]; for(var k=0;k<Q.g;k++) p.push(Q.step); t=p.join(' artı ')+' kaç eder? Doğru havuca zıpla.'; }
+    else t=Q.g+' kere '+Q.step+' kaç eder? Doğru havuca zıpla.';
+  } else {
+    t=Q.a+' kere '+Q.b+' kaç eder? Doğru sayıdaki havuca zıpla.';
+  }
+  speakText(t);
+}
+(function(){
+  var lb=document.getElementById('listenBtn'); if(!lb) return;
+  if(!Speech.supported){ lb.style.display='none'; return; }
+  autoRead = !!Settings.get('autoRead', false);
+  function paint(){ lb.classList.toggle('on', autoRead); lb.innerHTML=speakerIcon()+(autoRead?' Açık':' Dinle'); }
+  paint();
+  lb.onclick=function(){
+    autoRead=!autoRead;
+    Settings.set('autoRead', autoRead);
+    paint();
+    if(autoRead) speakQuestion(); else Speech.cancel();
+  };
+})();
+
+renderMap();
+</script>
+<script src="../shared/hud.js"></script>

@@ -1,0 +1,944 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F2F8EC">
+<title>Mathmazel'in Bahçesi</title>
+<link rel="stylesheet" href="../shared/theme.css">
+<style>
+  /* Bu oyuna özel — ortak stiller shared/theme.css içinde */
+  :root{
+    --bg:#F2F8EC; --surface:#FFFFFF; --ink:#2B3A22; --muted:#66795A;
+    --line:#DFEBD4; --soft:#EAF3E1;
+    --grass:#4E9B2E; --grass-dk:#2F6415;
+    --berry:#D9455F; --berry-dk:#9E2437;
+    --carrot:#E8792B; --carrot-dk:#A94D10;
+    --sky:#3E8FC9; --sky-dk:#1F6395;
+    --amber:#EFB227; --amber-dk:#8A6410;
+    --grape:#8B5CD6; --grape-dk:#5A3A9A;
+    --soil:#8A6244; --soil-dk:#5E4029;
+  }
+  body{background:radial-gradient(1000px 380px at 50% -120px,#E4F2D8 0,var(--bg) 60%)}
+
+  .flags i:nth-child(5n+1){border-top:15px solid var(--grass)}
+  .flags i:nth-child(5n+2){border-top:15px solid var(--carrot)}
+  .flags i:nth-child(5n+3){border-top:15px solid var(--berry)}
+  .flags i:nth-child(5n+4){border-top:15px solid var(--sky)}
+  .flags i:nth-child(5n+5){border-top:15px solid var(--amber)}
+
+  .hero .maz{width:82px;height:82px;flex:none}
+  .booth .tick{color:var(--grass)}
+  .primary{background:var(--grass); box-shadow:0 5px 0 var(--grass-dk)}
+  .primary:active{box-shadow:0 3px 0 var(--grass-dk)}
+  .prize.got{background:#FBF3E0}
+  .win .prizebig{background:#FBF3E0}
+
+  /* ---- görev satırı ---- */
+  .task{display:flex; gap:10px; align-items:flex-start; background:var(--soft);
+    border-radius:16px; padding:12px 14px; margin-bottom:12px}
+  .task .who{width:38px;height:38px;flex:none}
+  .task p{margin:0; font-weight:700; font-size:14.5px; line-height:1.35}
+  .task b{font-family:var(--disp); font-size:16px; color:var(--grass-dk)}
+
+  /* ---- bahçe şeridi ---- */
+  .gardens{display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;
+    justify-content:center; margin:4px 0 10px; min-height:120px}
+
+  /* biten bahçe: küçük rozet */
+  .gplot{border-radius:14px; border:2px solid var(--line); background:var(--surface);
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+    padding:6px 6px 5px; position:relative}
+  .gplot .cap{font-family:var(--disp); font-weight:700; font-size:11px; color:var(--muted);
+    margin-top:4px; white-space:nowrap}
+  .gplot.done{background:#EFF7E7; border-color:var(--grass); border-style:solid; min-width:56px}
+  .gplot.done .big{font-family:var(--disp); font-weight:700; font-size:24px; color:var(--grass-dk)}
+  .gplot.done .cap{color:var(--grass-dk)}
+  .gplot.todo{border-style:dashed; opacity:.6; min-width:52px; min-height:58px}
+  .gplot.todo .cap{font-size:10.5px}
+
+  /* açık bahçe — gökyüzü + toprak */
+  .gplot.open{border-color:#CBB79C; border-style:solid; padding:0; overflow:hidden;
+    background:linear-gradient(#EAF6FB 0%, #F3FAF0 58%);
+    box-shadow:0 3px 0 #E7DDD1; min-width:96px}
+  .gplot.open .cap{color:var(--soil-dk); font-size:12px; margin:0 0 5px}
+  .plotin{padding:8px 8px 0; display:flex; flex-direction:column; align-items:center}
+
+  /* TARH: bitkiler toprağın üstünde durur */
+  .crop{display:grid; gap:4px 5px; justify-content:center; align-items:end}
+  .pick{border:none; background:none; padding:1px; border-radius:8px; line-height:0;
+    transition:transform .1s ease; position:relative}
+  .pick svg{width:28px;height:30px; display:block}
+  .pick:active{transform:scale(.85)}
+  /* toprak şeridi */
+  .soil{height:16px; margin-top:2px; align-self:stretch;
+    background:linear-gradient(#9A7050 0 40%, #7E5940 40% 100%);
+    border-top:2px solid #B98D67; position:relative}
+  .soil::after{content:''; position:absolute; inset:0;
+    background:repeating-linear-gradient(90deg,#00000018 0 3px,transparent 3px 11px)}
+
+  /* AĞAÇ: meyveler yeşil taçta durur */
+  .gplot.tree .canopy{background:#7CC043; border-radius:50% 50% 44% 44%;
+    padding:9px 10px 12px; box-shadow:inset 0 -6px 0 #63A335}
+  .gplot.tree .trunk{width:16px; height:16px; background:#8A6244; border-radius:0 0 4px 4px;
+    margin:-2px auto 0}
+  .gplot.tree .soil{margin-top:0}
+  /* Uçuşu klon yapıyor; yerdeki meyve sadece solup boşluğunu koruyor. */
+  .pick.gone{opacity:0; pointer-events:none; transition:opacity .12s ease}
+  /* Bahçede kalan fazlalıklar — toplanmadı, orada duruyor */
+  .pick.left{opacity:.45; pointer-events:none}
+  /* Dolu gösterilen bahçeler (Bahçeyi Say / Pazar Siparişi açıklaması):
+     buton değil, dokunma beklentisi yaratmasın */
+  .pick.static{pointer-events:none; padding:1px}
+  .gplot.done .mini{display:flex; gap:2px; flex-wrap:wrap; justify-content:center; max-width:66px}
+  .gplot.done .mini svg{width:13px;height:14px}
+  .gplot.open .sofar{font-family:var(--disp); font-weight:700; font-size:15px;
+    color:var(--carrot-dk); margin-top:5px}
+
+  /* ---- cümle ---- */
+  .build{text-align:center; margin:8px 0 4px; min-height:54px}
+  .build .add{font-family:var(--disp); font-weight:700; font-size:clamp(20px,5.5vw,28px); color:var(--ink)}
+  .build .add .op{color:var(--carrot)}
+  .build .mul{font-family:var(--disp); font-weight:700; font-size:clamp(22px,6vw,32px);
+    color:var(--grass-dk); margin-top:2px}
+  .build .mul .op{color:var(--berry)}
+  .build .hintline{font-size:12.5px; font-weight:700; color:var(--muted); margin-top:4px}
+  /* Cevap kutusunun hemen üstündeki soru — toplama uzun sürünce
+     yukarıdaki görev metni gözden kaçıyordu. */
+  .build .askline{font-family:var(--disp); font-weight:700; font-size:clamp(16px,4.4vw,20px);
+    color:var(--ink); margin-top:10px}
+  .build .askline em{font-style:normal; color:var(--carrot-dk)}
+
+  /* ---- SEPET: toplanan meyveler gerçekten burada birikir ---- */
+  .basket{margin:6px 0 12px}
+  .basketbox{border:2px solid #C98B4E; border-top-color:#DDB287;
+    border-radius:10px 10px 20px 20px; background:linear-gradient(#FFFBF5,#F7EADB);
+    padding:10px 10px 8px; min-height:74px; position:relative;
+    box-shadow:inset 0 -10px 0 #EBD9C4, 0 3px 0 #E3D3C0}
+  /* hasır dokusu */
+  .basketbox::after{content:''; position:absolute; left:6px; right:6px; bottom:5px; height:12px;
+    border-radius:0 0 14px 14px; opacity:.5;
+    background:repeating-linear-gradient(90deg,#C98B4E 0 4px,transparent 4px 9px)}
+  .bitems{display:flex; flex-wrap:wrap; gap:3px 4px; justify-content:center; align-items:flex-end;
+    min-height:34px; position:relative; z-index:1}
+  .bitems .bat{display:flex; gap:3px; padding:0 5px; border-radius:8px}
+  .bitems .bat + .bat{border-left:2px dotted #DDBE9B}
+  .bitems svg{width:20px;height:22px; display:block}
+  .bitems .bi{opacity:0; transform:scale(.4)}
+  .bitems .bi.in{opacity:1; transform:scale(1); transition:opacity .18s ease, transform .24s cubic-bezier(.3,1.6,.5,1)}
+  .bcount{display:flex; align-items:center; justify-content:center; gap:7px; margin-top:6px; position:relative; z-index:1}
+  .bcount .bk{width:26px;height:26px}
+  .bcount b{font-family:var(--disp); font-size:20px; color:var(--carrot-dk)}
+  .bcount span{font-size:12px; font-weight:700; color:var(--muted)}
+  .bempty{font-size:12.5px; font-weight:700; color:var(--muted); text-align:center; padding:6px 0}
+
+  /* sepete uçan meyve */
+  .fly{position:fixed; left:0; top:0; width:0; height:0; z-index:55; pointer-events:none}
+  .fly i{position:absolute; display:block; width:30px;height:32px; margin:-16px 0 0 -15px}
+  .fly svg{width:100%;height:100%}
+
+  /* ---- tuş takımı ---- */
+
+  .answer{display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:8px}
+  .answer .slot{min-width:96px; height:52px; border-radius:14px; border:2px dashed var(--line);
+    background:var(--surface); display:flex; align-items:center; justify-content:center;
+    font-family:var(--disp); font-weight:700; font-size:28px; color:var(--ink)}
+  .answer .slot.filled{border-style:solid; border-color:var(--grass)}
+  .answer .slot.bad{border-color:var(--berry); background:#FCEDEF; animation:shake .4s ease}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+
+  .pad{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; max-width:290px; margin:0 auto}
+  .pad button{border:1.5px solid var(--line); background:var(--surface); border-radius:14px;
+    font-family:var(--disp); font-weight:700; font-size:22px; padding:12px 0; color:var(--ink);
+    min-height:var(--tap); box-shadow:0 3px 0 var(--soft)}
+  .pad button:active{transform:translateY(2px); box-shadow:0 1px 0 var(--soft)}
+  .pad button.act{background:var(--grass); border-color:transparent; color:#fff;
+    box-shadow:0 3px 0 var(--grass-dk); font-size:17px}
+  .pad button.del{background:var(--soft); font-size:17px}
+
+  /* ---- şık modu ---- */
+  .opts{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; max-width:340px; margin:0 auto}
+  .opt{border:1.5px solid var(--line); background:var(--surface); border-radius:16px;
+    font-family:var(--disp); font-weight:700; font-size:26px; padding:16px 0; color:var(--ink);
+    min-height:var(--tap); box-shadow:0 3px 0 var(--soft)}
+  .opt:active{transform:translateY(2px); box-shadow:0 1px 0 var(--soft)}
+  .opt.wrong{background:#FCEDEF; border-color:var(--berry); color:var(--berry-dk);
+    animation:shake .4s ease}
+  .opt:disabled{opacity:.6}
+
+  /* ---- toplama şekli anahtarı ---- */
+  .modebar{display:flex; gap:8px; align-items:center; margin-bottom:10px; flex-wrap:wrap}
+  .modebar .lb{font-size:12px; font-weight:800; color:var(--muted)}
+  .modebar button{border:1.5px solid var(--line); background:var(--surface); border-radius:999px;
+    padding:7px 13px; font-weight:800; font-size:12.5px; color:var(--muted); min-height:var(--tap)}
+  .modebar button.on{background:var(--carrot); border-color:transparent; color:#fff;
+    box-shadow:0 2px 0 var(--carrot-dk)}
+
+  /* ---- nasıl saydığı özeti (öğretmene) ---- */
+  .howbox{margin-top:16px}
+  .howrow{display:flex; align-items:center; gap:10px; margin-top:8px}
+  .howrow .lab{font-weight:800; font-size:12.5px; color:var(--muted); min-width:104px}
+  .howrow .bar{flex:1; height:14px; border-radius:999px; background:var(--soft); overflow:hidden}
+  .howrow .bar i{display:block; height:100%; border-radius:999px}
+  .howrow .n{font-family:var(--disp); font-weight:700; font-size:14px; color:var(--ink); min-width:26px; text-align:right}
+
+  @media (max-width:520px){
+    .hero .maz{width:64px;height:64px}
+    .pick svg{width:26px;height:28px}
+    .gardens{gap:6px}
+  }
+  @media (max-width:380px){
+    .pick svg{width:22px;height:24px}
+    .gplot.open{padding:7px 6px 5px}
+  }
+</style>
+
+<div class="wrap">
+  <div id="hud"></div>
+  <header>
+    <span class="logo" id="logo"></span>
+    <div><b>Mathmazel'in Bahçesi</b><span>Topla, say, çarp</span></div>
+    <div class="starcount"><span class="s" id="sIcon"></span><b id="starTotal">0</b></div>
+  </header>
+  <div class="flags" id="flags"></div>
+
+  <!-- HARİTA -->
+  <section id="map">
+    <div class="hero">
+      <span class="maz" id="maz"></span>
+      <div><h1>Bahçeye hoş geldin!</h1>
+      <p>Bahçelerden topla, sepeti doldur. Her bahçe bir grup — topladıkça çarpma kendiliğinden yazılıyor.</p></div>
+    </div>
+    <div class="booths" id="booths"></div>
+    <div class="shelf"><h3>Ödül Rafım</h3><div class="prizes" id="shelf"></div></div>
+    <section class="shelf howbox hidden" id="howBox">
+      <h3>Nasıl buluyor?</h3>
+      <p class="hbnote" id="howNote"></p>
+      <div id="howRows"></div>
+    </section>
+    <p class="note">Yıldızların bu cihazda saklanır — yarın kaldığın yerden devam edebilirsin.</p>
+  </section>
+
+  <!-- OYUN -->
+  <section id="play" class="hidden">
+    <div class="plhead">
+      <button class="back" id="back">‹ Bahçelere dön</button>
+      <span class="lvlpill" id="lvlpill"></span>
+    </div>
+    <div class="diffbar" id="diffbar"></div>
+    <div class="modebar">
+      <span class="lb">Toplama:</span>
+      <button type="button" id="modeTek">Tek tek</button>
+      <button type="button" id="modeHiz">Hepsi birden</button>
+    </div>
+    <div class="modebar">
+      <span class="lb">Cevap:</span>
+      <button type="button" id="ansPad">Rakamı yaz</button>
+      <button type="button" id="ansSik">Şıklardan seç</button>
+    </div>
+    <div class="board">
+      <div class="meterrow"><div class="meter" id="meter"></div><span class="sectbadge" id="sectionBadge"></span></div>
+      <div class="task" id="task"></div>
+      <div class="hintwrap" id="showWrap"></div>
+      <div class="gardens" id="gardens"></div>
+      <div class="basket" id="basketRow">
+        <div class="basketbox">
+          <div class="bitems" id="bitems"></div>
+          <div class="bcount" id="bcount"></div>
+        </div>
+      </div>
+      <div class="build" id="build"></div>
+      <div class="answer"><div class="slot" id="slot">?</div></div>
+      <div class="pad" id="pad"></div>
+      <div class="cheer" id="cheer"></div>
+    </div>
+  </section>
+
+  <!-- KAZANMA -->
+  <section id="winScreen" class="hidden">
+    <div class="win">
+      <div class="prizebig" id="winPrize"></div>
+      <div class="ribbon" id="winPrizeName"></div>
+      <p class="added" id="winAdded">Ödül Rafına eklendi ✓</p>
+      <h2 id="winTitle"></h2>
+      <p id="winMsg"></p>
+      <p class="winsug hidden" id="winSuggest"></p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="primary" id="winNext">Sonraki bahçe ›</button>
+        <button class="ghost" id="winMap">Haritaya dön</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="../shared/storage.js"></script>
+<script src="../shared/audio.js"></script>
+<script src="../shared/celebrate.js"></script>
+<script>
+/* ================= DURUM ================= */
+var GAME_ID='mathmazel-bahcesi';
+var S=Progress.load(GAME_ID, {
+  stars:0, unlocked:1, prizes:[], levelStars:[0,0,0,0,0], diff:'kolay',
+  tierDone:[{},{},{},{},{}],
+  /* Nasıl bulduğu: tek tek toplayıp mı saydı, yoksa çarpmayı mı kullandı */
+  how:{sayarak:0, carparak:0}
+});
+if(!S.how) S.how={sayarak:0, carparak:0};
+function persist(){ Progress.save(GAME_ID, S); }
+
+var totalEl=document.getElementById('starTotal');
+var scEl=document.querySelector('.starcount');
+function addStar(n){ S.stars+=(n||1); persist(); }
+function paintStars(){ totalEl.textContent=S.stars; }
+function catchStar(){
+  paintStars(); Celebrate.bump(scEl);
+  scEl.classList.add('caught');
+  setTimeout(function(){ scEl.classList.remove('caught'); }, 550);
+}
+paintStars();
+
+/* Toplama şekli — kalıcı ayar. Varsayılan TEK TEK. */
+var hizliMod = !!Settings.get('bahceHizli', false);
+/* Cevap şekli — kalıcı ayar. Varsayılan TUŞ TAKIMI (tahminle geçmeyi kapatır). */
+var sikMod = !!Settings.get('bahceSik', false);
+
+/* ================= ÇİZİMLER ================= */
+function mathmazel(sz){return '<svg viewBox="0 0 100 100" width="'+sz+'" height="'+sz+'" aria-hidden="true">'
+  +'<path d="M50 14 L64 34 H36 Z" fill="#D9455F"/><circle cx="50" cy="12" r="5" fill="#EFB227"/>'
+  +'<circle cx="50" cy="58" r="30" fill="#FBDDE2"/><circle cx="50" cy="58" r="30" fill="none" stroke="#D9455F" stroke-width="3"/>'
+  +'<circle cx="40" cy="54" r="5" fill="#2B3A22"/><circle cx="60" cy="54" r="5" fill="#2B3A22"/>'
+  +'<circle cx="42" cy="52.5" r="1.6" fill="#fff"/><circle cx="62" cy="52.5" r="1.6" fill="#fff"/>'
+  +'<circle cx="36" cy="65" r="4" fill="#F0997B" opacity=".55"/><circle cx="64" cy="65" r="4" fill="#F0997B" opacity=".55"/>'
+  +'<path d="M42 68 Q50 75 58 68" stroke="#2B3A22" stroke-width="3" fill="none" stroke-linecap="round"/>'
+  +'<text x="50" y="45" font-family="Baloo 2,sans-serif" font-size="12" font-weight="700" fill="#D9455F" text-anchor="middle">×</text></svg>';}
+function starIcon(){return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.1 6.6.8-4.9 4.5 1.3 6.6L12 17.8 6.1 20.6l1.3-6.6L2.5 8.9l6.6-.8z"/></svg>';}
+function lockIcon(){return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 0 1 6 0v3z"/></svg>';}
+function tickIcon(){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#EAF3DE" stroke="#4E9B2E"/><path d="M7 12.5l3.5 3.5L17 9"/></svg>';}
+function basketIcon(){return '<svg viewBox="0 0 32 32" aria-hidden="true">'
+  +'<path d="M4 12 h24 l-3 15 a2 2 0 0 1-2 2 H9 a2 2 0 0 1-2-2 Z" fill="#C98B4E"/>'
+  +'<path d="M4 12 h24 l-.6 3 H4.6 Z" fill="#A96C33"/>'
+  +'<path d="M10 12 a6 6 0 0 1 12 0" fill="none" stroke="#A96C33" stroke-width="2.4"/></svg>';}
+
+/* toplanacak materyaller */
+var CROPS={
+  cilek:{ad:'çilek', svg:'<svg viewBox="0 0 30 32" aria-hidden="true"><path d="M15 31 C7 26 4 20 4 15 C4 10 9 8 15 11 C21 8 26 10 26 15 C26 20 23 26 15 31 Z" fill="#D9455F"/><circle cx="11" cy="16" r="1.1" fill="#FFE6A8"/><circle cx="18" cy="15" r="1.1" fill="#FFE6A8"/><circle cx="15" cy="21" r="1.1" fill="#FFE6A8"/><circle cx="21" cy="20" r="1.1" fill="#FFE6A8"/><circle cx="9" cy="21" r="1.1" fill="#FFE6A8"/><path d="M15 11 L9 5 M15 11 L21 5 M15 11 L15 3" stroke="#4E9B2E" stroke-width="2.4" stroke-linecap="round"/></svg>'},
+  elma:{ad:'elma', svg:'<svg viewBox="0 0 30 32" aria-hidden="true"><path d="M15 9 C9 5 3 9 4 17 C5 25 10 30 15 30 C20 30 25 25 26 17 C27 9 21 5 15 9 Z" fill="#E0413B"/><path d="M15 9 C15 5 16 3 19 2" stroke="#7A4B23" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M16 6 q5 -3 7 1 q-4 3 -7 -1Z" fill="#4E9B2E"/><ellipse cx="10" cy="15" rx="2.4" ry="3.6" fill="#fff" opacity=".28"/></svg>'},
+  armut:{ad:'armut', svg:'<svg viewBox="0 0 30 32" aria-hidden="true"><path d="M15 8 C11 8 12 13 10 16 C7 20 6 30 15 30 C24 30 23 20 20 16 C18 13 19 8 15 8 Z" fill="#B7C93A"/><path d="M15 8 C15 5 15 3 17 2" stroke="#7A4B23" stroke-width="2.2" fill="none" stroke-linecap="round"/><ellipse cx="11" cy="21" rx="2.2" ry="3.2" fill="#fff" opacity=".25"/></svg>'},
+  havuc:{ad:'havuç', svg:'<svg viewBox="0 0 30 32" aria-hidden="true"><path d="M15 31 L9 14 q6 -4 12 0 Z" fill="#E8792B"/><path d="M11 19 h8 M12 23 h6" stroke="#C05F17" stroke-width="1.4" stroke-linecap="round"/><path d="M15 13 L11 4 M15 13 L19 4 M15 13 L15 2" stroke="#4E9B2E" stroke-width="2.6" stroke-linecap="round"/></svg>'},
+  domates:{ad:'domates', svg:'<svg viewBox="0 0 30 32" aria-hidden="true"><circle cx="15" cy="19" r="11" fill="#D9455F"/><ellipse cx="10" cy="15" rx="2.4" ry="3.2" fill="#fff" opacity=".26"/><path d="M15 8 L10 5 M15 8 L20 5 M15 8 L15 3 M15 8 L8 9 M15 8 L22 9" stroke="#4E9B2E" stroke-width="2.2" stroke-linecap="round"/></svg>'},
+  biber:{ad:'biber', svg:'<svg viewBox="0 0 30 32" aria-hidden="true"><path d="M12 10 C6 12 6 22 11 27 C16 32 24 28 23 20 C22 13 18 9 12 10 Z" fill="#5FA832"/><path d="M12 10 C12 6 14 4 17 4" stroke="#3B6D11" stroke-width="2.4" fill="none" stroke-linecap="round"/><ellipse cx="12" cy="18" rx="2" ry="4" fill="#fff" opacity=".2"/></svg>'},
+  papatya:{ad:'papatya', svg:'<svg viewBox="0 0 30 32" aria-hidden="true"><path d="M15 16 L15 31" stroke="#4E9B2E" stroke-width="2.2" stroke-linecap="round"/><path d="M15 24 q-6 -2 -7 -6 q6 0 7 6Z" fill="#5FA832"/><g fill="#fff" stroke="#E4E8DC" stroke-width="1"><ellipse cx="15" cy="6" rx="3" ry="5"/><ellipse cx="15" cy="16" rx="3" ry="5"/><ellipse cx="10" cy="11" rx="5" ry="3"/><ellipse cx="20" cy="11" rx="5" ry="3"/><ellipse cx="11" cy="7" rx="4" ry="3" transform="rotate(-45 11 7)"/><ellipse cx="19" cy="15" rx="4" ry="3" transform="rotate(-45 19 15)"/><ellipse cx="19" cy="7" rx="4" ry="3" transform="rotate(45 19 7)"/><ellipse cx="11" cy="15" rx="4" ry="3" transform="rotate(45 11 15)"/></g><circle cx="15" cy="11" r="3.4" fill="#EFB227"/></svg>'},
+  lale:{ad:'lale', svg:'<svg viewBox="0 0 30 32" aria-hidden="true"><path d="M15 14 L15 31" stroke="#4E9B2E" stroke-width="2.2" stroke-linecap="round"/><path d="M15 26 q6 -2 7 -7 q-6 1 -7 7Z" fill="#5FA832"/><path d="M7 8 q0 10 8 12 q8 -2 8 -12 q-4 4 -8 1 q-4 3 -8 -1Z" fill="#D9455F"/></svg>'}
+};
+var CROP_ORDER=['havuc','cilek','papatya','elma','domates','lale','armut','biber'];
+/* Elma ve armut ağaçta; kalanı toprak tarhında. Görsel buna göre değişir. */
+var AGACTA={elma:1, armut:1};
+
+/* ödüller */
+function prizeSvg(id){
+  var p={
+    kova:'<svg viewBox="0 0 48 48"><path d="M10 16 h28 l-3 22 a3 3 0 0 1-3 3 H16 a3 3 0 0 1-3-3 Z" fill="#5FA832"/><path d="M10 16 h28 l-.7 4 H10.7 Z" fill="#3B6D11"/><path d="M17 16 a7 7 0 0 1 14 0" fill="none" stroke="#3B6D11" stroke-width="3"/></svg>',
+    fide:'<svg viewBox="0 0 48 48"><rect x="12" y="28" width="24" height="14" rx="3" fill="#B07murky"/><rect x="12" y="28" width="24" height="14" rx="3" fill="#B0764A"/><path d="M24 28 L24 12" stroke="#4E9B2E" stroke-width="3" stroke-linecap="round"/><path d="M24 20 q-9 -3 -11 -10 q9 0 11 10Z" fill="#5FA832"/><path d="M24 24 q9 -3 11 -11 q-9 1 -11 11Z" fill="#7CC043"/></svg>',
+    sepet:'<svg viewBox="0 0 48 48"><circle cx="18" cy="16" r="5" fill="#D9455F"/><circle cx="29" cy="14" r="5" fill="#E8792B"/><circle cx="24" cy="20" r="5" fill="#EFB227"/><path d="M8 22 h32 l-4 18 a3 3 0 0 1-3 3 H15 a3 3 0 0 1-3-3 Z" fill="#C98B4E"/><path d="M8 22 h32 l-.8 4 H8.8 Z" fill="#A96C33"/></svg>',
+    tartı:'<svg viewBox="0 0 48 48"><path d="M24 8 L24 34" stroke="#7A6A55" stroke-width="3"/><rect x="14" y="34" width="20" height="6" rx="3" fill="#7A6A55"/><path d="M10 14 h28" stroke="#7A6A55" stroke-width="3" stroke-linecap="round"/><path d="M10 14 L5 24 h10 Z" fill="#EFB227"/><path d="M38 14 L33 24 h10 Z" fill="#EFB227"/><circle cx="24" cy="9" r="3" fill="#D9455F"/></svg>',
+    taci:'<svg viewBox="0 0 48 48"><path d="M8 34 L10 16 L19 26 L24 12 L29 26 L38 16 L40 34 Z" fill="#EFB227" stroke="#8A6410" stroke-width="1.5" stroke-linejoin="round"/><circle cx="24" cy="12" r="2.5" fill="#4E9B2E"/><rect x="8" y="34" width="32" height="5" rx="2" fill="#D89A17"/></svg>',
+    usta:'<svg viewBox="0 0 48 48"><path d="M16 30 L11 46 L20 40 Z" fill="#D9455F"/><path d="M32 30 L37 46 L28 40 Z" fill="#4E9B2E"/><circle cx="24" cy="20" r="14" fill="#EFB227" stroke="#8A6410" stroke-width="2"/><path d="M24 10l2.9 6 6.5.7-4.8 4.4 1.3 6.4L24 30.6 18.1 27.9 19.4 21.5 14.6 17.1 21.1 16.4z" fill="#fff"/></svg>'
+  };
+  return p[id]||p.sepet;
+}
+var PRIZES={
+  kova: {ad:'Bahçe Kovası', nasil:'1. bahçeyi bitir'},
+  fide: {ad:'Altın Fide',   nasil:'2. bahçeyi bitir'},
+  sepet:{ad:'Dolu Sepet',   nasil:'3. bahçeyi bitir'},
+  tartı:{ad:'Pazar Tartısı',nasil:'4. bahçeyi bitir'},
+  taci: {ad:'Bahçıvan Tacı',nasil:'5. bahçeyi bitir'},
+  usta: {ad:'Usta Rozeti',  nasil:'Serbest Bahçe\'yi üç zorlukta da bitir'}
+};
+function prizeAd(id){ return (PRIZES[id]||{}).ad || 'Ödül'; }
+function prizeNasil(id){ return (PRIZES[id]||{}).nasil || ''; }
+
+document.getElementById('logo').innerHTML=mathmazel(40);
+document.getElementById('maz').innerHTML=mathmazel(82);
+document.getElementById('sIcon').innerHTML=starIcon();
+(function(){var f=document.getElementById('flags');for(var i=0;i<20;i++)f.appendChild(document.createElement('i'));})();
+
+/* ================= BÖLÜMLER ================= */
+/* Bahçe sayısı hep 1-5 arasında; müfredat sınırı (çarpanlardan biri 1-5)
+   yapısal olarak sağlanır, ayrıca kelepçeye gerek kalmaz. */
+var TIERS={
+  kolay:{gMin:2,gMax:3,nMin:2,nMax:5},
+  orta :{gMin:2,gMax:4,nMin:2,nMax:8},
+  zor  :{gMin:2,gMax:5,nMin:2,nMax:10}
+};
+var LEVELS=[
+  {name:'Bahçeyi Say',      sub:'Bahçeler dolu — hepsi kaç tane?', color:'#4E9B2E', prize:'kova',  mode:'count'},
+  {name:'Sen Topla',        sub:'Her bahçeden söylenen kadar topla', color:'#E8792B', prize:'fide',  mode:'harvest'},
+  {name:'Kaç Bahçe Gerek?', sub:'Sepeti doldurmak için kaç bahçe?', color:'#3E8FC9', prize:'sepet', mode:'howmany'},
+  {name:'Pazar Siparişi',   sub:'Problemi oku, sepeti hazırla',     color:'#8B5CD6', prize:'tartı', mode:'word'},
+  {name:'Serbest Bahçe',    sub:'Sonsuz bölüm — karışık görevler',  color:'#D9455F', prize:'taci',  mode:'mixed', endless:true}
+];
+var GOAL=5;
+
+var mapEl=document.getElementById('map'), playEl=document.getElementById('play'), winEl=document.getElementById('winScreen');
+function rint(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function starRow(n){var s='';for(var i=0;i<GOAL;i++)s+='<i class="'+(i<n?'on':'')+'">'+starIcon()+'</i>';return s;}
+
+/* ================= HARİTA ================= */
+var justWonPrize=null;
+function showMap(){ paintStars(); playEl.classList.add('hidden'); winEl.classList.add('hidden');
+  mapEl.classList.remove('hidden'); renderMap(); window.scrollTo(0,0); }
+function renderMap(){
+  var b=document.getElementById('booths'); b.innerHTML='';
+  LEVELS.forEach(function(L,i){
+    var open=(i+1)<=S.unlocked, done=S.levelStars[i]>=GOAL;
+    var bt=document.createElement('button'); bt.className='booth'; if(!open) bt.disabled=true;
+    var right = done ? '<span class="tick">'+tickIcon()+'</span>'
+      : open ? '<span class="stars">'+starRow(S.levelStars[i])+'</span>'
+             : '<span class="lock">'+lockIcon()+'</span>';
+    var td=S.tierDone[i]||{};
+    var pips = open ? '<span class="tierpips" title="Kolay / Orta / Zor">'
+      +'<i class="'+(td.kolay?'on kolay':'')+'"></i><i class="'+(td.orta?'on orta':'')+'"></i><i class="'+(td.zor?'on zor':'')+'"></i></span>' : '';
+    bt.innerHTML='<span class="badge" style="background:'+L.color+'">'+(i+1)+'</span>'
+      +'<div><h3>'+L.name+'</h3><p>'+L.sub+'</p>'+pips+'</div>'+right;
+    if(open) bt.onclick=function(){ startLevel(i); };
+    b.appendChild(bt);
+  });
+
+  var sh=document.getElementById('shelf'); sh.innerHTML='';
+  function prizeCell(id, extra){
+    var got=S.prizes.indexOf(id)>-1;
+    var cell=document.createElement('div'); cell.className='prizecell';
+    var d=document.createElement('div'); d.className='prize '+(extra||'')+' '+(got?'got':'empty');
+    d.innerHTML=prizeSvg(id)+(got?'':'<span class="lockdot">'+lockIcon()+'</span>');
+    if(!got) d.setAttribute('aria-label', prizeAd(id)+' — henüz kazanılmadı');
+    var nm=document.createElement('span'); nm.className='pname'+(got?'':' locked');
+    nm.textContent = got ? prizeAd(id) : prizeNasil(id);
+    cell.appendChild(d); cell.appendChild(nm); sh.appendChild(cell);
+  }
+  LEVELS.forEach(function(L){ prizeCell(L.prize); });
+  prizeCell('usta','master');
+  if(justWonPrize){
+    var cells=sh.querySelectorAll('.prize');
+    var order=LEVELS.map(function(L){return L.prize;}).concat(['usta']);
+    var ix=order.indexOf(justWonPrize);
+    if(ix>-1 && cells[ix]) Celebrate.pulse(cells[ix]);
+    justWonPrize=null;
+  }
+  renderHow();
+}
+
+/* Öğretmene dönük: çocuk sonucu sayarak mı buluyor, çarparak mı?
+   Sadece "Tek tek" modunda ölçülebilir — hızlı modda toplama zaten tek dokunuş. */
+function renderHow(){
+  var box=document.getElementById('howBox'), rows=document.getElementById('howRows');
+  var a=S.how.sayarak||0, c=S.how.carparak||0, t=a+c;
+  if(t<3){ box.classList.add('hidden'); return; }
+  box.classList.remove('hidden');
+  document.getElementById('howNote').textContent =
+    'Son '+t+' görevde: sonucu bahçeleri toplayıp mı buldu, yoksa toplamayı bitirmeden çarpmayı mı kullandı?';
+  function row(lab,n,col){
+    return '<div class="howrow"><span class="lab">'+lab+'</span>'
+      +'<span class="bar"><i style="width:'+Math.round(100*n/t)+'%;background:'+col+'"></i></span>'
+      +'<span class="n">'+n+'</span></div>';
+  }
+  rows.innerHTML = row('Sayarak', a, 'var(--carrot)') + row('Çarparak', c, 'var(--grass)');
+}
+
+/* ================= OYUN ================= */
+var curLevel=0, correctCount=0, sectionNo=1, Q=null, missedThisQ=false;
+var picked=0, gDone=0, answeredEarly=false, cropId='cilek', locked=false;
+
+function startLevel(i){
+  curLevel=i; correctCount=0; sectionNo=1;
+  mapEl.classList.add('hidden'); winEl.classList.add('hidden'); playEl.classList.remove('hidden');
+  window.scrollTo(0,0);
+  document.getElementById('lvlpill').textContent=LEVELS[i].name;
+  document.getElementById('lvlpill').style.background=LEVELS[i].color;
+  renderDiffBar(); renderModeBar(); updateSectionBadge();
+  Sfx.unlock();
+  nextTask();
+}
+function renderDiffBar(){
+  var bar=document.getElementById('diffbar'); bar.innerHTML='';
+  [['kolay','Kolay'],['orta','Orta'],['zor','Zor']].forEach(function(d){
+    var b=document.createElement('button'); b.className=d[0]+(S.diff===d[0]?' on':'');
+    b.textContent=d[1];
+    b.onclick=function(){ if(S.diff===d[0]) return; S.diff=d[0]; persist(); Sfx.click();
+      Array.prototype.forEach.call(bar.children,function(x){x.classList.remove('on');});
+      b.classList.add('on'); nextTask(); };
+    bar.appendChild(b);
+  });
+}
+function renderModeBar(){
+  var t=document.getElementById('modeTek'), h=document.getElementById('modeHiz');
+  function paint(){ t.classList.toggle('on',!hizliMod); h.classList.toggle('on',hizliMod);
+    t.setAttribute('aria-pressed',!hizliMod); h.setAttribute('aria-pressed',hizliMod); }
+  t.onclick=function(){ if(!hizliMod) return; hizliMod=false; Settings.set('bahceHizli',false); Sfx.click(); paint(); nextTask(); };
+  h.onclick=function(){ if(hizliMod) return; hizliMod=true;  Settings.set('bahceHizli',true);  Sfx.click(); paint(); nextTask(); };
+  paint();
+
+  var ap=document.getElementById('ansPad'), as=document.getElementById('ansSik');
+  function paintA(){ ap.classList.toggle('on',!sikMod); as.classList.toggle('on',sikMod);
+    ap.setAttribute('aria-pressed',!sikMod); as.setAttribute('aria-pressed',sikMod); }
+  ap.onclick=function(){ if(!sikMod) return; sikMod=false; Settings.set('bahceSik',false); Sfx.click(); paintA(); nextTask(); };
+  as.onclick=function(){ if(sikMod) return;  sikMod=true;  Settings.set('bahceSik',true);  Sfx.click(); paintA(); nextTask(); };
+  paintA();
+}
+function updateSectionBadge(){
+  var el=document.getElementById('sectionBadge');
+  if(LEVELS[curLevel] && LEVELS[curLevel].endless){ el.style.display=''; el.textContent='Bölüm '+sectionNo; }
+  else el.style.display='none';
+}
+function updateMeter(popIndex){
+  var m=document.getElementById('meter'); m.innerHTML='';
+  for(var i=0;i<GOAL;i++){ var e=document.createElement('i');
+    e.className=(i<correctCount?'on':'')+(i===popIndex?' pop':'');
+    e.innerHTML=starIcon(); m.appendChild(e); }
+}
+function restartAnim(el){ if(!el) return; el.style.animation='none'; void el.offsetWidth; el.style.animation=''; }
+
+/* ---------- görev üretimi ---------- */
+function makeTask(){
+  var L=LEVELS[curLevel];
+  var mode=L.mode;
+  if(mode==='mixed') mode=pick(['count','harvest','howmany','word']);
+  var T=TIERS[S.diff]||TIERS.kolay;
+  var g=rint(T.gMin,T.gMax), n=rint(T.nMin,T.nMax);
+  /* Bahçede istenenden FAZLA materyal olsun: çocuk hepsini silmesin,
+     soruda kaç deniyorsa onu sayarak toplasın. */
+  var fazla=Math.min(n+rint(2,4), 12);
+  return {mode:mode, g:g, n:n, bed:fazla, ans:(mode==='howmany'? g : g*n), toplam:g*n};
+}
+
+function cropOf(){ return CROPS[cropId]; }
+
+/* ---------- ekran ---------- */
+function nextTask(){
+  if(!document.getElementById('gardens')) return;
+  Q=makeTask(); picked=0; gDone=0; answeredEarly=false; missedThisQ=false; locked=false;
+  cropId=CROP_ORDER[(curLevel + sectionNo + correctCount) % CROP_ORDER.length];
+  updateMeter();
+  document.getElementById('cheer').textContent='';
+  setSlot('');
+  wordAcik=false;
+  var bi=document.getElementById('bitems'); if(bi) bi.innerHTML='';
+  renderTask(); renderShowBtn(); renderGardens(); renderBuild(); renderBasket(); renderPad();
+}
+
+function renderTask(){
+  var c=cropOf(), t=document.getElementById('task'), s='';
+  if(Q.mode==='count')   s='Her bahçeden <b>'+Q.n+' '+c.ad+'</b> topla. '+Q.g+' bahçe var. Sonra <b>sepettekileri say</b>.';
+  else if(Q.mode==='harvest') s='Her bahçeden <b>'+Q.n+' '+c.ad+'</b> topla. '+Q.g+' bahçe var.';
+  else if(Q.mode==='howmany') s='Sepete <b>'+Q.toplam+' '+c.ad+'</b> lazım. Her bahçeden <b>'+Q.n+'</b> tane toplanıyor. <b>Kaç bahçe gerekir?</b>';
+  else s='Pazara <b>'+Q.g+' sepet</b> götüreceğiz. Her sepete <b>'+Q.n+' '+c.ad+'</b> koyacağız. <b>Toplam kaç '+c.ad+' gerekir?</b>';
+  t.innerHTML='<span class="who">'+mathmazel(38)+'</span><p>'+s+'</p>';
+}
+
+var wordAcik=false;   /* Pazar Siparişi'nde bahçe modeli açıldı mı */
+function renderShowBtn(){
+  var w=document.getElementById('showWrap');
+  if(Q.mode!=='word' || wordAcik){ w.innerHTML=''; return; }
+  w.innerHTML='<button class="hintbtn" type="button" id="showBtn">'
+    +'<span class="m">'+mathmazel(24)+'</span> Bahçeyi göster</button>';
+  document.getElementById('showBtn').onclick=function(){
+    wordAcik=true; Sfx.click(); renderShowBtn(); renderGardens(); renderBuild();
+  };
+}
+/* Bir bahçe kutusu: toprak tarhı ya da ağaç. */
+function plotHTML(c, adet, cols, tiklanabilir, altYazi){
+  var agac=!!AGACTA[cropId];
+  var g='<div class="crop" style="grid-template-columns:repeat('+cols+',1fr)">';
+  for(var j=0;j<adet;j++){
+    g += tiklanabilir
+      ? '<button class="pick" type="button" data-j="'+j+'" aria-label="'+c.ad+' topla">'+c.svg+'</button>'
+      : '<span class="pick static" aria-hidden="true">'+c.svg+'</span>';
+  }
+  g+='</div>';
+  var govde = agac
+    ? '<div class="canopy">'+g+'</div><div class="trunk"></div>'
+    : g;
+  return '<div class="plotin">'+govde+'</div><div class="soil"></div>'
+       + '<span class="cap">'+altYazi+'</span>';
+}
+
+function renderGardens(){
+  var wrap=document.getElementById('gardens'); wrap.innerHTML='';
+  var c=cropOf();
+  var agac=!!AGACTA[cropId];
+
+  /* Pazar Siparişi'nin açıklama görüntüsü: dolu ve dokunulamaz. */
+  if(Q.mode==='word'){
+    if(!wordAcik){ wrap.classList.add('hidden'); return; }
+    wrap.classList.remove('hidden');
+    for(var k=0;k<Q.g;k++){
+      var e=document.createElement('div'); e.className='gplot open'+(agac?' tree':'');
+      e.innerHTML=plotHTML(c, Q.n, Math.min(Q.n,5), false, (k+1)+'. sepet · '+Q.n+' tane');
+      wrap.appendChild(e);
+    }
+    return;
+  }
+
+  /* "Kaç bahçe gerek?" bölümünde bahçe sayısı cevabın kendisi —
+     çocuk isterse toplayıp deneyebilsin diye fazladan boş bahçe koyuyoruz. */
+  var goster = (Q.mode==='howmany') ? Math.min(Q.g+2, 8) : Q.g;
+
+  for(var i=0;i<goster;i++){
+    var d=document.createElement('div');
+    if(i<gDone){
+      /* Biten bahçe: kaç alındığı hem sayıyla hem minik resimlerle */
+      d.className='gplot done';
+      var mini=''; for(var q=0;q<Math.min(Q.n,10);q++) mini+=c.svg;
+      d.innerHTML='<span class="big">'+Q.n+'</span>'
+        +'<span class="mini">'+mini+'</span>'
+        +'<span class="cap">'+(i+1)+'. bahçe</span>';
+    } else if(i===gDone){
+      d.className='gplot open'+(agac?' tree':'');
+      d.innerHTML=plotHTML(c, Q.bed, Math.min(Q.bed,5), true,
+        (i+1)+'. bahçe');
+      /* sayaç ayrı satırda */
+      var sf=document.createElement('span'); sf.className='sofar'; sf.id='sofar';
+      sf.textContent=picked+' / '+Q.n;
+      d.querySelector('.plotin').appendChild(sf);
+    } else {
+      d.className='gplot todo';
+      d.innerHTML='<span class="cap">'+(i+1)+'.<br>bahçe</span>';
+    }
+    wrap.appendChild(d);
+  }
+  wrap.classList.remove('hidden');
+  bindPicks();
+}
+
+function bindPicks(){
+  var open=document.querySelector('.gplot.open');
+  if(!open) return;
+  var btns=open.querySelectorAll('.pick');
+  Array.prototype.forEach.call(btns,function(b){
+    b.onclick=function(){
+      if(locked || b.classList.contains('gone')) return;
+      if(hizliMod){ harvestAll(btns); return; }
+      b.classList.add('gone'); picked++;
+      Sfx.tone(420+picked*45, .07, 'triangle', .13);
+      sepeteAt(b);
+      afterPick();
+    };
+  });
+}
+function harvestAll(btns){
+  /* Hepsi birden: sırayla ama hızlı — grup fikri kaybolmasın.
+     Bahçede fazlası var; sadece istenen kadar toplanır. */
+  locked=true;
+  var kalan=Q.n-picked, i=0;
+  (function step(){
+    if(i>=kalan || i>=btns.length){ locked=false; picked=Q.n; afterPick(); return; }
+    picked=i+1;
+    btns[i].classList.add('gone');
+    Sfx.tone(420+(i+1)*45, .05, 'triangle', .11);
+    sepeteAt(btns[i]);
+    i++; setTimeout(step, 55);
+  })();
+}
+function afterPick(){
+  var so=document.getElementById('sofar');
+  if(so) so.textContent=picked+' / '+Q.n;
+  if(picked>=Q.n){
+    /* Bahçe doldu. Yeniden çizilene kadar KİLİTLE — yoksa hızlı dokunan
+       çocuk sonraki bahçeye fazladan meyve saydırabiliyordu. */
+    locked=true;
+    picked=0; gDone++;
+    Sfx.pop();
+    setTimeout(function(){ renderGardens(); renderBuild(); renderBasket(); locked=false; }, 300);
+  } else {
+    renderBasket();
+  }
+}
+
+/* Sepet toplananların GÖRÜNÜR karşılığı: her meyve gerçekten içine düşer,
+   bahçe bahçe kümelenir. Çocuk isterse sepettekileri tek tek sayabilir. */
+function renderBasket(){
+  var row=document.getElementById('basketRow');
+  if(Q.mode==='word'){ row.classList.add('hidden'); return; }
+  row.classList.remove('hidden');
+  var items=document.getElementById('bitems');
+  var say=gDone*Q.n+picked;
+  if(!items.childNodes.length && say===0){
+    items.innerHTML='<div class="bempty">Sepet boş — bahçeden topla</div>';
+  }
+  document.getElementById('bcount').innerHTML =
+    '<span class="bk">'+basketIcon()+'</span><b>'+say+'</b><span>sepette</span>';
+}
+
+/* Sepete yeni meyve ekle. Önce görünmez yerleştir, yerini ölç, oraya uçur. */
+function sepeteAt(fromEl){
+  var items=document.getElementById('bitems');
+  var bos=items.querySelector('.bempty'); if(bos) bos.remove();
+
+  /* aynı bahçenin meyveleri bir küme olsun */
+  var bat=items.querySelector('.bat[data-g="'+gDone+'"]');
+  if(!bat){ bat=document.createElement('div'); bat.className='bat';
+    bat.setAttribute('data-g', gDone); items.appendChild(bat); }
+
+  var hedef=document.createElement('span');
+  hedef.className='bi'; hedef.innerHTML=cropOf().svg;
+  bat.appendChild(hedef);
+
+  function yerlestir(){ hedef.classList.add('in'); renderBasket(); }
+
+  if(Celebrate.reduced || !fromEl || typeof hedef.animate!=='function'){ yerlestir(); return; }
+
+  var a=fromEl.getBoundingClientRect(), b=hedef.getBoundingClientRect();
+  if(!a.width || !b.width){ yerlestir(); return; }
+
+  var host=document.createElement('div'); host.className='fly';
+  host.style.left=(a.left+a.width/2)+'px'; host.style.top=(a.top+a.height/2)+'px';
+  var inner=document.createElement('i'); inner.innerHTML=cropOf().svg;
+  host.appendChild(inner); document.body.appendChild(host);
+
+  var dx=(b.left+b.width/2)-(a.left+a.width/2);
+  var dy=(b.top+b.height/2)-(a.top+a.height/2);
+  var bitti=false;
+  function son(){ if(bitti) return; bitti=true;
+    if(host.parentNode) host.parentNode.removeChild(host); yerlestir(); }
+  var an=inner.animate([
+    {transform:'translate(0,0) scale(1) rotate(0deg)', opacity:1},
+    {transform:'translate('+(dx*0.5)+'px,'+(dy*0.5-34)+'px) scale(1.15) rotate(150deg)', opacity:1, offset:.55},
+    {transform:'translate('+dx+'px,'+dy+'px) scale(.68) rotate(330deg)', opacity:1}
+  ], {duration:430, easing:'cubic-bezier(.35,.05,.3,1)'});
+  an.onfinish=son;
+  setTimeout(son, 700);
+}
+
+/* Cevap kutusunun üstünde duran soru. Ne sorulduğu her an belli olsun. */
+/* Sadece "Bahçeyi Say" görevinde. Diğer görevlerde cümlenin kendisi
+   (4 × 2 = ?  /  ? × 4 = 20) zaten ne sorulduğunu söylüyor. */
+function soruSatiri(){
+  if(Q.mode!=='count') return '';
+  return '<div class="askline">Toplam kaç <em>'+cropOf().ad+'</em> oldu?</div>';
+}
+function renderBuild(){
+  var b=document.getElementById('build');
+  if(Q.mode==='count'){
+    /* Çarpma cümlesini baştan vermiyoruz — bu bölüm "eşit grup" kavramı için.
+       Doğru cevaptan sonra zaten yazılıyor. */
+    b.innerHTML='<div class="hintline">'+Q.g+' bahçe · her bahçede '+Q.n+' tane</div>'
+      + soruSatiri();
+    return;
+  }
+  if(Q.mode==='word'){
+    b.innerHTML = (wordAcik
+      ? '<div class="hintline">'+Q.g+' sepet · her sepette '+Q.n+' tane</div>'
+        +'<div class="mul">'+Q.g+' <span class="op">×</span> '+Q.n+' <span class="op">=</span> ?</div>'
+      : '<div class="hintline">Problemi oku, sepeti hesapla. Takılırsan bahçeyi açabilirsin.</div>');
+    return;
+  }
+  if(Q.mode==='howmany'){
+    b.innerHTML='<div class="hintline">Her bahçeden '+Q.n+' tane · hedef '+Q.toplam+'</div>'
+      +'<div class="mul">? <span class="op">×</span> '+Q.n+' <span class="op">=</span> '+Q.toplam+'</div>';
+    return;
+  }
+  /* harvest: cümle topladıkça yazılır */
+  var html;
+  if(gDone===0){ html='<div class="hintline">Topladıkça buraya yazılacak…</div>'; }
+  else {
+    var parts=[]; for(var i=0;i<gDone;i++) parts.push(Q.n);
+    var add=parts.join(' <span class="op">+</span> ');
+    html='<div class="add">'+add+(gDone<Q.g?' <span class="op">+</span> …':'')+'</div>';
+    if(gDone>=Q.g){
+      html+='<div class="mul">'+Q.g+' <span class="op">×</span> '+Q.n+' <span class="op">=</span> ?</div>';
+    }
+  }
+  b.innerHTML=html;
+}
+
+/* ---------- şık üretimi ----------
+   Bu oyunda en anlamlı çeldirici "bir bahçe eksik/fazla": g×n yerine
+   (g±1)×n. Çocuğun gerçekten yaptığı hata bu. */
+function secenekler(){
+  var set={}, o=[Q.ans]; set[Q.ans]=1;
+  var aday;
+  if(Q.mode==='howmany'){
+    aday=[Q.g+1, Q.g-1, Q.g+2, Q.g-2];
+  }else{
+    aday=[Q.ans+Q.n, Q.ans-Q.n, Q.ans+Q.g, Q.ans-Q.g, Q.ans+1, Q.ans-1];
+  }
+  /* bir bahçe eksik/fazla mutlaka bulunsun */
+  var oncelik = (Q.mode==='howmany') ? [Q.g+1, Q.g-1] : [Q.ans+Q.n, Q.ans-Q.n];
+  oncelik = oncelik.filter(function(v){ return v>0 && !set[v]; });
+  if(oncelik.length){ var s0=oncelik[Math.floor(Math.random()*oncelik.length)];
+    set[s0]=1; o.push(s0); }
+  aday.sort(function(){ return Math.random()-0.5; });
+  for(var i=0;i<aday.length && o.length<3;i++){
+    var v=aday[i]; if(v>0 && !set[v]){ set[v]=1; o.push(v); }
+  }
+  for(var f=1;o.length<3;f++){ var w=Q.ans+f; if(w>0 && !set[w]){ set[w]=1; o.push(w); } }
+  return o.sort(function(){ return Math.random()-0.5; });
+}
+
+/* ---------- cevap ---------- */
+var buf='';
+function setSlot(v){
+  buf=v;
+  var s=document.getElementById('slot');
+  s.textContent = v==='' ? '?' : v;
+  s.classList.toggle('filled', v!=='');
+  s.classList.remove('bad');
+}
+function renderPad(){
+  var p=document.getElementById('pad');
+  var slotWrap=document.querySelector('.answer');
+  p.innerHTML='';
+  if(sikMod){
+    /* Şık modunda yazılacak bir şey yok — kutu gizlenir */
+    slotWrap.classList.add('hidden');
+    p.className='opts';
+    secenekler().forEach(function(v){
+      var b=document.createElement('button'); b.type='button'; b.className='opt';
+      b.textContent=v;
+      b.onclick=function(){
+        if(locked) return;
+        if(v===Q.ans){ setSlot(String(v)); dogru(); }
+        else { b.classList.add('wrong'); yanlis(); }
+      };
+      p.appendChild(b);
+    });
+    return;
+  }
+  slotWrap.classList.remove('hidden');
+  p.className='pad';
+  var keys=['7','8','9','4','5','6','1','2','3','sil','0','ok'];
+  keys.forEach(function(k){
+    var b=document.createElement('button'); b.type='button';
+    if(k==='sil'){ b.className='del'; b.textContent='←'; b.setAttribute('aria-label','sil'); }
+    else if(k==='ok'){ b.className='act'; b.textContent='Tamam'; }
+    else b.textContent=k;
+    b.onclick=function(){
+      if(k==='sil'){ Sfx.click(); setSlot(buf.slice(0,-1)); return; }
+      if(k==='ok'){ submit(); return; }
+      if(buf.length>=3) return;
+      Sfx.tone(300+ (+k)*30, .05, 'square', .08);
+      setSlot((buf+k).replace(/^0+(?=\d)/,''));
+    };
+    p.appendChild(b);
+  });
+}
+
+function submit(){
+  if(buf===''||locked) return;
+  var v=parseInt(buf,10);
+  if(v===Q.ans) dogru();
+  else yanlis();
+}
+
+function yanlis(){
+  missedThisQ=true;
+  Sfx.bad();
+  var s=document.getElementById('slot');
+  s.classList.add('bad'); restartAnim(s);
+  var ch=document.getElementById('cheer');
+  ch.style.color='var(--muted)';
+  ch.textContent = (Q.mode==='howmany')
+    ? 'Olmadı. Bir bahçe topla, sepete bak.'
+    : 'Olmadı, bir daha bak. Bahçeleri saymayı dene.';
+  locked=true;
+  setTimeout(function(){ locked=false; setSlot(''); s.classList.remove('bad');
+    ch.textContent=''; ch.style.color='';
+    /* şık modunda yanlış işaretini temizle */
+    Array.prototype.forEach.call(document.querySelectorAll('#pad .opt'),
+      function(o){ o.classList.remove('wrong'); });
+  }, 1100);
+}
+
+function dogru(){
+  locked=true;
+  /* Toplamayı bitirmeden doğru cevabı verdiyse çarpmayı kullanmış demektir.
+     Sadece tek tek modunda anlamlı — hızlı modda toplama zaten tek dokunuş. */
+  var toplandi = (gDone>=Q.g);
+  /* Sinyal yalnız "tek tek + rakam yaz" ayarında güvenilir:
+     hızlı modda toplama tek dokunuş, şık modunda ise üçte bir ihtimalle
+     tutturmak da "erken doğru cevap" gibi görünürdü. */
+  var olculebilir = (!hizliMod && !sikMod && (Q.mode==='harvest'||Q.mode==='howmany'));
+  var carparak = (olculebilir && !toplandi);
+  if(olculebilir){ if(carparak) S.how.carparak++; else S.how.sayarak++; }
+  if(missedThisQ) Progress.logMiss(Q.g, Q.n); else Progress.logHit(Q.g, Q.n);
+
+  Sfx.good();
+  /* Bonus yıldızı uçuştan ÖNCE ekle: yoksa yıldız sayaca varıp sayıyı
+     boyadığında bonus henüz eklenmemiş oluyor ve ekran geride kalıyor. */
+  addStar(1 + (carparak ? 1 : 0));
+  correctCount++; updateMeter(correctCount-1);
+  Celebrate.flyStar(document.getElementById('slot'), scEl, catchStar);
+
+  var b=document.getElementById('build');
+  b.innerHTML='<div class="mul">'+Q.g+' <span class="op">×</span> '+Q.n
+    +' <span class="op">=</span> '+Q.toplam+'</div>'
+    +'<div class="hintline">'+Q.g+' bahçe, her bahçede '+Q.n+' tane</div>';
+
+  var ch=document.getElementById('cheer'); ch.style.color='';
+  ch.textContent = carparak ? 'Çarpmayı kullandın! ⭐'
+    : (missedThisQ ? pick(['Buldun! 👏','İşte bu!','Doğru! Vazgeçmedin.'])
+                   : pick(['Sepet doldu! 🧺','Harika!','Bravo!','Çok iyi!']));
+
+  if(correctCount>=GOAL){
+    if(LEVELS[curLevel].endless) setTimeout(sectionDone, 1250);
+    else setTimeout(winLevel, 1200);
+  } else setTimeout(function(){ locked=false; nextTask(); }, 1250);
+}
+
+/* ---------- bölüm / stant sonu ---------- */
+function masterEarned(){ var t=S.tierDone[LEVELS.length-1]||{}; return t.kolay&&t.orta&&t.zor; }
+function markTierAndMaster(){
+  var was=masterEarned();
+  if(!S.tierDone[curLevel]) S.tierDone[curLevel]={};
+  S.tierDone[curLevel][S.diff]=true;
+  if(!was && masterEarned() && S.prizes.indexOf('usta')<0){ S.prizes.push('usta'); persist(); return true; }
+  persist(); return false;
+}
+function tierSuggestion(){
+  var td=S.tierDone[curLevel]||{};
+  if(S.diff==='kolay' && !td.orta) return 'Bunu bir de <b>Orta</b>\'da denemek ister misin?';
+  if(S.diff==='orta'  && !td.zor)  return 'Bunu bir de <b>Zor</b>\'da denemek ister misin?';
+  return '';
+}
+function sectionDone(){
+  var L=LEVELS[curLevel];
+  var first=S.prizes.indexOf(L.prize)<0;
+  if(first) S.prizes.push(L.prize);
+  if(S.levelStars[curLevel]<GOAL) S.levelStars[curLevel]=GOAL;
+  var gotMaster=markTierAndMaster();
+  var ch=document.getElementById('cheer'); ch.style.color='var(--grass-dk)';
+  ch.textContent = gotMaster ? 'USTA ROZETİ senin! Üç zorluğu da bitirdin!'
+    : (first ? 'Tacı kazandın! Bölüm 1 tamam — devam!' : 'Bölüm '+sectionNo+' tamam! Devam!');
+  Sfx.pop(); Sfx.win();
+  Celebrate.finale({count: gotMaster ? 110 : 60});
+  sectionNo++; correctCount=0; updateMeter(); updateSectionBadge();
+  setTimeout(function(){ locked=false; nextTask(); }, 2200);
+}
+function winLevel(){
+  var L=LEVELS[curLevel];
+  S.levelStars[curLevel]=GOAL;
+  if(S.prizes.indexOf(L.prize)<0) S.prizes.push(L.prize);
+  markTierAndMaster();
+  if(curLevel+2>S.unlocked && curLevel+1<LEVELS.length) S.unlocked=curLevel+2;
+  persist(); paintStars();
+  Sfx.pop(); Sfx.win();
+  Celebrate.finale();
+  justWonPrize=L.prize;
+  playEl.classList.add('hidden'); winEl.classList.remove('hidden'); window.scrollTo(0,0);
+  document.getElementById('winPrize').innerHTML=prizeSvg(L.prize);
+  document.getElementById('winPrizeName').textContent=prizeAd(L.prize);
+  ['winPrize','winPrizeName','winAdded'].forEach(function(id){ restartAnim(document.getElementById(id)); });
+  document.getElementById('winTitle').textContent=L.name+' tamam!';
+  var last=curLevel===LEVELS.length-1;
+  document.getElementById('winMsg').textContent = last
+    ? 'Bütün bahçeleri topladın! Sen bir bahçıvan ustasısın.'
+    : 'Yeni bir ödülün var ve yeni bahçe açıldı!';
+  var sug=tierSuggestion();
+  var sEl=document.getElementById('winSuggest');
+  if(sEl){ sEl.innerHTML=sug; sEl.classList.toggle('hidden', !sug); }
+  document.getElementById('winNext').classList.toggle('hidden', last);
+}
+document.getElementById('winNext').onclick=function(){ var nx=curLevel+1; if(nx<LEVELS.length) startLevel(nx); else showMap(); };
+document.getElementById('winMap').onclick=showMap;
+document.getElementById('back').onclick=function(){ Sfx.click(); showMap(); };
+
+renderMap();
+</script>
+<script src="../shared/hud.js"></script>

@@ -1,0 +1,284 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F3F7FE">
+<title>Mathmazel Oyun Bahçesi</title>
+<link rel="stylesheet" href="shared/theme.css">
+<style>
+  .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px; margin-bottom:20px}
+  .card{display:flex; flex-direction:column; gap:0; text-decoration:none; color:inherit;
+    background:var(--surface); border:1.5px solid var(--line); border-radius:22px;
+    overflow:hidden; box-shadow:0 4px 0 var(--soft); transition:transform .12s ease}
+  .card:active{transform:translateY(2px); box-shadow:0 2px 0 var(--soft)}
+  .card .top{display:flex; align-items:center; gap:14px; padding:16px 16px 12px}
+  .card .art{width:64px;height:64px;border-radius:18px; flex:none;
+    display:flex; align-items:center; justify-content:center}
+  .card .art svg{width:44px;height:44px}
+  .card h2{font-size:19px; line-height:1.15}
+  .card p{margin:4px 0 0; font-size:13px; color:var(--muted); font-weight:600; line-height:1.35}
+  /* seviye rozeti — hangi kartın hangi sınıfa olduğu bir bakışta belli olsun */
+  .card .lvl{display:inline-block; margin-top:5px; padding:2px 9px; border-radius:999px;
+    font-size:10.5px; font-weight:800; letter-spacing:.02em;
+    background:#EAF3DE; color:#2E6B22}
+  .card .lvl.ileri{background:#FBE9F1; color:#993556}
+  .card .foot{display:flex; align-items:center; gap:8px; padding:11px 16px;
+    border-top:1.5px solid var(--line); background:var(--soft)}
+  .card .foot .st{display:inline-flex; align-items:center; gap:5px;
+    font-family:var(--disp); font-weight:700; font-size:14px; color:var(--amber-dk)}
+  .card .foot .st svg{width:17px;height:17px;color:var(--amber)}
+  .card .foot .new{font-size:12px; font-weight:800; color:var(--muted)}
+  .card .go{margin-left:auto; font-family:var(--disp); font-weight:700; font-size:14px; color:#fff;
+    padding:7px 16px; border-radius:999px; min-height:34px; display:inline-flex; align-items:center}
+
+  .toolbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:18px}
+  .toolbar button{display:inline-flex; align-items:center; gap:7px; min-height:var(--tap);
+    background:var(--surface); border:1.5px solid var(--line); border-radius:999px;
+    padding:9px 16px; font-weight:800; font-size:13px; color:var(--ink); box-shadow:0 2px 0 var(--soft)}
+  .toolbar button:active{transform:translateY(2px); box-shadow:none}
+  .toolbar button.on{background:var(--grass); border-color:transparent; color:#fff; box-shadow:0 2px 0 var(--grass-dk)}
+  .toolbar button.off{color:var(--muted)}
+  .toolbar button svg{width:18px;height:18px;flex:none}
+  .toolbar .grown{margin-left:auto; font-size:12px; color:var(--muted); font-weight:700}
+
+  /* öğretmene dönük: zorlanılan çarpımlar */
+  #hardBox{margin-bottom:18px}
+  .hbnote{margin:-4px 0 12px; font-size:12.5px; color:var(--muted); font-weight:600}
+  .facts{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px}
+  .fact{display:inline-flex; align-items:baseline; gap:7px; border-radius:12px;
+    padding:7px 12px; font-family:var(--disp); font-weight:700; font-size:17px;
+    border:1.5px solid; background:#fff}
+  .fact .cnt{font-family:var(--body); font-weight:800; font-size:11.5px; opacity:.8}
+  .fact.hot{border-color:#E8A0A0; background:#FDF1F1; color:var(--berry-dk)}
+  .fact.warm{border-color:#F0CE8E; background:#FFF8EA; color:var(--amber-dk)}
+  .fact.mild{border-color:var(--line); background:var(--soft); color:var(--muted)}
+  .clearfacts{background:none; border:none; padding:0; font-weight:800; font-size:12.5px;
+    color:var(--muted); text-decoration:underline; min-height:auto}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="logo" id="logo"></span>
+    <div><b>Oyun Bahçesi</b><span>Mathmazel ile matematik</span></div>
+    <div class="starcount"><span class="s" id="sIcon"></span><b id="starTotal">0</b></div>
+  </header>
+  <div class="flags" id="flags"></div>
+
+  <div class="hero">
+    <span class="maz" id="maz" style="width:84px;height:84px;flex:none"></span>
+    <div>
+      <h1>Hangi oyunu oynayalım?</h1>
+      <p>Bir oyuna dokun ve başla. Topladığın yıldızlar burada saklanır — yarın kaldığın yerden devam edebilirsin.</p>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button type="button" id="soundBtn"></button>
+    <button type="button" id="resetBtn" title="Tüm oyunların ilerlemesini sıfırla"></button>
+    <span class="grown" id="grownNote"></span>
+  </div>
+
+  <div class="cards" id="cards"></div>
+
+  <section class="shelf hidden" id="hardBox">
+    <h3>Çalışılacak çarpımlar</h3>
+    <p class="hbnote">İlk denemede bilinemeyen çarpımlar. Çok kaçırılandan aza doğru sıralı.</p>
+    <div class="facts" id="hardFacts"></div>
+    <button type="button" class="clearfacts" id="clearFacts">Kaydı temizle</button>
+  </section>
+
+  <p class="note">Mathmazel Oyun Bahçesi · 2. sınıf matematik · internetsiz de çalışır</p>
+</div>
+
+<script src="shared/storage.js"></script>
+<script src="shared/audio.js"></script>
+<script>
+/* ---------- oyun listesi — yeni oyun eklemek için buraya bir satır ---------- */
+var GAMES = [
+  {
+    id:   'balon-standi',
+    file: 'oyunlar/balon-standi.html',
+    title:"Mathmazel'in Balon Standı",
+    sub:  'Grupları say, tekrarlı topla, çarpmayı keşfet. Doğru cevaplı balonu patlat!',
+    color:'#E24B7A', tint:'#FBE7EF', art:'balloon', seviye:'2. sınıf'
+  },
+  {
+    id:   'zip-zip-karnavali',
+    file: 'oyunlar/zip-zip-karnavali.html',
+    title:'Zıp Zıp Karnavalı',
+    sub:  'Sayı doğrusunda ritmik say. Tavşanla zıpla, doğru havuca kon!',
+    color:'#4FA03A', tint:'#E7F4EC', art:'rabbit', seviye:'2. sınıf'
+  },
+  {
+    id:   'mathmazel-bahcesi',
+    file: 'oyunlar/mathmazel-bahcesi.html',
+    title:"Mathmazel'in Bahçesi",
+    sub:  'Bahçelerden topla, sepeti doldur. Grubu sen kur, çarpma kendiliğinden yazılsın.',
+    color:'#4E9B2E', tint:'#EAF3E1', art:'garden', seviye:'2. sınıf'
+  },
+  {
+    id:   'carpim-cadirlari-2sinif',
+    file: 'oyunlar/carpim-cadirlari-2sinif.html',
+    title:'Çarpım Çadırları',
+    sub:  'Dört çadır: örüntü keşfi, türetme köprüsü, çekirdek avı ve ritmik ritim.',
+    color:'#8B5CD6', tint:'#F1E9FB', art:'tent', seviye:'2. sınıf'
+  },
+  {
+    id:   'carpim-cadirlari',
+    file: 'oyunlar/carpim-cadirlari.html',
+    title:'Çarpım Çadırları — İleri',
+    sub:  'Aynı dört çadır, çarpım tablosu 10×10\'a kadar. Hızlı ilerleyenler için.',
+    color:'#D4537E', tint:'#FBE9F1', art:'tent', seviye:'3-4. sınıf', ileri:true
+  }
+];
+
+/* ---------- ikonlar ---------- */
+function mathmazel(sz){return '<svg viewBox="0 0 100 100" width="'+sz+'" height="'+sz+'" aria-hidden="true">'
+  +'<path d="M50 14 L64 34 H36 Z" fill="#E24B7A"/><circle cx="50" cy="12" r="5" fill="#EF9F27"/>'
+  +'<circle cx="50" cy="58" r="30" fill="#FBDDE7"/><circle cx="50" cy="58" r="30" fill="none" stroke="#E24B7A" stroke-width="3"/>'
+  +'<circle cx="40" cy="54" r="5" fill="#2C2A44"/><circle cx="60" cy="54" r="5" fill="#2C2A44"/>'
+  +'<circle cx="42" cy="52.5" r="1.6" fill="#fff"/><circle cx="62" cy="52.5" r="1.6" fill="#fff"/>'
+  +'<circle cx="36" cy="65" r="4" fill="#F0997B" opacity=".55"/><circle cx="64" cy="65" r="4" fill="#F0997B" opacity=".55"/>'
+  +'<path d="M42 68 Q50 75 58 68" stroke="#2C2A44" stroke-width="3" fill="none" stroke-linecap="round"/>'
+  +'<text x="50" y="45" font-family="Baloo 2,sans-serif" font-size="12" font-weight="700" fill="#E24B7A" text-anchor="middle">×</text></svg>';}
+
+function starIcon(){return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.1 6.6.8-4.9 4.5 1.3 6.6L12 17.8 6.1 20.6l1.3-6.6L2.5 8.9l6.6-.8z"/></svg>';}
+
+function artSvg(kind){
+  if(kind==='garden'){
+    return '<svg viewBox="0 0 80 80" aria-hidden="true">'
+      +'<rect x="6" y="52" width="68" height="20" rx="5" fill="#8A6244"/>'
+      +'<rect x="6" y="52" width="68" height="5" rx="2.5" fill="#6B4A32"/>'
+      +'<path d="M22 52 L22 30" stroke="#4E9B2E" stroke-width="3.4" stroke-linecap="round"/>'
+      +'<path d="M40 52 L40 24" stroke="#4E9B2E" stroke-width="3.4" stroke-linecap="round"/>'
+      +'<path d="M58 52 L58 32" stroke="#4E9B2E" stroke-width="3.4" stroke-linecap="round"/>'
+      +'<circle cx="22" cy="27" r="7" fill="#D9455F"/>'
+      +'<circle cx="40" cy="21" r="7" fill="#E8792B"/>'
+      +'<circle cx="58" cy="29" r="7" fill="#EFB227"/>'
+      +'<circle cx="22" cy="27" r="2.4" fill="#fff" opacity=".45"/>'
+      +'<circle cx="40" cy="21" r="2.4" fill="#fff" opacity=".45"/>'
+      +'<circle cx="58" cy="29" r="2.4" fill="#fff" opacity=".45"/></svg>';
+  }
+  if(kind==='tent'){
+    return '<svg viewBox="0 0 80 80" aria-hidden="true">'
+      +'<path d="M40 10 L70 66 H10 Z" fill="#8B5CD6"/>'
+      +'<path d="M40 10 L54 66 H26 Z" fill="#A87BE4"/>'
+      +'<path d="M40 30 L50 66 H30 Z" fill="#FFF8E8"/>'
+      +'<path d="M40 30 L40 66" stroke="#8B5CD6" stroke-width="2"/>'
+      +'<circle cx="40" cy="8" r="4" fill="#EF9F27"/>'
+      +'<rect x="8" y="66" width="64" height="5" rx="2.5" fill="#6C46AB"/></svg>';
+  }
+  if(kind==='balloon'){
+    return '<svg viewBox="0 0 96 132" aria-hidden="true">'
+      +'<path d="M48 96 C40 108 44 118 48 132 C52 118 56 108 48 96 Z" fill="none" stroke="#B9BED1" stroke-width="3"/>'
+      +'<ellipse cx="48" cy="48" rx="40" ry="46" fill="#E24B7A"/>'
+      +'<ellipse cx="34" cy="34" rx="10" ry="14" fill="#ffffff" opacity=".35"/>'
+      +'<path d="M43 92 L53 92 L48 100 Z" fill="#E24B7A"/></svg>';
+  }
+  return '<svg viewBox="0 0 80 80" aria-hidden="true">'
+    +'<ellipse cx="31" cy="20" rx="6" ry="16" fill="#EFEFF4" stroke="#D6D6E0" stroke-width="1.5"/>'
+    +'<ellipse cx="47" cy="20" rx="6" ry="16" fill="#EFEFF4" stroke="#D6D6E0" stroke-width="1.5"/>'
+    +'<ellipse cx="31" cy="22" rx="2.6" ry="9" fill="#F7C4D6"/><ellipse cx="47" cy="22" rx="2.6" ry="9" fill="#F7C4D6"/>'
+    +'<ellipse cx="40" cy="52" rx="22" ry="20" fill="#EFEFF4" stroke="#D6D6E0" stroke-width="1.5"/>'
+    +'<circle cx="32" cy="48" r="3" fill="#243A2E"/><circle cx="48" cy="48" r="3" fill="#243A2E"/>'
+    +'<path d="M37 56 h6" stroke="#E58AA8" stroke-width="3" stroke-linecap="round"/>'
+    +'<ellipse cx="30" cy="72" rx="6" ry="4" fill="#EFEFF4" stroke="#D6D6E0" stroke-width="1.5"/>'
+    +'<ellipse cx="50" cy="72" rx="6" ry="4" fill="#EFEFF4" stroke="#D6D6E0" stroke-width="1.5"/></svg>';
+}
+function soundIcon(on){
+  var s='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    +'<path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" stroke="none"/>';
+  s += on ? '<path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19.5 6a9 9 0 0 1 0 12"/>'
+          : '<path d="M17 9.5l4 5"/><path d="M21 9.5l-4 5"/>';
+  return s+'</svg>';
+}
+function trashIcon(){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M6 7l1 13h10l1-13"/></svg>';}
+
+document.getElementById('logo').innerHTML = mathmazel(40);
+document.getElementById('maz').innerHTML  = mathmazel(84);
+document.getElementById('sIcon').innerHTML = starIcon();
+(function(){ var f=document.getElementById('flags'); for(var i=0;i<20;i++) f.appendChild(document.createElement('i')); })();
+
+/* ---------- kartlar ---------- */
+function renderCards(){
+  var host = document.getElementById('cards');
+  host.innerHTML = '';
+  GAMES.forEach(function(G){
+    var sum = Progress.summary(G.id);
+    var a = document.createElement('a');
+    a.className = 'card';
+    a.href = G.file;
+    a.innerHTML =
+      '<div class="top">' +
+        '<span class="art" style="background:'+G.tint+'">'+artSvg(G.art)+'</span>' +
+        '<div><h2>'+G.title+'</h2>' +
+          '<span class="lvl'+(G.ileri?' ileri':'')+'">'+G.seviye+'</span>' +
+          '<p>'+G.sub+'</p></div>' +
+      '</div>' +
+      '<div class="foot">' +
+        (sum.played
+          ? '<span class="st">'+starIcon()+' '+sum.stars+' yıldız</span>'
+          : '<span class="new">Henüz oynanmadı</span>') +
+        '<span class="go" style="background:'+G.color+'">'+(sum.played?'Devam et':'Başla')+' ›</span>' +
+      '</div>';
+    a.addEventListener('click', function(){ if(window.Sfx) Sfx.click(); });
+    host.appendChild(a);
+  });
+  document.getElementById('starTotal').textContent = Progress.totalStars();
+}
+
+/* ---------- araç çubuğu ---------- */
+var soundBtn = document.getElementById('soundBtn');
+function paintSound(){
+  var m = Sfx.isMuted();
+  soundBtn.innerHTML = soundIcon(!m) + (m ? 'Ses kapalı' : 'Ses açık');
+  soundBtn.className = m ? 'off' : 'on';
+  soundBtn.setAttribute('aria-pressed', m ? 'true' : 'false');
+}
+soundBtn.addEventListener('click', function(){
+  var m = Sfx.toggleMute();
+  paintSound();
+  if(!m) Sfx.click();
+});
+paintSound();
+
+var resetBtn = document.getElementById('resetBtn');
+resetBtn.innerHTML = trashIcon() + 'İlerlemeyi sıfırla';
+resetBtn.addEventListener('click', function(){
+  if(confirm('Tüm oyunlardaki yıldızlar, açılan bölümler ve çarpım kaydı silinsin mi?')){
+    Progress.reset();
+    refresh();
+    Sfx.bad();
+  }
+});
+
+document.getElementById('grownNote').textContent = GAMES.length + ' oyun';
+
+/* ---------- zorlanılan çarpımlar (öğretmene dönük) ---------- */
+function renderHardFacts(){
+  var box  = document.getElementById('hardBox');
+  var host = document.getElementById('hardFacts');
+  var list = Progress.hardFacts(12);
+  if(!list.length){ box.classList.add('hidden'); return; }
+  box.classList.remove('hidden');
+  host.innerHTML = '';
+  list.forEach(function(f){
+    /* renk = kaçırma oranı, sayı = kaç kez kaçırıldı */
+    var cls = f.rate >= 0.5 ? 'hot' : (f.rate >= 0.25 ? 'warm' : 'mild');
+    var el = document.createElement('span');
+    el.className = 'fact ' + cls;
+    el.innerHTML = f.fact.replace('x','×') + '<span class="cnt">' + f.miss + '/' + f.seen + '</span>';
+    el.title = f.seen + ' kez soruldu, ' + f.miss + " kez ilk denemede bilinemedi";
+    host.appendChild(el);
+  });
+}
+document.getElementById('clearFacts').addEventListener('click', function(){
+  if(confirm('Zorlanılan çarpım kaydı silinsin mi? Yıldızlar etkilenmez.')){
+    Progress.clearMisses();
+    renderHardFacts();
+  }
+});
+
+function refresh(){ renderCards(); renderHardFacts(); }
+refresh();
+/* başka bir sekmede oynanırsa yıldızları tazele */
+window.addEventListener('pageshow', refresh);
+</script>
