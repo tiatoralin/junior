@@ -535,7 +535,7 @@ function groupsHTML(g,n){ var s='<div class="groups">';
 
 function nextQuestion(){
   var stagePresent=document.getElementById('stones'); if(!stagePresent) return;
-  Q=makeQuestion(LEVELS[curLevel]); cur=0; missedThisQ=false;
+  Q=makeQuestion(LEVELS[curLevel]); cur=0; missedThisQ=false; cozuldu=false;
   updateMeter();
   document.getElementById('cheer').textContent='';
   document.getElementById('runsum').textContent='';
@@ -606,7 +606,7 @@ function nextQuestion(){
 function st0Index(node){ var kids=document.getElementById('stones').children; for(var i=0;i<kids.length;i++) if(kids[i]===node) return i; return 0; }
 
 function doHop(){
-  if(!Q||Q.mode!=='hop') return;
+  if(!Q||Q.mode!=='hop'||cozuldu) return;
   if(cur>=Q.maxIndex){ nudge('Yolun sonu! Baştan alıp doğru havuca in.'); return; }
   cur++;
   var count=Q.maxIndex+1;
@@ -617,7 +617,7 @@ function doHop(){
   tone(['C4','D4','E4','F4','G4','A4','B4','C5','D5','E5','F5','C5','D5'][Math.min(cur,12)]);
 }
 function doHopBack(){
-  if(!Q||Q.mode!=='hop') return;
+  if(!Q||Q.mode!=='hop'||cozuldu) return;
   if(cur<=0){ nudge('Başlangıçtasın — ileri zıpla!'); return; }
   cur--;
   placeRunner(cur, Q.maxIndex+1);
@@ -625,7 +625,7 @@ function doHopBack(){
   tone(['C4','D4','E4','F4','G4','A4','B4','C5','D5','E5','F5','C5','D5'][Math.min(cur,12)]);
 }
 function doArrive(){
-  if(!Q||Q.mode!=='hop') return;
+  if(!Q||Q.mode!=='hop'||cozuldu) return;
   var stones=document.getElementById('stones').children;
   var onCarrot = stones[cur] && stones[cur].querySelector('.carrot');
   if(cur===Q.g){ succeed(); }
@@ -634,7 +634,7 @@ function doArrive(){
   else { nudge('Burada havuç yok — havucun üstüne in.'); }
 }
 function resetHops(){
-  if(!Q||Q.mode!=='hop') return; cur=0;
+  if(!Q||Q.mode!=='hop'||cozuldu) return; cur=0;
   var ss=document.getElementById('stones').children;
   for(var i=0;i<ss.length;i++){ ss[i].classList.remove('hit'); var sn=ss[i].querySelector('.snum'); if(sn) sn.textContent=(i===0?'0':''); }
   ss[0].classList.add('hit');
@@ -672,7 +672,15 @@ function nudge(msg){ document.getElementById('cheer').style.color='var(--muted)'
   document.getElementById('cheer').textContent=msg;
   setTimeout(function(){ document.getElementById('cheer').textContent=''; document.getElementById('cheer').style.color=''; }, 1200); }
 
+var cozuldu=false;   /* bu soru çözüldü mü — tekrar ödül verilmesin */
 function succeed(){
+  /* "Vardım!" tuşuna havucun üstündeyken tekrar tekrar basılınca her basış
+     yeni yıldız veriyordu: cur hâlâ Q.g'ye eşit, hiçbir kilit yoktu. */
+  if(cozuldu) return;
+  cozuldu=true;
+  var ctrl=document.getElementById('controls');
+  if(ctrl) Array.prototype.forEach.call(ctrl.querySelectorAll('button'),
+    function(b){ b.disabled=true; });
   Sfx.good();
   /* öğretmene dönük kayıt: bu çarpımı ilk denemede bildi mi? */
   if(Q){ if(missedThisQ) Progress.logMiss(Q.step, Q.g); else Progress.logHit(Q.step, Q.g); }

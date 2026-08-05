@@ -429,7 +429,10 @@ function buildPattern(){
         if(revealed===10){ Sfx.win(); Celebrate.finale({count:40}); awardFrom(cell, 1); disc.innerHTML='<b>Aferin!</b> '+tamlayan(f)+' tablosunu açtın. Bir örüntü fark ettin mi? '
           +'<button class="ghost" id="pdiscBtn" style="margin-top:8px">İpucunu göster (+2 yıldız)</button>';
           disc.classList.add('show');
+          var ipuVerildi=false;
           document.getElementById('pdiscBtn').onclick=function(){
+            if(ipuVerildi) return;   /* buton DOM'dan silinse de referansı elde kalabilir */
+            ipuVerildi=true;
             this.remove(); awardFrom(disc, 2);
             disc.innerHTML = disc.innerHTML + '<div style="margin-top:8px">'+patterns[f]+'</div>';
           };
@@ -666,7 +669,10 @@ function buildHunt(){
     document.getElementById('hFox').disabled=false;
   }
   function answer(btn, correct, ans){
-    Array.prototype.forEach.call(document.getElementById('hopts').children,function(o){o.style.pointerEvents='none';});
+    /* pointer-events:none dokunmayı engeller ama klavyeyi engellemez —
+       aynı şıkka tekrar basınca yeniden ödül veriyordu. disabled gerçekten kapatır. */
+    Array.prototype.forEach.call(document.getElementById('hopts').children,
+      function(o){ o.disabled=true; });
     var k=catOf(cur.a,cur.b);
     if(correct){
       btn.classList.add('correct');
