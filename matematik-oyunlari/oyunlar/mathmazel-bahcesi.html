@@ -224,11 +224,6 @@
     </div>
     <div class="diffbar" id="diffbar"></div>
     <div class="modebar">
-      <span class="lb">Toplama:</span>
-      <button type="button" id="modeTek">Tek tek</button>
-      <button type="button" id="modeHiz">Hepsi birden</button>
-    </div>
-    <div class="modebar">
       <span class="lb">Cevap:</span>
       <button type="button" id="ansPad">Rakamı yaz</button>
       <button type="button" id="ansSik">Şıklardan seç</button>
@@ -294,8 +289,6 @@ function catchStar(){
 }
 paintStars();
 
-/* Toplama şekli — kalıcı ayar. Varsayılan TEK TEK. */
-var hizliMod = !!Settings.get('bahceHizli', false);
 /* Cevap şekli — kalıcı ayar. Varsayılan TUŞ TAKIMI (tahminle geçmeyi kapatır). */
 var sikMod = !!Settings.get('bahceSik', false);
 
@@ -433,7 +426,8 @@ function renderHow(){
   if(t<3){ box.classList.add('hidden'); return; }
   box.classList.remove('hidden');
   document.getElementById('howNote').textContent =
-    'Son '+t+' görevde: sonucu bahçeleri toplayıp mı buldu, yoksa toplamayı bitirmeden çarpmayı mı kullandı?';
+    'Son '+t+' görevde: sonucu bahçeleri toplayıp mı buldu, yoksa toplamayı bitirmeden çarpmayı mı kullandı? '
+    + '(Yalnız "Rakamı yaz" ayarında ölçülür.)';
   function row(lab,n,col){
     return '<div class="howrow"><span class="lab">'+lab+'</span>'
       +'<span class="bar"><i style="width:'+Math.round(100*n/t)+'%;background:'+col+'"></i></span>'
@@ -468,13 +462,6 @@ function renderDiffBar(){
   });
 }
 function renderModeBar(){
-  var t=document.getElementById('modeTek'), h=document.getElementById('modeHiz');
-  function paint(){ t.classList.toggle('on',!hizliMod); h.classList.toggle('on',hizliMod);
-    t.setAttribute('aria-pressed',!hizliMod); h.setAttribute('aria-pressed',hizliMod); }
-  t.onclick=function(){ if(!hizliMod) return; hizliMod=false; Settings.set('bahceHizli',false); Sfx.click(); paint(); nextTask(); };
-  h.onclick=function(){ if(hizliMod) return; hizliMod=true;  Settings.set('bahceHizli',true);  Sfx.click(); paint(); nextTask(); };
-  paint();
-
   var ap=document.getElementById('ansPad'), as=document.getElementById('ansSik');
   function paintA(){ ap.classList.toggle('on',!sikMod); as.classList.toggle('on',sikMod);
     ap.setAttribute('aria-pressed',!sikMod); as.setAttribute('aria-pressed',sikMod); }
@@ -614,27 +601,12 @@ function bindPicks(){
   Array.prototype.forEach.call(btns,function(b){
     b.onclick=function(){
       if(locked || b.classList.contains('gone')) return;
-      if(hizliMod){ harvestAll(btns); return; }
       b.classList.add('gone'); picked++;
       Sfx.tone(420+picked*45, .07, 'triangle', .13);
       sepeteAt(b);
       afterPick();
     };
   });
-}
-function harvestAll(btns){
-  /* Hepsi birden: sırayla ama hızlı — grup fikri kaybolmasın.
-     Bahçede fazlası var; sadece istenen kadar toplanır. */
-  locked=true;
-  var kalan=Q.n-picked, i=0;
-  (function step(){
-    if(i>=kalan || i>=btns.length){ locked=false; picked=Q.n; afterPick(); return; }
-    picked=i+1;
-    btns[i].classList.add('gone');
-    Sfx.tone(420+(i+1)*45, .05, 'triangle', .11);
-    sepeteAt(btns[i]);
-    i++; setTimeout(step, 55);
-  })();
 }
 function afterPick(){
   var so=document.getElementById('sofar');
@@ -851,10 +823,9 @@ function dogru(){
   /* Toplamayı bitirmeden doğru cevabı verdiyse çarpmayı kullanmış demektir.
      Sadece tek tek modunda anlamlı — hızlı modda toplama zaten tek dokunuş. */
   var toplandi = (gDone>=Q.g);
-  /* Sinyal yalnız "tek tek + rakam yaz" ayarında güvenilir:
-     hızlı modda toplama tek dokunuş, şık modunda ise üçte bir ihtimalle
-     tutturmak da "erken doğru cevap" gibi görünürdü. */
-  var olculebilir = (!hizliMod && !sikMod && (Q.mode==='harvest'||Q.mode==='howmany'));
+  /* Sinyal yalnız "rakam yaz" ayarında güvenilir: şık modunda üçte bir
+     ihtimalle tutturmak da "erken doğru cevap" gibi görünürdü. */
+  var olculebilir = (!sikMod && (Q.mode==='harvest'||Q.mode==='howmany'));
   var carparak = (olculebilir && !toplandi);
   if(olculebilir){ if(carparak) S.how.carparak++; else S.how.sayarak++; }
   if(missedThisQ) Progress.logMiss(Q.g, Q.n); else Progress.logHit(Q.g, Q.n);
