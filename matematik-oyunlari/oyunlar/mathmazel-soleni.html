@@ -1,0 +1,707 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFF6EC">
+<title>Mathmazel'in Şöleni</title>
+<link rel="stylesheet" href="../shared/theme.css">
+<style>
+  /* Bu oyuna özel — ortak stiller shared/theme.css içinde */
+  :root{
+    --bg:#FFF6EC; --surface:#FFFFFF; --ink:#43301F; --muted:#7E6A55;
+    --line:#F0E2D2; --soft:#FAF0E4;
+    --carrot:#E8792B; --carrot-dk:#A94D10;
+    --grass:#4E9B2E; --grass-dk:#2F6415;
+    --berry:#D9455F; --berry-dk:#9E2437;
+    --sky:#3E8FC9;   --sky-dk:#1F6395;
+    --amber:#EFB227; --amber-dk:#8A6410;
+    --grape:#8B5CD6; --grape-dk:#5A3A9A;
+  }
+  body{background:radial-gradient(1000px 380px at 50% -120px,#FFEBD5 0,var(--bg) 60%)}
+  .flags i:nth-child(5n+1){border-top:15px solid var(--carrot)}
+  .flags i:nth-child(5n+2){border-top:15px solid var(--berry)}
+  .flags i:nth-child(5n+3){border-top:15px solid var(--grass)}
+  .flags i:nth-child(5n+4){border-top:15px solid var(--amber)}
+  .flags i:nth-child(5n+5){border-top:15px solid var(--sky)}
+  .hero .maz{width:82px;height:82px;flex:none}
+  .booth .tick{color:var(--grass)}
+  .primary{background:var(--carrot); box-shadow:0 5px 0 var(--carrot-dk)}
+  .primary:active{box-shadow:0 3px 0 var(--carrot-dk)}
+  .prize.got{background:#FFF3DF}
+  .win .prizebig{background:#FFF3DF}
+
+  .task{display:flex; gap:10px; align-items:flex-start; background:var(--soft);
+    border-radius:16px; padding:12px 14px; margin-bottom:10px}
+  .task .who{width:38px;height:38px;flex:none}
+  .task p{margin:0; font-weight:700; font-size:14.5px; line-height:1.35}
+  .task b{font-family:var(--disp); font-size:16px; color:var(--carrot-dk)}
+
+  /* ---- ORTAK TABAK ---- */
+  .bowl{border:2px solid #D8B48A; border-radius:14px 14px 22px 22px; padding:9px 10px 8px;
+    background:linear-gradient(#FFFDF9,#F8EEDF); margin-bottom:12px;
+    box-shadow:inset 0 -8px 0 #EFE0CB}
+  .bowl .items{display:flex; flex-wrap:wrap; gap:3px 4px; justify-content:center; min-height:30px}
+  .bowl .items svg{width:22px;height:22px; display:block}
+  .bowl .lab{text-align:center; font-family:var(--disp); font-weight:700; font-size:13px;
+    color:var(--muted); margin-top:5px}
+  .bowl .lab b{color:var(--carrot-dk); font-size:17px}
+  .cookie{border:none; background:none; padding:0; line-height:0}
+
+  /* ---- KONUKLAR / TABAKLAR ---- */
+  .seats{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:10px}
+  .seat{background:var(--surface); border:2px solid var(--line); border-radius:16px;
+    padding:7px 7px 6px; display:flex; flex-direction:column; align-items:center; gap:3px;
+    min-width:70px; transition:transform .1s ease}
+  .seat:active:not(:disabled){transform:translateY(2px)}
+  .seat .guest{width:44px;height:44px}
+  .seat .plate{min-height:30px; width:100%; border-radius:8px 8px 14px 14px;
+    background:#F4F0EA; border:1.5px solid #E2D8CB; display:flex; flex-wrap:wrap;
+    gap:2px; justify-content:center; align-items:center; padding:3px}
+  .seat .plate svg{width:17px;height:17px; display:block}
+  .seat .cnt{font-family:var(--disp); font-weight:700; font-size:15px; color:var(--carrot-dk)}
+  .seat.full{border-color:var(--grass); background:#F2F9EE}
+  .seat.full .cnt{color:var(--grass-dk)}
+  .seat:disabled{opacity:.75}
+  .seat .nm{font-size:10.5px; font-weight:800; color:var(--muted)}
+
+  /* uçan kurabiye */
+  .fly{position:fixed; left:0; top:0; width:0; height:0; z-index:55; pointer-events:none}
+  .fly i{position:absolute; display:block; width:24px;height:24px; margin:-12px 0 0 -12px}
+  .fly svg{width:100%;height:100%}
+
+  /* ---- CÜMLE / CEVAP ---- */
+  .build{text-align:center; margin:6px 0 4px; min-height:48px}
+  .build .div{font-family:var(--disp); font-weight:700; font-size:clamp(22px,6vw,32px); color:var(--ink)}
+  .build .div .op{color:var(--carrot)}
+  .build .mul{font-family:var(--disp); font-weight:700; font-size:clamp(17px,4.6vw,22px);
+    color:var(--grass-dk); margin-top:2px}
+  .build .hintline{font-size:12.5px; font-weight:700; color:var(--muted); margin-top:4px}
+  .build .askline{font-family:var(--disp); font-weight:700; font-size:clamp(16px,4.4vw,20px);
+    color:var(--ink); margin-top:8px}
+  .build .askline em{font-style:normal; color:var(--carrot-dk)}
+
+  .answer{display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:8px}
+  .answer .slot{min-width:96px; height:52px; border-radius:14px; border:2px dashed var(--line);
+    background:var(--surface); display:flex; align-items:center; justify-content:center;
+    font-family:var(--disp); font-weight:700; font-size:28px; color:var(--ink)}
+  .answer .slot.filled{border-style:solid; border-color:var(--carrot)}
+  .answer .slot.bad{border-color:var(--berry); background:#FCEDEF; animation:shake .4s ease}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+
+  .pad{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; max-width:290px; margin:0 auto}
+  .pad button{border:1.5px solid var(--line); background:var(--surface); border-radius:14px;
+    font-family:var(--disp); font-weight:700; font-size:22px; padding:12px 0; color:var(--ink);
+    min-height:var(--tap); box-shadow:0 3px 0 var(--soft)}
+  .pad button:active{transform:translateY(2px); box-shadow:0 1px 0 var(--soft)}
+  .pad button.act{background:var(--carrot); border-color:transparent; color:#fff;
+    box-shadow:0 3px 0 var(--carrot-dk); font-size:17px}
+  .pad button.del{background:var(--soft); font-size:17px}
+  .opts{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; max-width:340px; margin:0 auto}
+  .opt{border:1.5px solid var(--line); background:var(--surface); border-radius:16px;
+    font-family:var(--disp); font-weight:700; font-size:26px; padding:16px 0; color:var(--ink);
+    min-height:var(--tap); box-shadow:0 3px 0 var(--soft)}
+  .opt:active{transform:translateY(2px); box-shadow:0 1px 0 var(--soft)}
+  .opt.wrong{background:#FCEDEF; border-color:var(--berry); color:var(--berry-dk); animation:shake .4s ease}
+
+  .modebar{display:flex; gap:8px; align-items:center; margin-bottom:10px; flex-wrap:wrap}
+  .modebar .lb{font-size:12px; font-weight:800; color:var(--muted)}
+  .modebar button{border:1.5px solid var(--line); background:var(--surface); border-radius:999px;
+    padding:7px 13px; font-weight:800; font-size:12.5px; color:var(--muted); min-height:var(--tap)}
+  .modebar button.on{background:var(--carrot); border-color:transparent; color:#fff;
+    box-shadow:0 2px 0 var(--carrot-dk)}
+  .modebar .reset{margin-left:auto}
+
+  @media (max-width:520px){
+    .hero .maz{width:64px;height:64px}
+    .seat{min-width:62px} .seat .guest{width:36px;height:36px}
+    .seat .plate svg{width:15px;height:15px}
+  }
+  @media (max-width:380px){
+    .seat{min-width:54px} .seat .guest{width:30px;height:30px}
+    .bowl .items svg{width:19px;height:19px}
+  }
+</style>
+
+<div class="wrap">
+  <div id="hud"></div>
+  <header>
+    <span class="logo" id="logo"></span>
+    <div><b>Mathmazel'in Şöleni</b><span>Paylaştır, böl</span></div>
+    <div class="starcount"><span class="s" id="sIcon"></span><b id="starTotal">0</b></div>
+  </header>
+  <div class="flags" id="flags"></div>
+
+  <section id="map">
+    <div class="hero">
+      <span class="maz" id="maz"></span>
+      <div><h1>Şölene hoş geldin!</h1>
+      <p>Kurabiyeleri arkadaşlara eşit paylaştır. Kaç kişiye böldüğünü sen seçiyorsun.</p></div>
+    </div>
+    <div class="booths" id="booths"></div>
+    <div class="shelf"><h3>Ödül Rafım</h3><div class="prizes" id="shelf"></div></div>
+    <p class="note">Yıldızların bu cihazda saklanır — yarın kaldığın yerden devam edebilirsin.</p>
+  </section>
+
+  <section id="play" class="hidden">
+    <div class="plhead">
+      <button class="back" id="back">‹ Sofralara dön</button>
+      <span class="lvlpill" id="lvlpill"></span>
+    </div>
+    <div class="diffbar" id="diffbar"></div>
+    <div class="modebar">
+      <span class="lb">Cevap:</span>
+      <button type="button" id="ansPad">Rakamı yaz</button>
+      <button type="button" id="ansSik">Şıklardan seç</button>
+      <button type="button" class="reset" id="resetBtn">Baştan dağıt</button>
+    </div>
+    <div class="board">
+      <div class="meterrow"><div class="meter" id="meter"></div><span class="sectbadge" id="sectionBadge"></span></div>
+      <div class="task" id="task"></div>
+      <div class="bowl" id="bowl"></div>
+      <div class="seats" id="seats"></div>
+      <div class="build" id="build"></div>
+      <div class="answer"><div class="slot" id="slot">?</div></div>
+      <div class="pad" id="pad"></div>
+      <div class="cheer" id="cheer"></div>
+    </div>
+  </section>
+
+  <section id="winScreen" class="hidden">
+    <div class="win">
+      <div class="prizebig" id="winPrize"></div>
+      <div class="ribbon" id="winPrizeName"></div>
+      <p class="added" id="winAdded">Ödül Rafına eklendi ✓</p>
+      <h2 id="winTitle"></h2>
+      <p id="winMsg"></p>
+      <p class="winsug hidden" id="winSuggest"></p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="primary" id="winNext">Sonraki sofra ›</button>
+        <button class="ghost" id="winMap">Haritaya dön</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="../shared/storage.js"></script>
+<script src="../shared/audio.js"></script>
+<script src="../shared/celebrate.js"></script>
+<script>
+/* ================= DURUM ================= */
+var GAME_ID='mathmazel-soleni';
+var S=Progress.load(GAME_ID, {
+  stars:0, unlocked:1, prizes:[], levelStars:[0,0,0,0], diff:'kolay', tierDone:[{},{},{},{}]
+});
+function persist(){ Progress.save(GAME_ID, S); }
+var totalEl=document.getElementById('starTotal');
+var scEl=document.querySelector('.starcount');
+function addStar(n){ S.stars+=(n||1); persist(); }
+function paintStars(){ totalEl.textContent=S.stars; }
+function catchStar(){ paintStars(); Celebrate.bump(scEl);
+  scEl.classList.add('caught'); setTimeout(function(){ scEl.classList.remove('caught'); },550); }
+paintStars();
+var sikMod = !!Settings.get('solenSik', false);
+
+/* ================= ÇİZİMLER ================= */
+function mathmazel(sz){return '<svg viewBox="0 0 100 100" width="'+sz+'" height="'+sz+'" aria-hidden="true">'
+  +'<path d="M50 14 L64 34 H36 Z" fill="#D9455F"/><circle cx="50" cy="12" r="5" fill="#EFB227"/>'
+  +'<circle cx="50" cy="58" r="30" fill="#FBDDE2"/><circle cx="50" cy="58" r="30" fill="none" stroke="#D9455F" stroke-width="3"/>'
+  +'<circle cx="40" cy="54" r="5" fill="#43301F"/><circle cx="60" cy="54" r="5" fill="#43301F"/>'
+  +'<circle cx="42" cy="52.5" r="1.6" fill="#fff"/><circle cx="62" cy="52.5" r="1.6" fill="#fff"/>'
+  +'<circle cx="36" cy="65" r="4" fill="#F0997B" opacity=".55"/><circle cx="64" cy="65" r="4" fill="#F0997B" opacity=".55"/>'
+  +'<path d="M42 68 Q50 75 58 68" stroke="#43301F" stroke-width="3" fill="none" stroke-linecap="round"/>'
+  +'<text x="50" y="45" font-family="Baloo 2,sans-serif" font-size="12" font-weight="700" fill="#D9455F" text-anchor="middle">÷</text></svg>';}
+function starIcon(){return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.1 6.6.8-4.9 4.5 1.3 6.6L12 17.8 6.1 20.6l1.3-6.6L2.5 8.9l6.6-.8z"/></svg>';}
+function lockIcon(){return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 0 1 6 0v3z"/></svg>';}
+function tickIcon(){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#EAF3DE" stroke="#4E9B2E"/><path d="M7 12.5l3.5 3.5L17 9"/></svg>';}
+
+/* ikram çeşitleri — bölüm ilerledikçe değişir */
+var TREATS={
+  kurabiye:{ad:'kurabiye', svg:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#D9A05B"/><circle cx="12" cy="12" r="10" fill="none" stroke="#B57F3C" stroke-width="1.2"/><circle cx="8" cy="9" r="1.7" fill="#5B3A1A"/><circle cx="15" cy="8" r="1.5" fill="#5B3A1A"/><circle cx="12" cy="14" r="1.6" fill="#5B3A1A"/><circle cx="16" cy="15" r="1.4" fill="#5B3A1A"/></svg>'},
+  elma:    {ad:'elma',     svg:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7 C8 4 3 7 4 13 C5 19 9 22 12 22 C15 22 19 19 20 13 C21 7 16 4 12 7 Z" fill="#E0413B"/><path d="M12 7 C12 4 13 3 15 2" stroke="#7A4B23" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M13 5 q4 -2 5 1 q-3 2 -5 -1Z" fill="#4E9B2E"/></svg>'},
+  cilek:   {ad:'çilek',    svg:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 23 C6 19 4 14 4 11 C4 7 8 6 12 8 C16 6 20 7 20 11 C20 14 18 19 12 23 Z" fill="#D9455F"/><circle cx="9" cy="12" r="0.9" fill="#FFE6A8"/><circle cx="14" cy="11" r="0.9" fill="#FFE6A8"/><circle cx="12" cy="16" r="0.9" fill="#FFE6A8"/><path d="M12 8 L8 4 M12 8 L16 4 M12 8 L12 2" stroke="#4E9B2E" stroke-width="1.8" stroke-linecap="round"/></svg>'},
+  simit:   {ad:'simit',    svg:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="#C98B4E" stroke-width="5"/><circle cx="12" cy="12" r="9.5" fill="none" stroke="#8B5A2B" stroke-width="1" stroke-dasharray="2 3"/></svg>'}
+};
+var TREAT_ORDER=['kurabiye','elma','cilek','simit'];
+
+function prizeSvg(id){
+  var p={
+    tabak:'<svg viewBox="0 0 48 48"><ellipse cx="24" cy="30" rx="19" ry="8" fill="#EFE3D2"/><ellipse cx="24" cy="28" rx="19" ry="8" fill="#FBF5EC" stroke="#D8C3A8" stroke-width="1.5"/><circle cx="18" cy="26" r="3.4" fill="#D9A05B"/><circle cx="27" cy="27" r="3.4" fill="#D9455F"/></svg>',
+    catal:'<svg viewBox="0 0 48 48"><path d="M14 6 v10 a4 4 0 0 0 8 0 V6" fill="none" stroke="#9AA6AE" stroke-width="3" stroke-linecap="round"/><path d="M18 16 v26" stroke="#9AA6AE" stroke-width="3" stroke-linecap="round"/><path d="M32 6 c5 0 6 12 0 14 v22" fill="none" stroke="#C8A24B" stroke-width="3" stroke-linecap="round"/></svg>',
+    pasta:'<svg viewBox="0 0 48 48"><rect x="9" y="22" width="30" height="18" rx="4" fill="#F3D6A8"/><path d="M9 26 q6 5 10 0 q6 5 10 0 q6 5 10 0 v-4 H9 Z" fill="#D9455F"/><rect x="22" y="10" width="4" height="10" rx="2" fill="#FBF5EC"/><circle cx="24" cy="8" r="3" fill="#EFB227"/></svg>',
+    taci:'<svg viewBox="0 0 48 48"><path d="M8 34 L10 16 L19 26 L24 12 L29 26 L38 16 L40 34 Z" fill="#EFB227" stroke="#8A6410" stroke-width="1.5" stroke-linejoin="round"/><circle cx="24" cy="12" r="2.5" fill="#E8792B"/><rect x="8" y="34" width="32" height="5" rx="2" fill="#D89A17"/></svg>',
+    usta:'<svg viewBox="0 0 48 48"><path d="M16 30 L11 46 L20 40 Z" fill="#D9455F"/><path d="M32 30 L37 46 L28 40 Z" fill="#E8792B"/><circle cx="24" cy="20" r="14" fill="#EFB227" stroke="#8A6410" stroke-width="2"/><path d="M24 10l2.9 6 6.5.7-4.8 4.4 1.3 6.4L24 30.6 18.1 27.9 19.4 21.5 14.6 17.1 21.1 16.4z" fill="#fff"/></svg>'
+  };
+  return p[id]||p.tabak;
+}
+var PRIZES={
+  tabak:{ad:'Şölen Tabağı', nasil:'1. sofrayı bitir'},
+  catal:{ad:'Gümüş Çatal',  nasil:'2. sofrayı bitir'},
+  pasta:{ad:'Doğum Pastası',nasil:'3. sofrayı bitir'},
+  taci: {ad:'Şölen Tacı',   nasil:'4. sofrayı bitir'},
+  usta: {ad:'Usta Rozeti',  nasil:'Şölen Sofrası\'nı üç zorlukta da bitir'}
+};
+function prizeAd(id){ return (PRIZES[id]||{}).ad||'Ödül'; }
+function prizeNasil(id){ return (PRIZES[id]||{}).nasil||''; }
+
+document.getElementById('logo').innerHTML=mathmazel(40);
+document.getElementById('maz').innerHTML=mathmazel(82);
+document.getElementById('sIcon').innerHTML=starIcon();
+(function(){var f=document.getElementById('flags');for(var i=0;i<20;i++)f.appendChild(document.createElement('i'));})();
+
+var GUESTS=['rabbit','frog','squirrel','kangaroo','cat'];
+var GUEST_AD={rabbit:'Tavşan',frog:'Kurbağa',squirrel:'Sincap',kangaroo:'Kanguru',cat:'Kedi'};
+function animalSvg(type){
+  var s='<svg viewBox="0 0 80 80" width="100%" height="100%" aria-hidden="true">';
+  if(type==='rabbit'){
+    s+='<ellipse cx="31" cy="20" rx="6" ry="16" fill="#EFEFF4" stroke="#D6D6E0" stroke-width="1.5"/>'
+      +'<ellipse cx="47" cy="20" rx="6" ry="16" fill="#EFEFF4" stroke="#D6D6E0" stroke-width="1.5"/>'
+      +'<ellipse cx="31" cy="22" rx="2.6" ry="9" fill="#F7C4D6"/><ellipse cx="47" cy="22" rx="2.6" ry="9" fill="#F7C4D6"/>'
+      +'<ellipse cx="40" cy="52" rx="22" ry="20" fill="#EFEFF4" stroke="#D6D6E0" stroke-width="1.5"/>'
+      +'<circle cx="32" cy="48" r="3" fill="#243A2E"/><circle cx="48" cy="48" r="3" fill="#243A2E"/>'
+      +'<path d="M37 56 h6" stroke="#E58AA8" stroke-width="3" stroke-linecap="round"/>'
+      +'<ellipse cx="30" cy="72" rx="6" ry="4" fill="#EFEFF4" stroke="#D6D6E0" stroke-width="1.5"/>'
+      +'<ellipse cx="50" cy="72" rx="6" ry="4" fill="#EFEFF4" stroke="#D6D6E0" stroke-width="1.5"/>';
+  } else if(type==='frog'){
+    s+='<circle cx="28" cy="26" r="9" fill="#7CC043"/><circle cx="52" cy="26" r="9" fill="#7CC043"/>'
+      +'<circle cx="28" cy="24" r="4" fill="#fff"/><circle cx="52" cy="24" r="4" fill="#fff"/>'
+      +'<circle cx="28" cy="24" r="2" fill="#243A2E"/><circle cx="52" cy="24" r="2" fill="#243A2E"/>'
+      +'<ellipse cx="40" cy="50" rx="26" ry="22" fill="#7CC043"/>'
+      +'<path d="M26 54 Q40 66 54 54" stroke="#3E6B1E" stroke-width="3" fill="none" stroke-linecap="round"/>'
+      +'<ellipse cx="20" cy="70" rx="8" ry="4" fill="#69A838"/><ellipse cx="60" cy="70" rx="8" ry="4" fill="#69A838"/>';
+  } else if(type==='cat'){
+    s+='<path d="M24 20 L30 40 L16 36 Z" fill="#F2A65A"/><path d="M56 20 L50 40 L64 36 Z" fill="#F2A65A"/>'
+      +'<path d="M25 24 L28 35 L21 33 Z" fill="#F7CBA0"/><path d="M55 24 L52 35 L59 33 Z" fill="#F7CBA0"/>'
+      +'<ellipse cx="40" cy="50" rx="23" ry="21" fill="#F2A65A"/>'
+      +'<circle cx="32" cy="47" r="3" fill="#243A2E"/><circle cx="48" cy="47" r="3" fill="#243A2E"/>'
+      +'<path d="M40 53 l-3 3 h6 z" fill="#C9642B"/>'
+      +'<path d="M18 50 h12 M18 55 h12 M62 50 h-12 M62 55 h-12" stroke="#E1935090" stroke-width="1.5"/>'
+      +'<path d="M62 60 q12 -2 8 -14" stroke="#F2A65A" stroke-width="7" fill="none" stroke-linecap="round"/>';
+  } else if(type==='squirrel'){
+    s+='<path d="M60 62 Q80 50 66 24 Q60 14 54 24 Q64 40 52 58 Z" fill="#C0703A"/>'
+      +'<path d="M60 58 Q72 48 62 30" stroke="#E0A878" stroke-width="4" fill="none" stroke-linecap="round"/>'
+      +'<path d="M28 24 L32 34 L24 32 Z" fill="#C0703A"/><path d="M50 24 L46 34 L54 32 Z" fill="#C0703A"/>'
+      +'<ellipse cx="38" cy="50" rx="21" ry="20" fill="#C0703A"/>'
+      +'<circle cx="31" cy="47" r="3" fill="#243A2E"/><circle cx="45" cy="47" r="3" fill="#243A2E"/>'
+      +'<path d="M38 53 l-2.5 3 h5 z" fill="#7A3F17"/>'
+      +'<ellipse cx="38" cy="60" rx="8" ry="6" fill="#E8C6A6"/>';
+  } else { /* kangaroo */
+    s+='<path d="M52 66 Q78 66 66 40 Q60 30 54 42 Q60 56 46 62 Z" fill="#D9A05B"/>'
+      +'<path d="M34 22 L37 36 L30 32 Z" fill="#D9A05B"/><path d="M46 22 L43 36 L50 32 Z" fill="#D9A05B"/>'
+      +'<ellipse cx="40" cy="46" rx="16" ry="17" fill="#D9A05B"/>'
+      +'<ellipse cx="40" cy="40" rx="12" ry="12" fill="#E7C094"/>'
+      +'<circle cx="35" cy="40" r="2.6" fill="#243A2E"/><circle cx="45" cy="40" r="2.6" fill="#243A2E"/>'
+      +'<path d="M38 45 h4" stroke="#8A5A22" stroke-width="2.5" stroke-linecap="round"/>'
+      +'<ellipse cx="34" cy="70" rx="9" ry="4" fill="#C68A45"/><ellipse cx="50" cy="70" rx="7" ry="4" fill="#C68A45"/>';
+  }
+  return s+'</svg>';
+}
+/* ================= BÖLÜMLER =================
+   MEB 2. sınıf bölme: 20'ye kadar, bölen 2-3-4-5, KALANSIZ.
+   Zorluk yapısal — sonradan kelepçe gerekmiyor. */
+var TIERS={
+  kolay:{bolen:[2,5],       enCok:10},
+  orta :{bolen:[2,3,4,5],   enCok:16},
+  zor  :{bolen:[2,3,4,5],   enCok:20}
+};
+var LEVELS=[
+  {name:'Eşit Paylaştır',  sub:'Herkese aynı sayıda ver',        color:'#E8792B', prize:'tabak', mode:'share'},
+  {name:'Kaç Tabak Gerek?',sub:'Her tabağa aynı sayıda koy',     color:'#3E8FC9', prize:'catal', mode:'fill'},
+  {name:'Ters Yüz',        sub:'Çarpma ile bölme aynı ailedir',  color:'#8B5CD6', prize:'pasta', mode:'inverse'},
+  {name:'Şölen Sofrası',   sub:'Sonsuz bölüm — karışık görevler',color:'#D9455F', prize:'taci',  mode:'mixed', endless:true}
+];
+var GOAL=5;
+
+var mapEl=document.getElementById('map'), playEl=document.getElementById('play'), winEl=document.getElementById('winScreen');
+function rint(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function starRow(n){var s='';for(var i=0;i<GOAL;i++)s+='<i class="'+(i<n?'on':'')+'">'+starIcon()+'</i>';return s;}
+function restartAnim(el){ if(!el) return; el.style.animation='none'; void el.offsetWidth; el.style.animation=''; }
+
+/* ================= HARİTA ================= */
+var justWonPrize=null;
+function showMap(){ paintStars(); playEl.classList.add('hidden'); winEl.classList.add('hidden');
+  mapEl.classList.remove('hidden'); renderMap(); window.scrollTo(0,0); }
+function renderMap(){
+  var b=document.getElementById('booths'); b.innerHTML='';
+  LEVELS.forEach(function(L,i){
+    var open=(i+1)<=S.unlocked, done=S.levelStars[i]>=GOAL;
+    var bt=document.createElement('button'); bt.className='booth'; if(!open) bt.disabled=true;
+    var right = done ? '<span class="tick">'+tickIcon()+'</span>'
+      : open ? '<span class="stars">'+starRow(S.levelStars[i])+'</span>'
+             : '<span class="lock">'+lockIcon()+'</span>';
+    var td=S.tierDone[i]||{};
+    var pips = open ? '<span class="tierpips" title="Kolay / Orta / Zor">'
+      +'<i class="'+(td.kolay?'on kolay':'')+'"></i><i class="'+(td.orta?'on orta':'')+'"></i><i class="'+(td.zor?'on zor':'')+'"></i></span>' : '';
+    bt.innerHTML='<span class="badge" style="background:'+L.color+'">'+(i+1)+'</span>'
+      +'<div><h3>'+L.name+'</h3><p>'+L.sub+'</p>'+pips+'</div>'+right;
+    if(open) bt.onclick=function(){ startLevel(i); };
+    b.appendChild(bt);
+  });
+  var sh=document.getElementById('shelf'); sh.innerHTML='';
+  function cell(id, extra){
+    var got=S.prizes.indexOf(id)>-1;
+    var c=document.createElement('div'); c.className='prizecell';
+    var d=document.createElement('div'); d.className='prize '+(extra||'')+' '+(got?'got':'empty');
+    d.innerHTML=prizeSvg(id)+(got?'':'<span class="lockdot">'+lockIcon()+'</span>');
+    if(!got) d.setAttribute('aria-label', prizeAd(id)+' — henüz kazanılmadı');
+    var nm=document.createElement('span'); nm.className='pname'+(got?'':' locked');
+    nm.textContent = got ? prizeAd(id) : prizeNasil(id);
+    c.appendChild(d); c.appendChild(nm); sh.appendChild(c);
+  }
+  LEVELS.forEach(function(L){ cell(L.prize); });
+  cell('usta','master');
+  if(justWonPrize){
+    var cs=sh.querySelectorAll('.prize');
+    var order=LEVELS.map(function(L){return L.prize;}).concat(['usta']);
+    var ix=order.indexOf(justWonPrize);
+    if(ix>-1 && cs[ix]) Celebrate.pulse(cs[ix]);
+    justWonPrize=null;
+  }
+}
+
+/* ================= OYUN ================= */
+var curLevel=0, correctCount=0, sectionNo=1, Q=null, missedThisQ=false;
+var kalan=0, plates=[], locked=false, treatId='kurabiye', buf='';
+
+function startLevel(i){
+  curLevel=i; correctCount=0; sectionNo=1;
+  mapEl.classList.add('hidden'); winEl.classList.add('hidden'); playEl.classList.remove('hidden');
+  window.scrollTo(0,0);
+  document.getElementById('lvlpill').textContent=LEVELS[i].name;
+  document.getElementById('lvlpill').style.background=LEVELS[i].color;
+  renderDiffBar(); renderModeBar(); updateSectionBadge();
+  Sfx.unlock(); nextTask();
+}
+function renderDiffBar(){
+  var bar=document.getElementById('diffbar'); bar.innerHTML='';
+  [['kolay','Kolay'],['orta','Orta'],['zor','Zor']].forEach(function(d){
+    var b=document.createElement('button'); b.className=d[0]+(S.diff===d[0]?' on':'');
+    b.textContent=d[1];
+    b.onclick=function(){ if(S.diff===d[0]) return; S.diff=d[0]; persist(); Sfx.click();
+      Array.prototype.forEach.call(bar.children,function(x){x.classList.remove('on');});
+      b.classList.add('on'); nextTask(); };
+    bar.appendChild(b);
+  });
+}
+function renderModeBar(){
+  var ap=document.getElementById('ansPad'), as=document.getElementById('ansSik');
+  function paint(){ ap.classList.toggle('on',!sikMod); as.classList.toggle('on',sikMod);
+    ap.setAttribute('aria-pressed',!sikMod); as.setAttribute('aria-pressed',sikMod); }
+  ap.onclick=function(){ if(!sikMod) return; sikMod=false; Settings.set('solenSik',false); Sfx.click(); paint(); nextTask(); };
+  as.onclick=function(){ if(sikMod) return;  sikMod=true;  Settings.set('solenSik',true);  Sfx.click(); paint(); nextTask(); };
+  paint();
+  document.getElementById('resetBtn').onclick=function(){ Sfx.click(); resetDagitim(); };
+}
+function updateSectionBadge(){
+  var el=document.getElementById('sectionBadge');
+  if(LEVELS[curLevel] && LEVELS[curLevel].endless){ el.style.display=''; el.textContent='Bölüm '+sectionNo; }
+  else el.style.display='none';
+}
+function updateMeter(popIndex){
+  var m=document.getElementById('meter'); m.innerHTML='';
+  for(var i=0;i<GOAL;i++){ var e=document.createElement('i');
+    e.className=(i<correctCount?'on':'')+(i===popIndex?' pop':'');
+    e.innerHTML=starIcon(); m.appendChild(e); }
+}
+
+/* ---------- görev üretimi ---------- */
+function makeTask(){
+  var L=LEVELS[curLevel], mode=L.mode;
+  if(mode==='mixed') mode=pick(['share','fill','inverse']);
+  var T=TIERS[S.diff]||TIERS.kolay;
+  var bolen=pick(T.bolen);
+  var enFazla=Math.min(10, Math.floor(T.enCok/bolen));
+  var bolum=rint(2, Math.max(2, enFazla));
+  var bolunen=bolen*bolum;
+  /* Hangi bilinmeyen soruluyor, moda göre değişir:
+       share  : "her arkadaşa kaç düştü?"  -> bolum
+       fill   : "kaç tabak doldu?"          -> bolen
+       inverse: "baştan kaç tane vardı?"    -> bolunen  */
+  var cevap = (mode==='fill') ? bolen : (mode==='inverse') ? bolunen : bolum;
+  return {mode:mode, bolen:bolen, bolum:bolum, bolunen:bolunen, ans:cevap};
+}
+function treat(){ return TREATS[treatId]; }
+
+/* ---------- ekran ---------- */
+function nextTask(){
+  if(!document.getElementById('seats')) return;
+  Q=makeTask(); missedThisQ=false; locked=false;
+  treatId=TREAT_ORDER[(curLevel+sectionNo+correctCount)%TREAT_ORDER.length];
+  /* plates: her tabakta kaç var. share/fill'de dağıtılır, inverse'de kullanılmaz */
+  var n = (Q.mode==='fill') ? Math.min(Q.bolen+2, 8) : Q.bolen;
+  plates=[]; for(var i=0;i<n;i++) plates.push(0);
+  kalan=Q.bolunen;
+  updateMeter();
+  document.getElementById('cheer').textContent='';
+  setSlot('');
+  renderTask(); renderBowl(); renderSeats(); renderBuild(); renderPad();
+}
+function resetDagitim(){
+  if(locked || !Q || Q.mode==='inverse') return;
+  for(var i=0;i<plates.length;i++) plates[i]=0;
+  kalan=Q.bolunen;
+  renderBowl(); renderSeats(); renderBuild();
+  document.getElementById('cheer').textContent='';
+}
+
+function renderTask(){
+  var t=document.getElementById('task'), c=treat(), s='';
+  if(Q.mode==='share')
+    s='<b>'+Q.bolunen+' '+c.ad+'</b> var, <b>'+Q.bolen+' arkadaş</b> geldi. Herkese <b>eşit</b> paylaştır.';
+  else if(Q.mode==='fill')
+    s='<b>'+Q.bolunen+' '+c.ad+'</b> var. Her tabağa <b>'+Q.bolum+' tane</b> koy.';
+  else
+    s='<b>'+Q.bolen+'</b> arkadaş, her birine <b>'+Q.bolum+'</b> '+c.ad+' düştü. Baştan kaç '+c.ad+' vardı?';
+  t.innerHTML='<span class="who">'+mathmazel(38)+'</span><p>'+s+'</p>';
+}
+
+function renderBowl(){
+  var b=document.getElementById('bowl'), c=treat();
+  if(Q.mode==='inverse'){ b.classList.add('hidden'); return; }
+  b.classList.remove('hidden');
+  var h='<div class="items">';
+  for(var i=0;i<kalan;i++) h+=c.svg;
+  h+='</div><div class="lab">Ortak tabakta <b>'+kalan+'</b> '+c.ad+' kaldı</div>';
+  b.innerHTML=h;
+}
+
+function renderSeats(){
+  var w=document.getElementById('seats'), c=treat();
+  if(Q.mode==='inverse'){ w.classList.add('hidden'); return; }
+  w.classList.remove('hidden');
+  w.innerHTML='';
+  plates.forEach(function(adet,i){
+    var btn=document.createElement('button'); btn.type='button'; btn.className='seat';
+    var dolu = (Q.mode==='fill') && adet>=Q.bolum;
+    if(dolu) btn.classList.add('full');
+    if(kalan<=0 || dolu) btn.disabled=true;
+    var ic='';
+    if(Q.mode==='share'){
+      ic='<span class="guest">'+animalSvg(GUESTS[i%GUESTS.length])+'</span>';
+    }
+    var pl='<span class="plate">';
+    for(var k=0;k<adet;k++) pl+=c.svg;
+    pl+='</span>';
+    var ad = (Q.mode==='share') ? GUEST_AD[GUESTS[i%GUESTS.length]] : (i+1)+'. tabak';
+    btn.innerHTML=ic+pl+'<span class="cnt">'+adet+'</span><span class="nm">'+ad+'</span>';
+    btn.setAttribute('aria-label', ad+', '+adet+' '+c.ad);
+    btn.onclick=function(){ ver(i, btn); };
+    w.appendChild(btn);
+  });
+}
+
+/* bir ikramı seçilen tabağa uçur */
+function ver(i, btn){
+  if(locked || kalan<=0) return;
+  if(Q.mode==='fill' && plates[i]>=Q.bolum) return;
+  var kaynak=document.querySelector('#bowl .items svg');
+  kalan--; plates[i]++;
+  Sfx.tone(360+plates[i]*40, .06, 'triangle', .12);
+  renderBowl();
+  renderSeats();
+  renderBuild();
+  var hedef=document.querySelectorAll('#seats .seat')[i];
+  ucur(kaynak, hedef);
+}
+function ucur(fromEl, toEl){
+  if(Celebrate.reduced || !fromEl || !toEl) return;
+  var host=document.createElement('div'); host.className='fly';
+  var a=fromEl.getBoundingClientRect(), b=toEl.getBoundingClientRect();
+  if(!a.width || !b.width) return;
+  host.style.left=(a.left+a.width/2)+'px'; host.style.top=(a.top+a.height/2)+'px';
+  var inner=document.createElement('i'); inner.innerHTML=treat().svg;
+  host.appendChild(inner); document.body.appendChild(host);
+  if(typeof inner.animate!=='function'){ host.remove(); return; }
+  var dx=(b.left+b.width/2)-(a.left+a.width/2), dy=(b.top+b.height/2)-(a.top+a.height/2);
+  var bitti=false;
+  function son(){ if(bitti) return; bitti=true; if(host.parentNode) host.parentNode.removeChild(host); }
+  var an=inner.animate([
+    {transform:'translate(0,0) scale(1)', opacity:1},
+    {transform:'translate('+(dx*0.5)+'px,'+(dy*0.5-26)+'px) scale(1.2)', opacity:1, offset:.55},
+    {transform:'translate('+dx+'px,'+dy+'px) scale(.7)', opacity:1}
+  ], {duration:360, easing:'cubic-bezier(.35,.05,.3,1)'});
+  an.onfinish=son; setTimeout(son, 620);
+}
+
+function esitMi(){
+  if(!plates.length) return false;
+  var ilk=plates[0];
+  for(var i=0;i<plates.length;i++) if(plates[i]!==ilk) return false;
+  return true;
+}
+function soruSatiri(){
+  var c=treat().ad;
+  if(Q.mode==='share')   return '<div class="askline">Her arkadaşa kaç <em>'+c+'</em> düştü?</div>';
+  if(Q.mode==='fill')    return '<div class="askline">Kaç <em>tabak</em> doldu?</div>';
+  return '<div class="askline">Baştan kaç <em>'+c+'</em> vardı?</div>';
+}
+function renderBuild(){
+  var b=document.getElementById('build');
+  if(Q.mode==='inverse'){
+    b.innerHTML='<div class="hintline">Çarpma ile bölme aynı ailedendir</div>'
+      +'<div class="div"><span>'+Q.bolen+'</span> <span class="op">×</span> <span>'+Q.bolum+'</span> <span class="op">=</span> ?</div>'
+      +'<div class="mul">? <span class="op">÷</span> '+Q.bolen+' = '+Q.bolum+'</div>'
+      + soruSatiri();
+    return;
+  }
+  var h='';
+  if(kalan>0){
+    h='<div class="hintline">Ortak tabakta '+kalan+' tane kaldı — hepsini dağıt</div>';
+  } else if(Q.mode==='share' && !esitMi()){
+    h='<div class="hintline" style="color:var(--berry-dk)">Tabaklar eşit değil! Herkeste aynı sayıda olmalı — “Baştan dağıt”a bas.</div>';
+  } else {
+    h='<div class="div"><span>'+Q.bolunen+'</span> <span class="op">÷</span> <span>'
+      + (Q.mode==='fill'? Q.bolum : Q.bolen) +'</span> <span class="op">=</span> ?</div>';
+  }
+  b.innerHTML=h + soruSatiri();
+}
+
+/* ---------- cevap ---------- */
+function setSlot(v){
+  buf=v;
+  var s=document.getElementById('slot');
+  s.textContent = v==='' ? '?' : v;
+  s.classList.toggle('filled', v!=='');
+  s.classList.remove('bad');
+}
+function secenekler(){
+  var set={}, o=[Q.ans]; set[Q.ans]=1;
+  /* En anlamlı çeldirici: bölen ile bölümü karıştırmak (12÷3 için 3 yerine 4). */
+  var oncelik=[ (Q.mode==='fill'? Q.bolum : Q.bolen), Q.ans+1, Q.ans-1 ]
+    .filter(function(v){ return v>0 && !set[v]; });
+  if(oncelik.length){ set[oncelik[0]]=1; o.push(oncelik[0]); }
+  var aday=[Q.ans+1, Q.ans-1, Q.ans+2, Q.ans-2, Q.bolunen, Q.bolen, Q.bolum]
+    .filter(function(v){ return v>0 && !set[v]; });
+  aday.sort(function(){ return Math.random()-0.5; });
+  for(var i=0;i<aday.length && o.length<3;i++){ set[aday[i]]=1; o.push(aday[i]); }
+  for(var f=1;o.length<3;f++){ var w=Q.ans+f; if(w>0 && !set[w]){ set[w]=1; o.push(w); } }
+  return o.sort(function(){ return Math.random()-0.5; });
+}
+function renderPad(){
+  var p=document.getElementById('pad'), slotWrap=document.querySelector('.answer');
+  p.innerHTML='';
+  if(sikMod){
+    slotWrap.classList.add('hidden'); p.className='opts';
+    secenekler().forEach(function(v){
+      var b=document.createElement('button'); b.type='button'; b.className='opt'; b.textContent=v;
+      b.onclick=function(){ if(locked) return;
+        if(v===Q.ans){ setSlot(String(v)); dogru(); }
+        else { b.classList.add('wrong'); yanlis(); } };
+      p.appendChild(b);
+    });
+    return;
+  }
+  slotWrap.classList.remove('hidden'); p.className='pad';
+  ['7','8','9','4','5','6','1','2','3','sil','0','ok'].forEach(function(k){
+    var b=document.createElement('button'); b.type='button';
+    if(k==='sil'){ b.className='del'; b.textContent='←'; b.setAttribute('aria-label','sil'); }
+    else if(k==='ok'){ b.className='act'; b.textContent='Tamam'; }
+    else b.textContent=k;
+    b.onclick=function(){
+      if(k==='sil'){ Sfx.click(); setSlot(buf.slice(0,-1)); return; }
+      if(k==='ok'){ submit(); return; }
+      if(buf.length>=3) return;
+      Sfx.tone(300+(+k)*30, .05, 'square', .08);
+      setSlot((buf+k).replace(/^0+(?=\d)/,''));
+    };
+    p.appendChild(b);
+  });
+}
+function submit(){ if(buf===''||locked) return; if(parseInt(buf,10)===Q.ans) dogru(); else yanlis(); }
+
+function yanlis(){
+  missedThisQ=true; Sfx.bad();
+  var s=document.getElementById('slot'); s.classList.add('bad'); restartAnim(s);
+  var ch=document.getElementById('cheer'); ch.style.color='var(--muted)';
+  ch.textContent = (Q.mode==='fill') ? 'Olmadı. Dolu tabakları say.'
+    : (Q.mode==='share') ? 'Olmadı. Bir arkadaşın tabağını say.'
+    : 'Olmadı, bir daha bak.';
+  locked=true;
+  setTimeout(function(){ locked=false; setSlot(''); s.classList.remove('bad');
+    ch.textContent=''; ch.style.color='';
+    Array.prototype.forEach.call(document.querySelectorAll('#pad .opt'),
+      function(o){ o.classList.remove('wrong'); });
+  }, 1100);
+}
+
+function dogru(){
+  locked=true;
+  if(missedThisQ) Progress.logMiss(Q.bolen, Q.bolum); else Progress.logHit(Q.bolen, Q.bolum);
+  Sfx.good();
+  addStar(1); correctCount++; updateMeter(correctCount-1);
+  Celebrate.flyStar(document.getElementById('slot'), scEl, catchStar);
+
+  /* Müfredat çarpma–bölme bağını istiyor: ikisini birden yaz. */
+  var b1 = (Q.mode==='fill') ? Q.bolum : Q.bolen;
+  var b2 = (Q.mode==='fill') ? Q.bolen : Q.bolum;
+  document.getElementById('build').innerHTML=
+      '<div class="div"><span>'+Q.bolunen+'</span> <span class="op">÷</span> <span>'+b1
+    + '</span> <span class="op">=</span> <span>'+b2+'</span></div>'
+    + '<div class="mul">'+b1+' × '+b2+' = '+Q.bolunen+'</div>';
+
+  var ch=document.getElementById('cheer'); ch.style.color='';
+  ch.textContent = missedThisQ ? pick(['Buldun! 👏','İşte bu!','Doğru! Vazgeçmedin.'])
+                               : pick(['Sofra hazır! 🍽️','Harika!','Bravo!','Çok iyi!']);
+  if(correctCount>=GOAL){
+    if(LEVELS[curLevel].endless) setTimeout(sectionDone, 1250);
+    else setTimeout(winLevel, 1200);
+  } else setTimeout(function(){ locked=false; nextTask(); }, 1250);
+}
+
+/* ---------- bölüm sonu ---------- */
+function endlessIndex(){ for(var i=0;i<LEVELS.length;i++) if(LEVELS[i].endless) return i; return LEVELS.length-1; }
+function masterEarned(){ var t=S.tierDone[endlessIndex()]||{}; return t.kolay&&t.orta&&t.zor; }
+function markTierAndMaster(){
+  var was=masterEarned();
+  if(!S.tierDone[curLevel]) S.tierDone[curLevel]={};
+  S.tierDone[curLevel][S.diff]=true;
+  if(!was && masterEarned() && S.prizes.indexOf('usta')<0){ S.prizes.push('usta'); persist(); return true; }
+  persist(); return false;
+}
+function tierSuggestion(){
+  var td=S.tierDone[curLevel]||{};
+  if(S.diff==='kolay' && !td.orta) return 'Bunu bir de <b>Orta</b>\'da denemek ister misin?';
+  if(S.diff==='orta'  && !td.zor)  return 'Bunu bir de <b>Zor</b>\'da denemek ister misin?';
+  return '';
+}
+function sectionDone(){
+  var L=LEVELS[curLevel];
+  var first=S.prizes.indexOf(L.prize)<0;
+  if(first) S.prizes.push(L.prize);
+  if(S.levelStars[curLevel]<GOAL) S.levelStars[curLevel]=GOAL;
+  var gotMaster=markTierAndMaster();
+  var ch=document.getElementById('cheer'); ch.style.color='var(--grass-dk)';
+  ch.textContent = gotMaster ? 'USTA ROZETİ senin! Üç zorluğu da bitirdin!'
+    : (first ? 'Tacı kazandın! Bölüm 1 tamam — devam!' : 'Bölüm '+sectionNo+' tamam! Devam!');
+  Sfx.pop(); Sfx.win();
+  Celebrate.finale({count: gotMaster?110:60});
+  sectionNo++; correctCount=0; updateMeter(); updateSectionBadge();
+  setTimeout(function(){ locked=false; nextTask(); }, 2200);
+}
+function winLevel(){
+  var L=LEVELS[curLevel];
+  S.levelStars[curLevel]=GOAL;
+  if(S.prizes.indexOf(L.prize)<0) S.prizes.push(L.prize);
+  markTierAndMaster();
+  if(curLevel+2>S.unlocked && curLevel+1<LEVELS.length) S.unlocked=curLevel+2;
+  persist(); paintStars();
+  Sfx.pop(); Sfx.win(); Celebrate.finale();
+  justWonPrize=L.prize;
+  playEl.classList.add('hidden'); winEl.classList.remove('hidden'); window.scrollTo(0,0);
+  document.getElementById('winPrize').innerHTML=prizeSvg(L.prize);
+  document.getElementById('winPrizeName').textContent=prizeAd(L.prize);
+  ['winPrize','winPrizeName','winAdded'].forEach(function(id){ restartAnim(document.getElementById(id)); });
+  document.getElementById('winTitle').textContent=L.name+' tamam!';
+  var last=curLevel===LEVELS.length-1;
+  document.getElementById('winMsg').textContent = last
+    ? 'Bütün sofraları kurdun! Sen bir paylaşma ustasısın.'
+    : 'Yeni bir ödülün var ve yeni sofra açıldı!';
+  var sug=tierSuggestion(), sEl=document.getElementById('winSuggest');
+  if(sEl){ sEl.innerHTML=sug; sEl.classList.toggle('hidden', !sug); }
+  document.getElementById('winNext').classList.toggle('hidden', last);
+}
+document.getElementById('winNext').onclick=function(){ var nx=curLevel+1; if(nx<LEVELS.length) startLevel(nx); else showMap(); };
+document.getElementById('winMap').onclick=showMap;
+document.getElementById('back').onclick=function(){ Sfx.click(); showMap(); };
+
+renderMap();
+</script>
+<script src="../shared/hud.js"></script>
