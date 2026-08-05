@@ -250,7 +250,7 @@
       <span class="maz" id="mazHero"></span>
       <div>
         <h1>Hoş geldin!</h1>
-        <p>Dört çadır, dört oyun. İstediğin çadırdan başla — Mathmazel sana yardım edecek.</p>
+        <p>Dört çadır, dört oyun. İstediğin çadırdan başla. Mathmazel sana yardım edecek.</p>
       </div>
     </div>
     <div class="tents" id="tents"></div>
@@ -348,14 +348,14 @@ document.getElementById('tikSlot').innerHTML = ticket(22);
 
 /* ---- home tents ---- */
 var GAMES = [
-  {id:'pattern', no:'01', name:'Örüntü Keşfi', tag:'KEŞİF', tagc:'k',
-   desc:'Tabloyu aç, gizli örüntüyü kendin bul.'},
-  {id:'bridge', no:'02', name:'Türetme Köprüsü', tag:'TÜRETME', tagc:'t',
-   desc:'Zor çarpımı, bildiklerinden köprü kurarak çöz.'},
-  {id:'hunt', no:'03', name:'Çekirdek Avı', tag:'AKICILIK', tagc:'a',
-   desc:'Takıldığın 6 çekirdeği avla, ustalaş.'},
-  {id:'rhythm', no:'04', name:'Ritmik Ritim', tag:'KAVRAM', tagc:'k',
-   desc:'Ritme uy, ikişer beşer sayarak çarpmaya köprü kur.'}
+  {id:'pattern', no:'01', name:'Örüntü Bul', tag:'KEŞİF', tagc:'k',
+   desc:'Kutulara dokun, tabloyu aç. Gizli kuralı sen bul.'},
+  {id:'bridge', no:'02', name:'Köprü Kur', tag:'KÖPRÜ', tagc:'t',
+   desc:'Zor bir çarpımı, bildiğin kolay çarpımdan bul.'},
+  {id:'hunt', no:'03', name:'Zor Çarpımlar', tag:'ALIŞTIRMA', tagc:'a',
+   desc:'En çok takıldığın 6 çarpımı yakala.'},
+  {id:'rhythm', no:'04', name:'Ritimle Say', tag:'RİTİM', tagc:'k',
+   desc:'Ritme uy, ikişer beşer say.'}
 ];
 var tents = document.getElementById('tents');
 GAMES.forEach(function(g){
@@ -390,8 +390,8 @@ function buildPattern(){
   };
   var p = el('div','panel');
   p.innerHTML =
-    '<div class="ghead">'+iconWrap(mathmazel(44))+'<div><h2>Örüntü Keşfi</h2>'
-    +'<p>Bir sayı seç, kutulara dokunarak tabloyu aç ve örüntüyü sen bul.</p></div></div>'
+    '<div class="ghead">'+iconWrap(mathmazel(44))+'<div><h2>Örüntü Bul</h2>'
+    +'<p>Bir sayı seç. Kutulara dokun, açılsınlar. Sayılarda gizli bir kural var — onu sen bul!</p></div></div>'
     +'<div class="chips" id="pchips"></div>'
     +'<div class="ptitle" id="ptitle"></div>'
     +'<div class="plabels" id="plabels"></div>'
@@ -521,8 +521,8 @@ function buildBridge(){
   shuffle(facts); var idx=0;
 
   var p=el('div','panel');
-  p.innerHTML='<div class="ghead">'+iconWrap(tilkipi(44))+'<div><h2>Türetme Köprüsü</h2>'
-    +'<p>Zor çarpımı ezberleme — bildiklerinden köprü kur. Taşlara sırayla dokun.</p></div></div>'
+  p.innerHTML='<div class="ghead">'+iconWrap(tilkipi(44))+'<div><h2>Köprü Kur</h2>'
+    +'<p>Zor çarpımı ezberleme! Bildiğin kolay bir çarpımdan başla. Taşlara sırayla dokun.</p></div></div>'
     +'<div class="fact" id="bfact"></div>'
     +'<div class="stones" id="bstones"></div>'
     +'<div class="row"><button class="primary hidden" id="bnext">Sonraki köprü ›</button>'
@@ -575,10 +575,10 @@ function buildBridge(){
              küçük kutlama her seferinde, büyük olan hepsi bitince. */
           if(toplam===facts.length && ilkKez){
             Celebrate.finale({count:110});
-            document.getElementById('bhint').textContent='🎉 Bütün köprüleri kurdun! Artık zor çarpımların yolunu biliyorsun.';
+            document.getElementById('bhint').textContent='🎉 Bütün köprüleri kurdun! Artık zor çarpımları da biliyorsun.';
           } else {
             Celebrate.finale({count:35});
-            document.getElementById('bhint').textContent='Bu tek yol değil — değişme özelliğiyle başka köprüler de kurulabilir.';
+            document.getElementById('bhint').textContent='Başka yol da var: '+f.a+' × '+f.b+' ile '+f.b+' × '+f.a+' aynı eder.';
           }
           var nb=document.getElementById('bnext'); nb.classList.remove('hidden');
         }
@@ -636,8 +636,8 @@ function buildHunt(){
   var cur=null;
 
   var p=el('div','panel');
-  p.innerHTML='<div class="ghead">'+iconWrap(mathmazel(44))+'<div><h2>Çekirdek Avı</h2>'
-    +'<p>En çok takıldığın çarpımlar daha sık gelir. Doğru avla, ustalaş.</p></div></div>'
+  p.innerHTML='<div class="ghead">'+iconWrap(mathmazel(44))+'<div><h2>Zor Çarpımlar</h2>'
+    +'<p>En çok takıldığın çarpımlar daha sık gelir. Bir çarpımı üç kez doğru bilirsen yıldızı kazanırsın.</p></div></div>'
     +'<div class="huntq" id="hq"></div>'
     +'<div class="opts" id="hopts"></div>'
     +'<div class="hintbar">'
@@ -645,7 +645,7 @@ function buildHunt(){
     +'<button class="hbtn" id="hFox">'+avatar(tilkipi(24))+' Tilki Pi ipucu <span style="color:var(--fox)">−2 yıldız</span></button>'
     +'</div><div class="hintmsg" id="hmsg"></div>'
     +'<div class="huntfoot"><span class="streak" id="hstreak">Seri: 0</span>'
-    +'<span class="streak">Çekirdek ustalığı:</span><span class="stars" id="hstars"></span></div>';
+    +'<span class="streak">Bildiklerin:</span><span class="stars" id="hstars"></span></div>';
   stage.appendChild(p);
 
   var starsEl=document.getElementById('hstars');
@@ -681,7 +681,7 @@ function buildHunt(){
     });
     /* Kutlama yalnız oyun içinde kazanınca — çadıra girerken değil. */
     if(done===core.length && !sessiz){ document.getElementById('hmsg').classList.add('show');
-      document.getElementById('hmsg').textContent='🎉 Tüm zor çekirdekleri avladın! Artık çarpım tablosunun en zor kısmı senin.';
+      document.getElementById('hmsg').textContent='🎉 Altı zor çarpımın hepsini bildin! En zorlarını artık biliyorsun.';
       if(!state.seen.huntDone){ state.seen.huntDone=1; persist(); Sfx.win(); Celebrate.finale(); } }
   }
   function next(){
@@ -722,7 +722,7 @@ function buildHunt(){
       });
       var msg=document.getElementById('hmsg'); msg.classList.add('show');
       var ck=Math.max(cur.a,cur.b)+'x'+Math.min(cur.a,cur.b);
-      msg.innerHTML='Doğrusu <b>'+ans+'</b>. '+(strat[ck]||'Bildiğin bir çarpımdan köprü kurmayı dene.');
+      msg.innerHTML='Doğrusu <b>'+ans+'</b>. '+(strat[ck]||'Bildiğin kolay bir çarpımdan başlamayı dene.');
       later(next, 2100);
     }
   }
@@ -735,7 +735,7 @@ function buildHunt(){
   };
   document.getElementById('hFox').onclick=function(){
     if(this.disabled) return;
-    if(state.xp<2){ var m=document.getElementById('hmsg'); m.classList.add('show'); m.textContent='Tilki Pi: Yeterli yıldızın yok (2 gerekir). Mathmazel ücretsiz yardım eder!'; return; }
+    if(state.xp<2){ var m=document.getElementById('hmsg'); m.classList.add('show'); m.textContent='Tilki Pi: 2 yıldızın olmalı. Mathmazel bedava yardım ediyor, ona sor!'; return; }
     addXP(-2);
     var ans=cur.a*cur.b; var wrongs=[];
     Array.prototype.forEach.call(document.getElementById('hopts').children,function(o){
@@ -783,7 +783,7 @@ function ulestir(n){
 /* ============ GAME 4: Ritmik Ritim ============ */
 function buildRhythm(){
   var p=el('div','panel');
-  p.innerHTML='<div class="ghead">'+iconWrap(mathmazel(44))+'<div><h2>Ritmik Ritim</h2>'
+  p.innerHTML='<div class="ghead">'+iconWrap(mathmazel(44))+'<div><h2>Ritimle Say</h2>'
     +'<p>Bir adım seç ve ritme uyarak say. Her basışta sayı ilerler; '
     +'vuruşa denk gelirsen yıldız kazanırsın.</p></div></div>'
     +'<div class="chips" id="rchips"></div>'
