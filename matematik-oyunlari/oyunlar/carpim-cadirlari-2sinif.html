@@ -185,14 +185,14 @@
   .tapbtn:disabled{background:var(--line); box-shadow:0 5px 0 #d7cee6; color:var(--muted)}
   .feedback{text-align:center; font-family:var(--disp); font-weight:700; font-size:18px; height:24px; margin-top:10px}
 
-/* Ritmik Ritim: sayma ile çarpma arasındaki köprü — çadırın asıl vaadi */
+/* Ritimle Say: sayma ile çarpma arasındaki köprü — çadırın asıl vaadi */
   .rbridge{text-align:center; margin-top:6px; min-height:44px}
   .rbridge .say{font-weight:700; font-size:13.5px; color:var(--muted)}
   .rbridge .carp{font-family:var(--disp); font-weight:700; font-size:clamp(20px,5vw,26px);
     color:var(--berry-dk); margin-top:2px}
   .rbridge .carp.big{color:var(--grass-dk)}
 
-  /* Türetme Köprüsü: sorunun altındaki "yani N tane M" bağı ve ilerleme */
+  /* Köprü Kur: sorunun altındaki "yani N tane M" bağı ve ilerleme */
   .fact small{display:block; font-family:var(--body); font-weight:700;
     font-size:14px; color:var(--muted); margin-top:2px}
   .stone .num{width:auto; min-width:58px; padding:0 8px; border-radius:999px; font-size:12px}
@@ -200,7 +200,7 @@
   .stone.done{cursor:default}
   .bprog{margin-top:14px; font-weight:800; font-size:12.5px; color:var(--muted)}
 
-  /* Örüntü Keşfi: hangi tablonun açık olduğu ve renklerin anlamı */
+  /* Örüntü Bul: hangi tablonun açık olduğu ve renklerin anlamı */
   .ptitle{font-family:var(--disp); font-weight:700; font-size:15px; margin:2px 0 8px; color:var(--ink)}
   .ptitle small{font-family:var(--body); font-weight:700; font-size:12px; color:var(--muted); margin-left:6px}
   .fglegend{display:flex; flex-wrap:wrap; gap:8px 14px; margin-top:12px;
@@ -378,7 +378,7 @@ function openGame(id){
   else if(id==='rhythm') buildRhythm();
 }
 
-/* ============ GAME 1: Örüntü Keşfi ============ */
+/* ============ GAME 1: Örüntü Bul ============ */
 function buildPattern(){
   var patterns = {
     1:'×1 sayıyı hiç değiştirmez: 7 × 1 = 7, 9 × 1 = 9.',
@@ -496,7 +496,7 @@ function fullGrid(){
 function getCSS(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
 function iconWrap(svg){ return '<span class="ic">'+svg+'</span>'; }
 
-/* ============ GAME 2: Türetme Köprüsü ============ */
+/* ============ GAME 2: Köprü Kur ============ */
 function buildBridge(){
   /* DİL: MEB'de "a × b" = "a kere b" = a grup, her grupta b tane.
      Yani İLK çarpan grup sayısıdır. Bu yüzden köprüler hep grup SAYISINI
@@ -590,7 +590,7 @@ function buildBridge(){
   render();
 }
 
-/* ============ GAME 3: Çekirdek Avı ============ */
+/* ============ GAME 3: Zor Çarpımlar ============ */
 function buildHunt(){
   /* 2. sınıfın en çok zorlandığı, kapsam içi altı çekirdek */
   var core=[[3,7],[3,8],[3,9],[4,6],[4,7],[4,8]];
@@ -780,7 +780,7 @@ function ulestir(n){
   return n + "'" + (ek[n] || 'er');
 }
 
-/* ============ GAME 4: Ritmik Ritim ============ */
+/* ============ GAME 4: Ritimle Say ============ */
 function buildRhythm(){
   var p=el('div','panel');
   p.innerHTML='<div class="ghead">'+iconWrap(mathmazel(44))+'<div><h2>Ritimle Say</h2>'
