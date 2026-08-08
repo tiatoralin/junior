@@ -703,32 +703,41 @@ function nextQuestion(){
   if(autoRead) speakQuestion();
 }
 
-/* "Kaçar Kaçar?" bölümünün yolu: seçilen adıma göre çizilir */
+/* "Kaçar Kaçar?" bölümünün yolu: seçilen adıma göre çizilir.
+   Sayı doğrusu diğer bölümlerle AYNI yönde: 0 solda, bölünen sağda.
+   Önce ters çizilmişti; tavşan sağa gidiyor ama düğme "geri" diyordu.
+   Ayrıca taş değerleri eksiye düşüyordu — 2. sınıfta negatif sayı yok. */
 var secilenAdim=null;
+function adimDeger(i){        /* i: soldan sağa taş sırası */
+  return Q.bolunen - (adimAdet()-i)*secilenAdim;
+}
+function adimAdet(){          /* sıfırın altına inmeden atılabilecek zıplayış */
+  return Math.floor(Q.bolunen/secilenAdim);
+}
 function yoluCiz(adim){
   var stns=document.getElementById('stones'); stns.innerHTML='';
   var ctrl=document.getElementById('controls');
   if(!adim){
+    secilenAdim=null;
     ctrl.innerHTML='';
     document.getElementById('runsum').textContent='Önce bir zıplayış boyu seç.';
     var bos=document.createElement('div'); bos.className='stone path'; stns.appendChild(bos);
     placeRunner(0,1);
     return;
   }
-  /* Yol her zaman bölünenden başlar; seçilen adımla kaç taş olacağını hesapla. */
-  var adet=Math.ceil(Q.bolunen/adim);
-  var cnt=adet+1;
+  secilenAdim=adim;
+  var adet=adimAdet(), cnt=adet+1;
   for(var i=0;i<cnt;i++){
     var st=document.createElement('div'); st.className='stone path';
-    var deger=Q.bolunen-i*adim;
-    st.dataset.val=deger;
+    var deger=adimDeger(i);
+    st.dataset.val=deger; st.dataset.idx=i;
     st.innerHTML=(deger===0?'<span class="carrot">'+kaseSvg()+'</span>':'')
-      +'<span class="snum">'+(i===0?Q.bolunen:'')+'</span>';
+      +'<span class="snum">'+(i===adet?Q.bolunen:'')+'</span>';
     stns.appendChild(st);
   }
-  cur=0;
-  stns.children[0].classList.add('hit');
-  placeRunner(0,cnt);
+  cur=adet;                              /* tavşan sağda, bölünenin üstünde */
+  stns.children[cur].classList.add('hit');
+  placeRunner(cur,cnt);
   ctrl.innerHTML='<button class="jump back" id="backHopBtn">◀ '+adim+' geri</button>'
     +'<button class="arrive" id="arriveBtn">Vardım!</button>'
     +'<button class="reset" id="resetBtn">Baştan</button>';
@@ -739,25 +748,25 @@ function yoluCiz(adim){
 }
 function adimGeri(){
   if(cozuldu || secilenAdim===null) return;
+  if(cur<=0){ nudge('Yolun sonuna geldin. Baştan al ya da başka adım seç.'); return; }
+  cur--;                                  /* geri = SOLA */
   var stns=document.getElementById('stones');
-  if(cur>=stns.children.length-1){ nudge('Yolun sonu! Baştan al ya da başka adım seç.'); return; }
-  cur++;
   placeRunner(cur, stns.children.length);
   var r=document.getElementById('runner'); r.classList.remove('hop'); void r.offsetWidth; r.classList.add('hop');
-  var st=stns.children[cur];
-  var deger=Q.bolunen-cur*secilenAdim;
+  var st=stns.children[cur], deger=adimDeger(cur);
   st.classList.add('hit');
   var sn=st.querySelector('.snum'); if(sn) sn.textContent=deger;
-  document.getElementById('runsum').textContent=cur+'. zıplayış · elde '+deger;
-  Sfx.tone(['C5','B4','A4','G4','F4','E4','D4','C4','B3','A3','G3'][Math.min(cur,10)]);
+  var atilan=adimAdet()-cur;
+  document.getElementById('runsum').textContent=atilan+'. zıplayış · elde '+deger;
+  Sfx.tone(['C5','B4','A4','G4','F4','E4','D4','C4','B3','A3','G3'][Math.min(atilan,10)]);
 }
 function adimVardim(){
   if(cozuldu || secilenAdim===null) return;
-  var deger=Q.bolunen-cur*secilenAdim;
-  if(deger===0 && cur===Q.bolum) succeed();
-  else if(deger===0) nudge(cur+' zıplayışta indin ama '+Q.bolum+' zıplayış olmalıydı. Başka adım dene.');
-  else if(deger<0) nudge('Sıfırı geçtin! Daha küçük bir zıplayış dene.');
-  else nudge('Elinde hâlâ '+deger+' var — devam et ya da başka adım dene.');
+  var deger=adimDeger(cur), atilan=adimAdet()-cur;
+  if(deger===0 && atilan===Q.bolum) succeed();
+  else if(deger===0) nudge(atilan+' zıplayışta indin ama '+Q.bolum+' zıplayış olmalıydı. Başka adım dene.');
+  else if(atilan===0) nudge('Önce geri zıplamaya başla!');
+  else nudge('Elinde hâlâ '+deger+' var — bu adımla tam 0\'a inilmiyor. Başka adım dene.');
 }
 function st0Index(node){ var kids=document.getElementById('stones').children; for(var i=0;i<kids.length;i++) if(kids[i]===node) return i; return 0; }
 
