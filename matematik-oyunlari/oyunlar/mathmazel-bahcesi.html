@@ -483,7 +483,20 @@ function updateMeter(popIndex){
 function restartAnim(el){ if(!el) return; el.style.animation='none'; void el.offsetWidth; el.style.animation=''; }
 
 /* ---------- görev üretimi ---------- */
+/* Arka arkaya aynı soruyu verme. Çeşit sayısı azken ("kolay" seviyeler)
+   çocuk her altı sorudan birinde aynısını üst üste görüyordu. */
+var sonSoruAnahtari=null;
+function tekrarsiz(uret, anahtar){
+  var q, d=0;
+  do { q=uret(); d++; }
+  while(d<12 && sonSoruAnahtari===anahtar(q));
+  sonSoruAnahtari=anahtar(q);
+  return q;
+}
 function makeTask(){
+  return tekrarsiz(makeTaskHam, function(q){ return q.mode+':'+q.g+'x'+q.n; });
+}
+function makeTaskHam(){
   var L=LEVELS[curLevel];
   var mode=L.mode;
   if(mode==='mixed') mode=pick(['count','harvest','howmany','word']);

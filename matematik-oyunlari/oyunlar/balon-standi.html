@@ -332,7 +332,21 @@ function rint(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
 function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
 
+/* Arka arkaya aynı soruyu verme. Çeşit sayısı azken ("kolay" seviyeler)
+   çocuk her altı sorudan birinde aynısını üst üste görüyordu. */
+var sonSoruAnahtari=null;
+function tekrarsiz(uret, anahtar){
+  var q, d=0;
+  do { q=uret(); d++; }
+  while(d<12 && sonSoruAnahtari===anahtar(q));
+  sonSoruAnahtari=anahtar(q);
+  return q;
+}
 function makeQuestion(L){
+  return tekrarsiz(function(){ return makeQuestionHam(L); },
+                   function(q){ return q.mode+':'+q.g+'x'+q.n; });
+}
+function makeQuestionHam(L){
   var T=(L.tiers&&L.tiers[S.diff])||(L.tiers&&L.tiers.kolay);
   var g,n,ans,visual='',sentence='',q='';
   if(L.mode==='facts'||L.mode==='mixed'){
