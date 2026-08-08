@@ -1,13 +1,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#EEF8F1">
-<title>Zıp Zıp Karnavalı</title>
+<meta name="theme-color" content="#FFF3E8">
+<title>Geri Zıp Zıp</title>
 <link rel="stylesheet" href="../shared/theme.css">
 <style>
   /* Bu oyuna özel — ortak stiller shared/theme.css içinde */
   :root{
-    --bg:#EEF8F1; --surface:#FFFFFF; --ink:#243A2E; --muted:#5E7268;
-    --line:#DBEDE2; --soft:#E7F4EC;
+    --bg:#FFF3E8; --surface:#FFFFFF; --ink:#40301F; --muted:#7B6650;
+    --line:#F2E1CE; --soft:#FBEEDF;
     --grass:#4FA03A; --grass-dk:#2E6B22;
     --sky:#3E97C9; --sky-dk:#1F6B95;
     --carrot:#EF7D2A; --carrot-dk:#B4531A;
@@ -15,7 +15,7 @@
     --amber:#EFB227; --amber-dk:#8A6410;
     --grape:#8B5CD6; --grape-dk:#5A3A9A;
   }
-  body{background:radial-gradient(1000px 380px at 50% -120px,#DFF3E6 0,var(--bg) 60%)}
+  body{background:radial-gradient(1000px 380px at 50% -120px,#FFE6CC 0,var(--bg) 60%)}
 
   /* bayrak renkleri bu oyunda farklı sırada */
   .flags i:nth-child(5n+1){border-top:15px solid var(--grass)}
@@ -95,6 +95,15 @@
   .reset{border:1.5px solid var(--line); background:#fff; border-radius:16px; font-weight:800; font-size:14px;
     padding:12px 16px; color:var(--ink); min-height:var(--tap)}
 
+  /* "Kaçar Kaçar?" — zıplayış boyu seçici */
+  .adimsec{display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:10px}
+  .adimsec .lb{font-size:12.5px; font-weight:800; color:var(--muted)}
+  .adim{border:1.5px solid var(--line); background:var(--surface); border-radius:12px;
+    font-family:var(--disp); font-weight:700; font-size:20px; width:52px; padding:8px 0;
+    color:var(--ink); min-height:var(--tap); box-shadow:0 3px 0 var(--soft)}
+  .adim:active{transform:translateY(2px); box-shadow:0 1px 0 var(--soft)}
+  .adim.on{background:var(--carrot); border-color:transparent; color:#fff; box-shadow:0 3px 0 var(--carrot-dk)}
+
   /* "Zıpla ile say" ipucu — cevabı vermeden sıçramaları gösterir */
   .hintbox{margin-top:8px; padding:10px 8px 8px; border-radius:16px;
     background:#F5FBF7; border:1.5px dashed var(--line)}
@@ -133,7 +142,7 @@
   <div id="hud"></div>
   <header>
     <span class="logo" id="logo"></span>
-    <div><b>Zıp Zıp Karnavalı</b><span>Zıplaya zıplaya çarpma</span></div>
+    <div><b>Geri Zıp Zıp</b><span>Geriye zıplaya zıplaya bölme</span></div>
     <div class="starcount"><span class="s" id="sIcon"></span><b id="starTotal">0</b></div>
   </header>
   <div class="flags" id="flags"></div>
@@ -142,8 +151,8 @@
   <section id="map">
     <div class="hero">
       <span class="maz" id="maz"></span>
-      <div><h1>Zıplamaya hazır mısın?</h1>
-      <p>Bir karakter seç, eşit zıplayışlarla havuca ulaş. Kolaydan başla, standları aç, ödülleri topla.</p></div>
+      <div><h1>Geriye zıplayalım!</h1>
+      <p>Bir karakter seç. Sayı doğrusunda geriye zıplayarak bölmeyi keşfet. Kolaydan başla, standları aç.</p></div>
     </div>
     <div class="picker">
       <h3>Karakterini seç</h3>
@@ -200,7 +209,7 @@
 <script src="../shared/celebrate.js"></script>
 <script>
 /* ---------- state ---------- */
-var GAME_ID='zip-zip-karnavali';
+var GAME_ID='geri-zip-zip';
 var S=Progress.load(GAME_ID, {
   stars:0, unlocked:1, prizes:[], levelStars:[0,0,0,0,0,0], animal:'rabbit', diff:'kolay',
   tierDone:[{},{},{},{},{},{}]
@@ -209,8 +218,8 @@ var S=Progress.load(GAME_ID, {
    Progress.load kaydı varsayılanın üstüne yazdığı için 6. bölüm tanımsız
    kalıyordu — burada tamamlanıyor. */
 (function(){
-  while(S.levelStars.length < 5) S.levelStars.push(0);
-  while(S.tierDone.length  < 5) S.tierDone.push({});
+  while(S.levelStars.length < 6) S.levelStars.push(0);
+  while(S.tierDone.length  < 6) S.tierDone.push({});
 })();
 function persist(){ Progress.save(GAME_ID, S); }
 var totalEl=document.getElementById('starTotal');
@@ -296,6 +305,8 @@ function prizeSvg(id){
     medal:'<svg viewBox="0 0 48 48"><path d="M17 6 L24 22 L14 22 Z" fill="#3E97C9"/><path d="M31 6 L34 22 L24 22 Z" fill="#E24B7A"/><circle cx="24" cy="32" r="12" fill="#EFB227"/><circle cx="24" cy="32" r="12" fill="none" stroke="#8A6410" stroke-width="2"/><path d="M24 26l1.6 3.3 3.6.4-2.7 2.5.7 3.6-3.2-1.6-3.2 1.6.7-3.6-2.7-2.5 3.6-.4z" fill="#fff"/></svg>',
     trophy:'<svg viewBox="0 0 48 48"><path d="M14 8h20v8a10 10 0 0 1-20 0z" fill="#EFB227"/><path d="M14 10H9a4 4 0 0 0 4 6M34 10h5a4 4 0 0 1-4 6" fill="none" stroke="#C99A17" stroke-width="2.5"/><rect x="21" y="26" width="6" height="8" fill="#C99A17"/><rect x="15" y="34" width="18" height="5" rx="2" fill="#8A6410"/></svg>',
     ribbon:'<svg viewBox="0 0 48 48"><circle cx="24" cy="18" r="12" fill="#E24B7A"/><circle cx="24" cy="18" r="12" fill="none" stroke="#A32D53" stroke-width="2"/><path d="M24 12l1.6 3.3 3.6.4-2.7 2.5.7 3.6-3.2-1.6-3.2 1.6.7-3.6-2.7-2.5 3.6-.4z" fill="#fff"/><path d="M18 28 L14 44 L22 38 Z" fill="#E24B7A"/><path d="M30 28 L34 44 L26 38 Z" fill="#C0355F"/></svg>',
+    pusula:'<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="#FBEEDF" stroke="#B4531A" stroke-width="2.5"/><path d="M24 10 L28 22 L24 38 L20 22 Z" fill="#D9455F"/><path d="M24 10 L28 22 L24 24 Z" fill="#9E2437"/><circle cx="24" cy="24" r="2.6" fill="#40301F"/></svg>',
+    harita:'<svg viewBox="0 0 48 48"><path d="M6 12 L18 8 L30 12 L42 8 V36 L30 40 L18 36 L6 40 Z" fill="#F3E0C4" stroke="#B08A5A" stroke-width="1.5" stroke-linejoin="round"/><path d="M18 8 V36 M30 12 V40" stroke="#B08A5A" stroke-width="1.2"/><path d="M10 30 q8 -10 16 -4 q6 4 12 -6" stroke="#E8792B" stroke-width="2" fill="none" stroke-dasharray="3 3"/><circle cx="38" cy="20" r="3" fill="#D9455F"/></svg>',
     kase:'<svg viewBox="0 0 48 48"><path d="M8 18 h32 l-4 18 a4 4 0 0 1-4 3 H16 a4 4 0 0 1-4-3 Z" fill="#E8792B"/><path d="M8 18 h32 l-.8 4 H8.8 Z" fill="#B4531A"/><circle cx="18" cy="13" r="4" fill="#4FA03A"/><circle cx="26" cy="11" r="4" fill="#EFB227"/><circle cx="33" cy="14" r="4" fill="#E24B7A"/></svg>',
     crown:'<svg viewBox="0 0 48 48"><path d="M8 34 L10 16 L19 26 L24 12 L29 26 L38 16 L40 34 Z" fill="#EFB227" stroke="#8A6410" stroke-width="1.5" stroke-linejoin="round"/><circle cx="24" cy="12" r="2.5" fill="#E24B7A"/><rect x="8" y="34" width="32" height="5" rx="2" fill="#D9A017"/></svg>',
     usta:'<svg viewBox="0 0 48 48"><path d="M16 30 L11 46 L20 40 Z" fill="#E24B7A"/><path d="M32 30 L37 46 L28 40 Z" fill="#3E97C9"/><circle cx="24" cy="20" r="14" fill="#EFB227" stroke="#8A6410" stroke-width="2"/><path d="M24 10l2.9 6 6.5.7-4.8 4.4 1.3 6.4L24 30.6 18.1 27.9 19.4 21.5 14.6 17.1 21.1 16.4z" fill="#fff"/></svg>'
@@ -321,30 +332,30 @@ document.getElementById('sIcon').innerHTML=starIcon();
 })();
 
 /* ---------- levels ---------- */
-var HOPT={ kolay:{steps:[2,5,10],gMin:2,gMax:5}, orta:{steps:[2,3,4,5],gMin:2,gMax:8}, zor:{steps:[2,3,4,5],gMin:2,gMax:10} };
+/* MEB 2. sınıf bölme: 20'ye kadar, bölen 2-3-4-5, KALANSIZ.
+   Zorluk yapısal — geçerli (bölen, bölüm) çiftleri listelenip eşit seçiliyor. */
+var DIVT={
+  kolay:{bolen:[2,5],     enCok:16},
+  orta :{bolen:[2,3,4,5], enCok:16},
+  zor  :{bolen:[2,3,4,5], enCok:20}
+};
 var LEVELS=[
-  {name:'Zıpla ve Say', sub:'Eşit zıplayışlarla havuca ulaş', color:'#4FA03A', prize:'carrot', mode:'hop', frame:'count', tiers:HOPT},
-  {name:'Tekrarlı Toplama', sub:'Zıpladıkça topla', color:'#3E97C9', prize:'medal', mode:'hop', frame:'add', tiers:HOPT},
-  {name:'Çarpmaya Köprü', sub:'Aynı zıplayış, artık çarpma', color:'#8B5CD6', prize:'trophy', mode:'hop', frame:'mult', tiers:HOPT},
-  {name:'Çarpımlar', sub:'Doğru sayıdaki havucu bul', color:'#EFB227', prize:'ribbon', mode:'choose',
-    /* bMin:2 -> "5 x 1" gibi bos gecen sorular uretilmesin */
-    tiers:{ kolay:{pool:[2,5,10],bMin:2,bMax:5}, orta:{pool:[2,3,4,5],bMin:2,bMax:8}, zor:{pool:[2,3,4,5,10],bMin:2,bMax:10} }},
-  {name:'Karışık Karnaval', sub:'Sonsuz bölüm — istediğin kadar oyna!', color:'#E24B7A', prize:'crown', mode:'choose', endless:true,
-    /* 1 ile carpma mufredatta var ama 2. sinifa fazla kolay; sorularin yarisini
-       kaplamasin. bMin:2 b=1 yolunu kapatir; kolay havuzu 10'ar ritmik saymayla
-       genisletilince 1'in payi 1/3'ten 1/4'e iner; zor'da 1 hic cikmaz. */
-    tiers:{ kolay:{pool:[1,2,5,10],bMin:2,bMax:5}, orta:{pool:[1,2,3,4,5],bMin:2,bMax:8}, zor:{pool:[2,3,4,5,10],bMin:2,bMax:10} }}
+  {name:'Geri Zıpla',   sub:'Kaç zıplayışta sıfıra inersin?', color:'#E8792B', prize:'kase',   mode:'back',   tiers:DIVT},
+  {name:'Kaçar Kaçar?', sub:'Her zıplayış kaç olmalı?',        color:'#D9455F', prize:'pusula', mode:'step',   tiers:DIVT},
+  {name:'İleri Say',    sub:'Sıfırdan kaç zıplayışta varırsın?',color:'#3E97C9', prize:'harita', mode:'fwd',    tiers:DIVT},
+  {name:'Havucu Seç',   sub:'Doğru sonucu bul',                color:'#EFB227', prize:'ribbon', mode:'choose', tiers:DIVT},
+  {name:'Karışık Yol',  sub:'Sonsuz bölüm — istediğin kadar oyna!', color:'#8B5CD6', prize:'crown', mode:'mixed', endless:true, tiers:DIVT}
 ];
 var GOAL=5;
 
 /* Ödüllerin adı ve nasıl kazanıldığı */
 var PRIZES={
-  carrot:{ad:'Altın Havuç',    nasil:'1. standı bitir'},
-  medal: {ad:'Madalya',        nasil:'2. standı bitir'},
-  trophy:{ad:'Kupa',           nasil:'3. standı bitir'},
+  kase:  {ad:'Paylaşma Kâsesi',nasil:'1. standı bitir'},
+  pusula:{ad:'Yön Pusulası',   nasil:'2. standı bitir'},
+  harita:{ad:'Yol Haritası',   nasil:'3. standı bitir'},
   ribbon:{ad:'Şeref Kurdelesi',nasil:'4. standı bitir'},
-  crown: {ad:'Karnaval Tacı',  nasil:'5. standı bitir'},
-  usta:  {ad:'Usta Rozeti',    nasil:'Karışık Karnaval\'ı üç zorlukta da bitir'}
+  crown: {ad:'Geri Sayım Tacı',nasil:'5. standı bitir'},
+  usta:  {ad:'Usta Rozeti',    nasil:'Karışık Yol\'u üç zorlukta da bitir'}
 };
 function prizeAd(id){ return (PRIZES[id]||{}).ad || 'Ödül'; }
 function prizeNasil(id){ return (PRIZES[id]||{}).nasil || ''; }
@@ -393,7 +404,7 @@ function renderMap(){
     justWonPrize=null;
   }
 }
-/* Usta Rozeti "Karışık Karnaval"a bağlı. Geri Zıpla eklenince o artık son
+/* Usta Rozeti "Karışık Yol"a bağlı. Geri Zıpla eklenince o artık son
    bölüm değil, bu yüzden indeks yerine bayrakla bulunuyor. */
 function endlessIndex(){ for(var i=0;i<LEVELS.length;i++) if(LEVELS[i].endless) return i; return LEVELS.length-1; }
 function masterEarned(){ var t=S.tierDone[endlessIndex()]||{}; return t.kolay&&t.orta&&t.zor; }
@@ -494,31 +505,37 @@ function ciftSec(T){
   sonSoru=s[0]+'x'+s[1];
   return s;
 }
-/* Arka arkaya aynı soruyu verme (bölme bölümünde ciftSec zaten yapıyor). */
+/* Arka arkaya aynı soruyu verme */
 var sonSoruAnahtari=null;
 function makeQuestion(L){
-  var q, d=0;
-  do { q=makeQuestionHam(L); d++; }
-  while(d<12 && sonSoruAnahtari===qAnahtar(q));
-  sonSoruAnahtari=qAnahtar(q);
+  var q,d=0;
+  do{ q=makeQuestionHam(L); d++; }
+  while(d<12 && sonSoruAnahtari===q.mode+':'+q.bolunen+'/'+q.bolen);
+  sonSoruAnahtari=q.mode+':'+q.bolunen+'/'+q.bolen;
   return q;
 }
-function qAnahtar(q){
-  return q.mode+':'+(q.mode==='hop'? q.g+'x'+q.step : q.a+'x'+q.b);
-}
 function makeQuestionHam(L){
-  var T=(L.tiers&&L.tiers[S.diff])||(L.tiers&&L.tiers.kolay);
-  if(L.mode==='hop'){
-    var step=pick(T.steps), g=rint(T.gMin,T.gMax);
-    var sc=scopeClamp(step,g); step=sc[0]; g=sc[1];
-    return {mode:'hop', frame:L.frame, step:step, g:g, ans:step*g};
-  } else {
-    var a=pick(T.pool), b=rint(T.bMin,T.bMax);
-    var c=scopeClamp(a,b); a=c[0]; b=c[1];
-    if(Math.random()<0.5){var t=a;a=b;b=t;}
-    return {mode:'choose', a:a, b:b, step:a, g:b, ans:a*b};
-  }
+  var T=(L.tiers&&L.tiers[S.diff])||DIVT.kolay;
+  var mode=L.mode;
+  if(mode==='mixed') mode=pick(['back','step','fwd','choose']);
+  var c=ciftSec(T), bolen=c[0], bolum=c[1];
+  /* back / fwd : cevap kaç zıplayış (bölüm)
+     step       : cevap her zıplayışın boyu (bölen)
+     choose     : cevap bölüm, şıklardan seçilir */
+  return {mode:mode, bolen:bolen, bolum:bolum, bolunen:bolen*bolum,
+          ans:(mode==='step'? bolen : bolum)};
 }
+/* Yönelme eki (-e/-a hâli): 20'ye ama 30'a, 15'e, 16'ya. */
+function yonelme(n){
+  var ek={1:'e',2:'ye',3:'e',4:'e',5:'e',6:'ya',7:'ye',8:'e',9:'a',
+          10:'a',20:'ye',30:'a',40:'a',50:'ye',60:'a',70:'e',80:'e',90:'a',100:'e',1000:'e'};
+  n=Math.abs(Math.round(n));
+  var son=n%10;  if(son) return n+"'"+ek[son];
+  var yuz=n%100; if(yuz) return n+"'"+ek[yuz];
+  var bin=n%1000;if(bin) return n+"'"+ek[100];
+  return n+"'"+ek[1000];
+}
+
 /* Ayrılma eki (-den/-dan/-ten/-tan) hem ünsüz benzeşmesine hem ünlü uyumuna
    bağlı: 15'ten (on beşten) ama 16'dan (on altıdan), 20'den (yirmiden). */
 function ayrilma(n){
@@ -590,74 +607,157 @@ function groupsHTML(g,n){ var s='<div class="groups">';
     for(var j=0;j<n;j++) s+=miniCarrot(); s+='</div>'; } return s+'</div>'; }
 
 function nextQuestion(){
-  var stagePresent=document.getElementById('stones'); if(!stagePresent) return;
-  Q=makeQuestion(LEVELS[curLevel]); cur=0; missedThisQ=false; cozuldu=false;
+  var varMi=document.getElementById('stones'); if(!varMi) return;
+  Q=makeQuestion(LEVELS[curLevel]); cur=0; missedThisQ=false; cozuldu=false; secilenAdim=null;
   updateMeter();
   document.getElementById('cheer').textContent='';
   document.getElementById('runsum').textContent='';
   document.getElementById('hintwrap').innerHTML='';
-  var qEl=document.getElementById('q'), sEl=document.getElementById('sentence'), ctrl=document.getElementById('controls');
+  var qEl=document.getElementById('q'), sEl=document.getElementById('sentence'),
+      ctrl=document.getElementById('controls'), stns=document.getElementById('stones');
   var runner=document.getElementById('runner'); runner.className='runner';
+  stns.innerHTML='';
 
-  if(Q.mode==='hop'){
-    // place 3 carrots on consecutive landing stones; the answer sits in a RANDOM slot
-    // (left / middle / right) so it isn't always the middle one
-    var slot=rint(0,2), startIdx=Q.g-slot; if(startIdx<1) startIdx=1;
-    var carrotIdx=[startIdx, startIdx+1, startIdx+2];
-    var carrotSet={}; carrotIdx.forEach(function(ix){carrotSet[ix]=1;});
-    Q.maxIndex=startIdx+3;   // track runs one stone past the furthest carrot
-    if(Q.frame==='count'){
-      qEl.textContent='Her zıplayışta '+Q.step+' ilerle.';
-      sEl.innerHTML='Havuç <span class="op">'+Q.ans+'</span> sayısında';
-    } else if(Q.frame==='add'){
-      qEl.textContent='Zıplaya zıplaya topla, doğru havuca in.';
-      var parts=[]; for(var k=0;k<Q.g;k++) parts.push(Q.step);
-      sEl.innerHTML=parts.join(' <span class="op">+</span> ')+' <span class="op">=</span> ?';
-    } else {
-      qEl.textContent='Zıplaya zıplaya çöz, doğru havuca in.';
-      sEl.innerHTML='<span>'+Q.g+'</span> <span class="op">×</span> <span>'+Q.step+'</span> <span class="op">=</span> ?';
-    }
-    var count=Q.maxIndex+1, stones=document.getElementById('stones'); stones.innerHTML='';
-    for(var i=0;i<count;i++){ var st=document.createElement('div'); st.className='stone path';
-      st.dataset.val=(i*Q.step); st.dataset.idx=i;
-      st.innerHTML=(carrotSet[i]?'<span class="carrot">'+carrotSvg()+'</span>':'')+'<span class="snum"></span>';
-      stones.appendChild(st); }
-    stones.children[0].querySelector('.snum').textContent='0'; stones.children[0].classList.add('hit');
-    placeRunner(0, count);
-    ctrl.innerHTML='<button class="jump back" id="backHopBtn">◀ Geri</button>'
-      +'<button class="jump" id="jumpBtn">İleri ▶</button>'
-      +'<button class="arrive" id="arriveBtn">Vardım!</button>'
-      +'<button class="reset" id="resetBtn">Baştan</button>';
-    document.getElementById('backHopBtn').onclick=doHopBack;
-    document.getElementById('jumpBtn').onclick=doHop;
-    document.getElementById('arriveBtn').onclick=doArrive;
-    document.getElementById('resetBtn').onclick=resetHops;
-  } else {
-    qEl.textContent='Doğru havucun üstündeki taşa zıpla';
-    sEl.innerHTML='<span>'+Q.a+'</span> <span class="op">×</span> <span>'+Q.b+'</span> <span class="op">=</span> ?';
-    var opts=optionSet(Q.ans,Q.a,Q.b);
-    var count2=opts.length+1, stones2=document.getElementById('stones'); stones2.innerHTML='';
-    var st0=document.createElement('div'); st0.className='stone'; stones2.appendChild(st0); // start pad
-    /* Gerçek <button>: klavyeyle ve ekran okuyucuyla oynanabilsin */
-    opts.forEach(function(v){ var st=document.createElement('button'); st.type='button'; st.className='stone choice';
+  /* --- HAVUCU SEÇ: şıklardan doğru sonucu bul --- */
+  if(Q.mode==='choose'){
+    qEl.textContent='Doğru sonucun üstündeki taşa zıpla';
+    sEl.innerHTML='<span>'+Q.bolunen+'</span> <span class="op">÷</span> <span>'+Q.bolen+'</span> <span class="op">=</span> ?';
+    var opts=optionSet(Q.bolum, Q.bolen, Q.bolunen);
+    var st0=document.createElement('div'); st0.className='stone'; stns.appendChild(st0);
+    opts.forEach(function(v){
+      var st=document.createElement('button'); st.type='button'; st.className='stone choice';
       st.setAttribute('aria-label', v+' yazan havuç');
       st.innerHTML='<span class="carrot">'+carrotSvg()+'</span><span class="cnum">'+v+'</span>';
-      st.dataset.val=v; st.onclick=function(){ chooseCarrot(st, v===Q.ans, st0Index(this)); }; stones2.appendChild(st); });
-    placeRunner(0, count2);
+      st.dataset.val=v;
+      st.onclick=function(){ chooseCarrot(st, v===Q.bolum, st0Index(this)); };
+      stns.appendChild(st);
+    });
+    placeRunner(0, opts.length+1);
     ctrl.innerHTML='';
-    document.getElementById('hintwrap').innerHTML='<button class="hintbtn" id="hintBtn"><span class="m">'+mathmazel(22)+'</span> Zıpla ile say</button>';
-    document.getElementById('hintBtn').onclick=function(){ this.style.display='none';
-      /* İpucu cevabı SÖYLEMEZ. 4-5. bölümlerde zıplama yok, sadece şık seçiliyor;
-         eski "Say: 5 → 10 → 15" biçimi son adımda doğrudan cevabı veriyordu.
-         Onun yerine 1-3. bölümlerin sayı doğrusunu çiz: sıçramalar işaretli,
-         varış noktası "?" — çocuk son adımı kendi atar. */
+    document.getElementById('hintwrap').innerHTML=
+      '<button class="hintbtn" type="button" id="hintBtn"><span class="m">'+mathmazel(22)+'</span> Geriye sayarak bul</button>';
+    document.getElementById('hintBtn').onclick=function(){
+      this.style.display='none';
+      var dizi=[]; for(var k=Q.bolum;k>=0;k--) dizi.push(k*Q.bolen);
       document.getElementById('hintwrap').insertAdjacentHTML('beforeend',
-          '<div class="hintbox">'
-        +   hopHintSvg(Q.a, Q.b)
-        +   '<div class="skiphint">'+Q.b+' kez '+ulestir(Q.a)+' ilerle</div>'
-        + '</div>'); };
+        '<div class="skiphint">Geri say: '+dizi.join(' → ')+'</div>');
+    };
+    if(autoRead) speakQuestion();
+    return;
   }
+
+  /* --- KAÇAR KAÇAR: önce zıplayışın boyunu seç --- */
+  if(Q.mode==='step'){
+    qEl.textContent=ayrilma(Q.bolunen)+' başlayıp '+Q.bolum+' zıplayışta tam 0\'a in.';
+    sEl.innerHTML='<span>'+Q.bolunen+'</span> <span class="op">÷</span> <span>?</span> <span class="op">=</span> <span>'+Q.bolum+'</span>';
+    document.getElementById('hintwrap').innerHTML=
+      '<div class="adimsec" id="adimsec"><span class="lb">Her zıplayış kaç olsun?</span></div>';
+    var kutu=document.getElementById('adimsec');
+    [2,3,4,5].forEach(function(a){
+      var b=document.createElement('button'); b.type='button'; b.className='adim'; b.textContent=a;
+      b.onclick=function(){
+        if(cozuldu) return;
+        secilenAdim=a; Sfx.click();
+        Array.prototype.forEach.call(kutu.querySelectorAll('.adim'),function(x){x.classList.remove('on');});
+        b.classList.add('on');
+        yoluCiz(a);
+      };
+      kutu.appendChild(b);
+    });
+    yoluCiz(null);
+    if(autoRead) speakQuestion();
+    return;
+  }
+
+  /* --- GERİ ZIPLA / İLERİ SAY: sayı doğrusu --- */
+  var geri = (Q.mode==='back');
+  qEl.textContent = geri
+    ? ayrilma(Q.bolunen)+' başla, '+ulestir(Q.bolen)+' geri zıpla.'
+    : 'Sıfırdan başla, '+ulestir(Q.bolen)+' ileri zıpla, '+yonelme(Q.bolunen)+' çık.';
+  sEl.innerHTML='<span>'+Q.bolunen+'</span> <span class="op">÷</span> <span>'+Q.bolen+'</span> <span class="op">=</span> ?';
+  Q.maxIndex=Q.bolum;
+  var cnt=Q.bolum+1;
+  for(var bi=0;bi<cnt;bi++){
+    var bst=document.createElement('div'); bst.className='stone path';
+    bst.dataset.val=(bi*Q.bolen); bst.dataset.idx=bi;
+    /* varış noktası: geri modda 0, ileri modda bölünen */
+    var varis = geri ? (bi===0) : (bi===Q.bolum);
+    bst.innerHTML=(varis?'<span class="carrot">'+kaseSvg()+'</span>':'')
+      +'<span class="snum">'+(bi===(geri?Q.bolum:0)?(geri?Q.bolunen:0):'')+'</span>';
+    stns.appendChild(bst);
+  }
+  cur = geri ? Q.bolum : 0;
+  stns.children[cur].classList.add('hit');
+  placeRunner(cur, cnt);
+  ctrl.innerHTML='<button class="jump back" id="backHopBtn">◀ Geri</button>'
+    +'<button class="jump" id="jumpBtn">İleri ▶</button>'
+    +'<button class="arrive" id="arriveBtn">Vardım!</button>'
+    +'<button class="reset" id="resetBtn">Baştan</button>';
+  document.getElementById('backHopBtn').onclick=doBack;
+  document.getElementById('jumpBtn').onclick=doBackFwd;
+  document.getElementById('arriveBtn').onclick=doBackArrive;
+  document.getElementById('resetBtn').onclick=resetBack;
+  document.getElementById('runsum').textContent = geri
+    ? Q.bolunen+' havuç · '+ulestir(Q.bolen)+' dağıtılıyor'
+    : '0\'dan başla · '+ulestir(Q.bolen)+' ilerle';
   if(autoRead) speakQuestion();
+}
+
+/* "Kaçar Kaçar?" bölümünün yolu: seçilen adıma göre çizilir */
+var secilenAdim=null;
+function yoluCiz(adim){
+  var stns=document.getElementById('stones'); stns.innerHTML='';
+  var ctrl=document.getElementById('controls');
+  if(!adim){
+    ctrl.innerHTML='';
+    document.getElementById('runsum').textContent='Önce bir zıplayış boyu seç.';
+    var bos=document.createElement('div'); bos.className='stone path'; stns.appendChild(bos);
+    placeRunner(0,1);
+    return;
+  }
+  /* Yol her zaman bölünenden başlar; seçilen adımla kaç taş olacağını hesapla. */
+  var adet=Math.ceil(Q.bolunen/adim);
+  var cnt=adet+1;
+  for(var i=0;i<cnt;i++){
+    var st=document.createElement('div'); st.className='stone path';
+    var deger=Q.bolunen-i*adim;
+    st.dataset.val=deger;
+    st.innerHTML=(deger===0?'<span class="carrot">'+kaseSvg()+'</span>':'')
+      +'<span class="snum">'+(i===0?Q.bolunen:'')+'</span>';
+    stns.appendChild(st);
+  }
+  cur=0;
+  stns.children[0].classList.add('hit');
+  placeRunner(0,cnt);
+  ctrl.innerHTML='<button class="jump back" id="backHopBtn">◀ '+adim+' geri</button>'
+    +'<button class="arrive" id="arriveBtn">Vardım!</button>'
+    +'<button class="reset" id="resetBtn">Baştan</button>';
+  document.getElementById('backHopBtn').onclick=adimGeri;
+  document.getElementById('arriveBtn').onclick=adimVardim;
+  document.getElementById('resetBtn').onclick=function(){ yoluCiz(secilenAdim); };
+  document.getElementById('runsum').textContent='0. zıplayış · elde '+Q.bolunen;
+}
+function adimGeri(){
+  if(cozuldu || secilenAdim===null) return;
+  var stns=document.getElementById('stones');
+  if(cur>=stns.children.length-1){ nudge('Yolun sonu! Baştan al ya da başka adım seç.'); return; }
+  cur++;
+  placeRunner(cur, stns.children.length);
+  var r=document.getElementById('runner'); r.classList.remove('hop'); void r.offsetWidth; r.classList.add('hop');
+  var st=stns.children[cur];
+  var deger=Q.bolunen-cur*secilenAdim;
+  st.classList.add('hit');
+  var sn=st.querySelector('.snum'); if(sn) sn.textContent=deger;
+  document.getElementById('runsum').textContent=cur+'. zıplayış · elde '+deger;
+  Sfx.tone(['C5','B4','A4','G4','F4','E4','D4','C4','B3','A3','G3'][Math.min(cur,10)]);
+}
+function adimVardim(){
+  if(cozuldu || secilenAdim===null) return;
+  var deger=Q.bolunen-cur*secilenAdim;
+  if(deger===0 && cur===Q.bolum) succeed();
+  else if(deger===0) nudge(cur+' zıplayışta indin ama '+Q.bolum+' zıplayış olmalıydı. Başka adım dene.');
+  else if(deger<0) nudge('Sıfırı geçtin! Daha küçük bir zıplayış dene.');
+  else nudge('Elinde hâlâ '+deger+' var — devam et ya da başka adım dene.');
 }
 function st0Index(node){ var kids=document.getElementById('stones').children; for(var i=0;i<kids.length;i++) if(kids[i]===node) return i; return 0; }
 
@@ -680,6 +780,71 @@ function doHopBack(){
   var runner=document.getElementById('runner'); runner.classList.remove('hop'); void runner.offsetWidth; runner.classList.add('hop');
   tone(['C4','D4','E4','F4','G4','A4','B4','C5','D5','E5','F5','C5','D5'][Math.min(cur,12)]);
 }
+/* ---------- GERİ ZIPLA (bölme) ---------- */
+function kaseSvg(){ return '<svg viewBox="0 0 28 34" aria-hidden="true">'
+  +'<path d="M3 12 h22 l-3 14 a3 3 0 0 1-3 2 H9 a3 3 0 0 1-3-2 Z" fill="#E8792B"/>'
+  +'<path d="M3 12 h22 l-.6 3 H3.6 Z" fill="#B4531A"/>'
+  +'<circle cx="10" cy="8" r="3" fill="#4FA03A"/><circle cx="17" cy="7" r="3" fill="#EFB227"/></svg>'; }
+
+function backTone(){
+  /* geri sayarken ses de aşağı insin */
+  var n=['C5','B4','A4','G4','F4','E4','D4','C4','B3','A3','G3'];
+  Sfx.tone(n[Math.min(Q.bolum-cur, 10)]);
+}
+function yolModu(){ return Q && (Q.mode==='back'||Q.mode==='fwd'); }
+function doBack(){
+  if(!yolModu()||cozuldu) return;
+  if(cur<=0){ nudge('Kâseye vardın! “Vardım!”a bas.'); return; }
+  cur--;
+  var cnt=Q.bolum+1;
+  placeRunner(cur, cnt);
+  var r=document.getElementById('runner'); r.classList.remove('hop'); void r.offsetWidth; r.classList.add('hop');
+  var st=document.getElementById('stones').children[cur];
+  if(st){ st.classList.add('hit'); var sn=st.querySelector('.snum'); if(sn) sn.textContent=(cur*Q.bolen); }
+  /* kaçıncı zıplayışta olduğunu göster — cevabın kendisi bu */
+  guncelleSayac();
+  backTone();
+}
+function guncelleSayac(){
+  var adim = (Q.mode==='back') ? (Q.bolum-cur) : cur;
+  var elde = cur*Q.bolen;
+  document.getElementById('runsum').textContent = (Q.mode==='back')
+    ? adim+'. zıplayış · elde '+elde
+    : adim+'. zıplayış · '+elde+' noktasındasın';
+}
+function doBackFwd(){
+  if(!yolModu()||cozuldu) return;
+  if(cur>=Q.bolum){ nudge('Başlangıçtasın — geri zıpla!'); return; }
+  cur++;
+  placeRunner(cur, Q.bolum+1);
+  var r=document.getElementById('runner'); r.classList.remove('hop'); void r.offsetWidth; r.classList.add('hop');
+  guncelleSayac();
+  backTone();
+}
+function doBackArrive(){
+  if(!yolModu()||cozuldu) return;
+  var hedef = (Q.mode==='back') ? 0 : Q.bolum;
+  var baslangic = (Q.mode==='back') ? Q.bolum : 0;
+  if(cur===hedef) succeed();
+  else if(cur===baslangic) nudge('Önce zıplamaya başla!');
+  else if(Q.mode==='back') nudge('Kâseye daha inmedin — elinde '+(cur*Q.bolen)+' var.');
+  else nudge(yonelme(Q.bolunen)+' daha varmadın — '+(cur*Q.bolen)+' noktasındasın.');
+}
+function resetBack(){
+  if(!yolModu()||cozuldu) return;
+  cur = (Q.mode==='back') ? Q.bolum : 0;
+  var ss=document.getElementById('stones').children;
+  for(var i=0;i<ss.length;i++){ ss[i].classList.remove('hit');
+    var sn=ss[i].querySelector('.snum');
+    if(sn) sn.textContent = (Q.mode==='back') ? (i===Q.bolum?Q.bolunen:'') : (i===0?0:''); }
+  ss[cur].classList.add('hit');
+  placeRunner(cur, Q.bolum+1);
+  document.getElementById('runsum').textContent = (Q.mode==='back')
+    ? Q.bolunen+' havuç · '+ulestir(Q.bolen)+' dağıtılıyor'
+    : '0\'dan başla · '+ulestir(Q.bolen)+' ilerle';
+  document.getElementById('cheer').textContent='';
+}
+
 function doArrive(){
   if(!Q||Q.mode!=='hop'||cozuldu) return;
   var stones=document.getElementById('stones').children;
@@ -740,13 +905,21 @@ function succeed(){
   Sfx.good();
   /* öğretmene dönük kayıt: bu çarpımı ilk denemede bildi mi? */
   if(Q){
-    if(missedThisQ) Progress.logMiss(Q.step, Q.g); else Progress.logHit(Q.step, Q.g);
+    if(missedThisQ) Progress.logMiss(Q.bolen, Q.bolum); else Progress.logHit(Q.bolen, Q.bolum);
   }
   addStar(); correctCount++; updateMeter(correctCount-1);
   Celebrate.flyStar(document.getElementById('runner'), scEl, catchStar);
   document.getElementById('cheer').style.color='';
-  document.getElementById('cheer').textContent =
-    pick(['Havuç yakalandı! 🥕','Harika zıpladın!','Bravo!','Süper!','Çok iyi!']);
+  document.getElementById('cheer').textContent = pick(
+    Q.mode==='back' ? ['Kâse doldu! 🥣','Tam 0\'a indin!','Bravo!','Çok iyi!']
+    : Q.mode==='fwd' ? ['Tam vardın! 🎯','Harika zıpladın!','Bravo!','Çok iyi!']
+    : Q.mode==='step'? ['Doğru adım! 👣','Buldun!','Bravo!','Süper!']
+    : ['Havuç yakalandı! 🥕','Doğru!','Bravo!','Çok iyi!']);
+  /* Müfredat çarpma–bölme bağını istiyor: ikisini birden göster. */
+  document.getElementById('sentence').innerHTML=
+    '<span>'+Q.bolunen+'</span> <span class="op">÷</span> <span>'+Q.bolen+'</span> <span class="op">=</span> <span>'+Q.bolum+'</span>';
+  document.getElementById('runsum').innerHTML=
+    Q.bolen+' × '+Q.bolum+' = '+Q.bolunen+'  ·  '+Q.bolum+' zıplayış × '+Q.bolen;
   var runner=document.getElementById('runner'); runner.classList.remove('hop'); void runner.offsetWidth; runner.classList.add('cheerjump');
   burst();
   if(correctCount>=GOAL){ if(LEVELS[curLevel].endless) setTimeout(sectionDone, 1300); else setTimeout(winLevel, 1250); }
@@ -807,14 +980,11 @@ document.getElementById('back').onclick=function(){ Speech.cancel(); Sfx.click()
 function speakerIcon(){return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M15.5 8.5a4 4 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';}
 function speakText(t){ Speech.speak(t); }
 function speakQuestion(){
-  if(!Q) return; var t='';
-  if(Q.mode==='hop'){
-    if(Q.frame==='count') t='Her zıplayışta '+Q.step+' ilerle. Havuç '+Q.ans+' sayısında.';
-    else if(Q.frame==='add'){ var p=[]; for(var k=0;k<Q.g;k++) p.push(Q.step); t=p.join(' artı ')+' kaç eder? Doğru havuca zıpla.'; }
-    else t=Q.g+' kere '+Q.step+' kaç eder? Doğru havuca zıpla.';
-  } else {
-    t=Q.a+' kere '+Q.b+' kaç eder? Doğru sayıdaki havuca zıpla.';
-  }
+  if(!Q) return; var t;
+  if(Q.mode==='back')      t=Q.bolunen+' bölü '+Q.bolen+' kaç eder? '+ayrilma(Q.bolunen)+' başla, '+ulestir(Q.bolen)+' geri zıpla, kâseye in.';
+  else if(Q.mode==='fwd')  t='Sıfırdan '+ulestir(Q.bolen)+' zıplayarak '+yonelme(Q.bolunen)+' çık. Kaç zıplayış eder?';
+  else if(Q.mode==='step') t=Q.bolunen+', '+Q.bolum+' zıplayışta bitiyor. Her zıplayış kaç olmalı?';
+  else                     t=Q.bolunen+' bölü '+Q.bolen+' kaç eder? Doğru havuca zıpla.';
   speakText(t);
 }
 (function(){
