@@ -205,9 +205,9 @@ var S=Progress.load(GAME_ID, {
   stars:0, unlocked:1, prizes:[], levelStars:[0,0,0,0,0,0], animal:'rabbit', diff:'kolay',
   tierDone:[{},{},{},{},{},{}]
 });
-/* Geri Zıpla eklenmeden önce kaydedilmiş oyunlarda diziler 5 uzunluğunda.
-   Progress.load kaydı varsayılanın üstüne yazdığı için 6. bölüm tanımsız
-   kalıyordu — burada tamamlanıyor. */
+/* Bölüm sayısı değişirse eski kayıtlardaki diziler kısa kalabilir.
+   Progress.load kaydı varsayılanın üstüne yazdığı için burada tamamlanıyor.
+   (Bölme "Geri Zıp Zıp" oyununa taşındı; bu oyun yine 5 bölüm.) */
 (function(){
   while(S.levelStars.length < 5) S.levelStars.push(0);
   while(S.tierDone.length  < 5) S.tierDone.push({});
@@ -393,8 +393,8 @@ function renderMap(){
     justWonPrize=null;
   }
 }
-/* Usta Rozeti "Karışık Karnaval"a bağlı. Geri Zıpla eklenince o artık son
-   bölüm değil, bu yüzden indeks yerine bayrakla bulunuyor. */
+/* Usta Rozeti sonsuz bölüme ("Karışık Karnaval") bağlı. Son indekse
+   güvenmek yerine bayrakla bulunuyor — bölüm sırası değişse de bozulmaz. */
 function endlessIndex(){ for(var i=0;i<LEVELS.length;i++) if(LEVELS[i].endless) return i; return LEVELS.length-1; }
 function masterEarned(){ var t=S.tierDone[endlessIndex()]||{}; return t.kolay&&t.orta&&t.zor; }
 function markTierAndMaster(){
