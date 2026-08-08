@@ -319,7 +319,7 @@ function animalSvg(type){
    MEB 2. sınıf bölme: 20'ye kadar, bölen 2-3-4-5, KALANSIZ.
    Zorluk yapısal — sonradan kelepçe gerekmiyor. */
 var TIERS={
-  kolay:{bolen:[2,5],       enCok:10},
+  kolay:{bolen:[2,5],       enCok:16},
   orta :{bolen:[2,3,4,5],   enCok:16},
   zor  :{bolen:[2,3,4,5],   enCok:20}
 };
@@ -425,14 +425,30 @@ function updateMeter(popIndex){
 }
 
 /* ---------- görev üretimi ---------- */
+/* Geçerli bütün (bölen, bölüm) çiftlerini listele.
+   Eskiden önce bölen seçilip sonra bölüm sınırla daraltılıyordu; bölen 5
+   olunca geriye tek seçenek kalıyor ve "10 ÷ 5" tüm kolay soruların
+   yarısını kaplıyordu. Artık her ÇARPIM eşit olasılıkla geliyor. */
+function tumCiftler(T){
+  var out=[];
+  T.bolen.forEach(function(b){
+    for(var q=2; b*q<=T.enCok && q<=10; q++) out.push([b,q]);
+  });
+  return out;
+}
+var sonSoru=null;
+function ciftSec(T){
+  var c=tumCiftler(T), s, d=0;
+  do { s=c[Math.floor(Math.random()*c.length)]; d++; }
+  while(c.length>1 && sonSoru===s[0]+'x'+s[1] && d<12);   /* arka arkaya aynısı gelmesin */
+  sonSoru=s[0]+'x'+s[1];
+  return s;
+}
 function makeTask(){
   var L=LEVELS[curLevel], mode=L.mode;
   if(mode==='mixed') mode=pick(['share','fill','inverse']);
   var T=TIERS[S.diff]||TIERS.kolay;
-  var bolen=pick(T.bolen);
-  var enFazla=Math.min(10, Math.floor(T.enCok/bolen));
-  var bolum=rint(2, Math.max(2, enFazla));
-  var bolunen=bolen*bolum;
+  var c=ciftSec(T), bolen=c[0], bolum=c[1], bolunen=bolen*bolum;
   /* Hangi bilinmeyen soruluyor, moda göre değişir:
        share  : "her arkadaşa kaç düştü?"  -> bolum
        fill   : "kaç tabak doldu?"          -> bolen

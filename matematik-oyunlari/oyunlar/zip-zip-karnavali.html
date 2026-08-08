@@ -338,7 +338,7 @@ var LEVELS=[
      Müfredat bölmenin ikinci anlamını "ardışık çıkarma / geriye ritmik sayma"
      diye adlandırıyor; bu bölüm tam olarak onu yaptırıyor. */
   {name:'Geri Zıpla', sub:'Geriye sayarak böl', color:'#E8792B', prize:'kase', mode:'back',
-    tiers:{ kolay:{bolen:[2,5], enCok:10}, orta:{bolen:[2,3,4,5], enCok:16}, zor:{bolen:[2,3,4,5], enCok:20} }}
+    tiers:{ kolay:{bolen:[2,5], enCok:16}, orta:{bolen:[2,3,4,5], enCok:16}, zor:{bolen:[2,3,4,5], enCok:20} }}
 ];
 var GOAL=5;
 
@@ -481,15 +481,31 @@ function scopeClamp(a,b){
   if(b>5) a=Math.min(a,5);
   return [a,b];
 }
+/* Geçerli bütün (bölen, bölüm) çiftlerini listele.
+   Eskiden önce bölen seçilip sonra bölüm sınırla daraltılıyordu; bölen 5
+   olunca geriye tek seçenek kalıyor ve "10 ÷ 5" tüm kolay soruların
+   yarısını kaplıyordu. Artık her ÇARPIM eşit olasılıkla geliyor. */
+function tumCiftler(T){
+  var out=[];
+  T.bolen.forEach(function(b){
+    for(var q=2; b*q<=T.enCok && q<=10; q++) out.push([b,q]);
+  });
+  return out;
+}
+var sonSoru=null;
+function ciftSec(T){
+  var c=tumCiftler(T), s, d=0;
+  do { s=c[Math.floor(Math.random()*c.length)]; d++; }
+  while(c.length>1 && sonSoru===s[0]+'x'+s[1] && d<12);   /* arka arkaya aynısı gelmesin */
+  sonSoru=s[0]+'x'+s[1];
+  return s;
+}
 function makeQuestion(L){
   var T=(L.tiers&&L.tiers[S.diff])||(L.tiers&&L.tiers.kolay);
   if(L.mode==='back'){
-    /* Kalansız bölme: bölünen = bölen × bölüm. Bölüm en az 2 olsun ki
-       gerçekten zıplansın; bölünen müfredat sınırı 20'yi aşmasın. */
-    var bolen=pick(T.bolen);
-    var enFazlaBolum=Math.min(10, Math.floor(T.enCok/bolen));
-    var bolum=rint(2, Math.max(2, enFazlaBolum));
-    return {mode:'back', bolen:bolen, bolum:bolum, bolunen:bolen*bolum, ans:bolum};
+    /* Kalansız bölme: bölünen = bölen × bölüm, bölüm en az 2. */
+    var c=ciftSec(T);
+    return {mode:'back', bolen:c[0], bolum:c[1], bolunen:c[0]*c[1], ans:c[1]};
   }
   if(L.mode==='hop'){
     var step=pick(T.steps), g=rint(T.gMin,T.gMax);
