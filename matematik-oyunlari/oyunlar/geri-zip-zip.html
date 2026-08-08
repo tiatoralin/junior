@@ -95,6 +95,11 @@
   .reset{border:1.5px solid var(--line); background:#fff; border-radius:16px; font-weight:800; font-size:14px;
     padding:12px 16px; color:var(--ink); min-height:var(--tap)}
 
+  /* 2. sınıf dışı bölümün rozeti */
+  .ileriRoz{display:inline-block; margin:2px 0 3px; padding:2px 9px; border-radius:999px;
+    font-size:10.5px; font-weight:800; background:#EDF0EE; color:#4A5A52}
+  .booth.ileriStant{border-style:dashed}
+
   /* "Kaçar Kaçar?" — zıplayış boyu seçici */
   .adimsec{display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:10px}
   .adimsec .lb{font-size:12.5px; font-weight:800; color:var(--muted)}
@@ -305,6 +310,7 @@ function prizeSvg(id){
     medal:'<svg viewBox="0 0 48 48"><path d="M17 6 L24 22 L14 22 Z" fill="#3E97C9"/><path d="M31 6 L34 22 L24 22 Z" fill="#E24B7A"/><circle cx="24" cy="32" r="12" fill="#EFB227"/><circle cx="24" cy="32" r="12" fill="none" stroke="#8A6410" stroke-width="2"/><path d="M24 26l1.6 3.3 3.6.4-2.7 2.5.7 3.6-3.2-1.6-3.2 1.6.7-3.6-2.7-2.5 3.6-.4z" fill="#fff"/></svg>',
     trophy:'<svg viewBox="0 0 48 48"><path d="M14 8h20v8a10 10 0 0 1-20 0z" fill="#EFB227"/><path d="M14 10H9a4 4 0 0 0 4 6M34 10h5a4 4 0 0 1-4 6" fill="none" stroke="#C99A17" stroke-width="2.5"/><rect x="21" y="26" width="6" height="8" fill="#C99A17"/><rect x="15" y="34" width="18" height="5" rx="2" fill="#8A6410"/></svg>',
     ribbon:'<svg viewBox="0 0 48 48"><circle cx="24" cy="18" r="12" fill="#E24B7A"/><circle cx="24" cy="18" r="12" fill="none" stroke="#A32D53" stroke-width="2"/><path d="M24 12l1.6 3.3 3.6.4-2.7 2.5.7 3.6-3.2-1.6-3.2 1.6.7-3.6-2.7-2.5 3.6-.4z" fill="#fff"/><path d="M18 28 L14 44 L22 38 Z" fill="#E24B7A"/><path d="M30 28 L34 44 L26 38 Z" fill="#C0355F"/></svg>',
+    pusula2:'<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="#EDF0EE" stroke="#5E7268" stroke-width="2.5"/><path d="M24 9 L29 22 L24 39 L19 22 Z" fill="#5E7268"/><path d="M24 9 L29 22 L24 24 Z" fill="#3C4A43"/><circle cx="24" cy="24" r="2.6" fill="#243A2E"/><path d="M24 3 l3 4 h-6 Z" fill="#EFB227"/></svg>',
     pusula:'<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="#FBEEDF" stroke="#B4531A" stroke-width="2.5"/><path d="M24 10 L28 22 L24 38 L20 22 Z" fill="#D9455F"/><path d="M24 10 L28 22 L24 24 Z" fill="#9E2437"/><circle cx="24" cy="24" r="2.6" fill="#40301F"/></svg>',
     harita:'<svg viewBox="0 0 48 48"><path d="M6 12 L18 8 L30 12 L42 8 V36 L30 40 L18 36 L6 40 Z" fill="#F3E0C4" stroke="#B08A5A" stroke-width="1.5" stroke-linejoin="round"/><path d="M18 8 V36 M30 12 V40" stroke="#B08A5A" stroke-width="1.2"/><path d="M10 30 q8 -10 16 -4 q6 4 12 -6" stroke="#E8792B" stroke-width="2" fill="none" stroke-dasharray="3 3"/><circle cx="38" cy="20" r="3" fill="#D9455F"/></svg>',
     kase:'<svg viewBox="0 0 48 48"><path d="M8 18 h32 l-4 18 a4 4 0 0 1-4 3 H16 a4 4 0 0 1-4-3 Z" fill="#E8792B"/><path d="M8 18 h32 l-.8 4 H8.8 Z" fill="#B4531A"/><circle cx="18" cy="13" r="4" fill="#4FA03A"/><circle cx="26" cy="11" r="4" fill="#EFB227"/><circle cx="33" cy="14" r="4" fill="#E24B7A"/></svg>',
@@ -340,11 +346,17 @@ var DIVT={
   zor  :{bolen:[2,3,4,5], enCok:20}
 };
 var LEVELS=[
-  {name:'Geri Zıpla',   sub:'Kaç zıplayışta sıfıra inersin?', color:'#E8792B', prize:'kase',   mode:'back',   tiers:DIVT},
-  {name:'Kaçar Kaçar?', sub:'Her zıplayış kaç olmalı?',        color:'#D9455F', prize:'pusula', mode:'step',   tiers:DIVT},
-  {name:'İleri Say',    sub:'Sıfırdan kaç zıplayışta varırsın?',color:'#3E97C9', prize:'harita', mode:'fwd',    tiers:DIVT},
-  {name:'Havucu Seç',   sub:'Doğru sonucu bul',                color:'#EFB227', prize:'ribbon', mode:'choose', tiers:DIVT},
-  {name:'Karışık Yol',  sub:'Sonsuz bölüm — istediğin kadar oyna!', color:'#8B5CD6', prize:'crown', mode:'mixed', endless:true, tiers:DIVT}
+  /* Zıp Zıp'ın çarpma tarafının aynadaki hâli:
+     eylem -> eylemin yazısı -> kısa yol.
+     "Geri Say"da sembol yok; ÷ ikinci bölümde tanıtılıyor. */
+  {name:'Geri Say',      sub:'Kaç zıplayışta sıfıra inersin?',      color:'#E8792B', prize:'kase',   mode:'back',   tiers:DIVT},
+  {name:'Çıkara Çıkara', sub:'Zıpladıkça çıkarmayı yaz',           color:'#D9455F', prize:'pusula', mode:'sub',    tiers:DIVT},
+  {name:'İleri Say',     sub:'Çarpma ile bölme aynı ailedendir',   color:'#3E97C9', prize:'harita', mode:'fwd',    tiers:DIVT},
+  {name:'Havucu Seç',    sub:'Doğru sonucu bul',                   color:'#EFB227', prize:'ribbon', mode:'choose', tiers:DIVT},
+  {name:'Karışık Yol',   sub:'Sonsuz bölüm — istediğin kadar oyna!',color:'#8B5CD6', prize:'crown', mode:'mixed', endless:true, tiers:DIVT},
+  /* 2. sınıf müfredatında YOK: bölmede verilmeyen sayıyı bulmak cebirsel
+     düşünme işi. Silinmedi, ileri seviye olarak burada duruyor. */
+  {name:'Kaçar Kaçar?',  sub:'Her zıplayış kaç olmalı?',           color:'#5E7268', prize:'pusula2',mode:'step',  ileri:true, tiers:DIVT}
 ];
 var GOAL=5;
 
@@ -355,6 +367,7 @@ var PRIZES={
   harita:{ad:'Yol Haritası',   nasil:'3. standı bitir'},
   ribbon:{ad:'Şeref Kurdelesi',nasil:'4. standı bitir'},
   crown: {ad:'Geri Sayım Tacı',nasil:'5. standı bitir'},
+  pusula2:{ad:'Usta Pusulası', nasil:'İleri standı bitir'},
   usta:  {ad:'Usta Rozeti',    nasil:'Karışık Yol\'u üç zorlukta da bitir'}
 };
 function prizeAd(id){ return (PRIZES[id]||{}).ad || 'Ödül'; }
@@ -368,15 +381,17 @@ function renderMap(){
   var b=document.getElementById('booths'); b.innerHTML='';
   LEVELS.forEach(function(L,i){
     var open=(i+1)<=S.unlocked, done=S.levelStars[i]>=GOAL;
-    var bt=document.createElement('button'); bt.className='booth'; if(!open) bt.disabled=true;
+    var bt=document.createElement('button');
+    bt.className='booth'+(L.ileri?' ileriStant':''); if(!open) bt.disabled=true;
     var right = done ? '<span class="tick">'+tickIcon()+'</span>'
       : open ? '<span class="stars">'+starRow(S.levelStars[i])+'</span>'
              : '<span class="lock">'+lockIcon()+'</span>';
     var td=S.tierDone[i]||{};
     var pips = open ? '<span class="tierpips" title="Kolay / Orta / Zor">'
       +'<i class="'+(td.kolay?'on kolay':'')+'"></i><i class="'+(td.orta?'on orta':'')+'"></i><i class="'+(td.zor?'on zor':'')+'"></i></span>' : '';
-    bt.innerHTML='<span class="badge" style="background:'+L.color+'">'+(i+1)+'</span>'
-      +'<div><h3>'+L.name+'</h3><p>'+L.sub+'</p>'+pips+'</div>'+right;
+    var ileriRozet = L.ileri ? '<span class="ileriRoz">İleri · 3-4. sınıf</span>' : '';
+    bt.innerHTML='<span class="badge" style="background:'+L.color+'">'+(L.ileri?'★':(i+1))+'</span>'
+      +'<div><h3>'+L.name+'</h3>'+ileriRozet+'<p>'+L.sub+'</p>'+pips+'</div>'+right;
     if(open) bt.onclick=function(){ startLevel(i); };
     b.appendChild(bt);
   });
@@ -434,6 +449,9 @@ function sectionDone(){
      Usta Rozeti kazanıldıysa tam salvo, normal bölümde daha ölçülü. */
   Sfx.pop(); Sfx.win();
   Celebrate.finale({count: gotMaster ? 110 : 60});
+  /* Sonsuz bölüm winLevel'a girmiyor; sonraki standı burada aç. */
+  if(curLevel+2>S.unlocked && curLevel+1<LEVELS.length) S.unlocked=curLevel+2;
+  persist();
   sectionNo++; correctCount=0; updateMeter(); updateSectionBadge();
   setTimeout(nextQuestion, 2200);
 }
@@ -453,7 +471,7 @@ function tone(n){ Sfx.tone(n); }
 function startLevel(i){
   curLevel=i; correctCount=0; sectionNo=1;
   mapEl.classList.add('hidden'); winEl.classList.add('hidden'); playEl.classList.remove('hidden'); window.scrollTo(0,0);
-  document.getElementById('lvlpill').textContent=LEVELS[i].name;
+  document.getElementById('lvlpill').textContent=LEVELS[i].name+(LEVELS[i].ileri?' · İleri':'');
   document.getElementById('lvlpill').style.background=LEVELS[i].color;
   document.getElementById('runner').querySelector('.hopwrap').innerHTML=animalSvg(S.animal);
   renderDiffBar();
@@ -517,7 +535,7 @@ function makeQuestion(L){
 function makeQuestionHam(L){
   var T=(L.tiers&&L.tiers[S.diff])||DIVT.kolay;
   var mode=L.mode;
-  if(mode==='mixed') mode=pick(['back','step','fwd','choose']);
+  if(mode==='mixed') mode=pick(['back','sub','fwd','choose']);   /* step ileri seviye, karışığa girmez */
   var c=ciftSec(T), bolen=c[0], bolum=c[1];
   /* back / fwd : cevap kaç zıplayış (bölüm)
      step       : cevap her zıplayışın boyu (bölen)
@@ -670,11 +688,18 @@ function nextQuestion(){
   }
 
   /* --- GERİ ZIPLA / İLERİ SAY: sayı doğrusu --- */
-  var geri = (Q.mode==='back');
-  qEl.textContent = geri
-    ? ayrilma(Q.bolunen)+' başla, '+ulestir(Q.bolen)+' geri zıpla.'
-    : 'Sıfırdan başla, '+ulestir(Q.bolen)+' ileri zıpla, '+yonelme(Q.bolunen)+' çık.';
-  sEl.innerHTML='<span>'+Q.bolunen+'</span> <span class="op">÷</span> <span>'+Q.bolen+'</span> <span class="op">=</span> ?';
+  var geri = (Q.mode==='back'||Q.mode==='sub');
+  if(Q.mode==='back'){
+    /* İlk bölüm: sembol YOK. Çocuk önce eylemi yapsın. */
+    qEl.textContent=ayrilma(Q.bolunen)+' başla, '+ulestir(Q.bolen)+' geri zıpla.';
+    sEl.innerHTML='Kaç zıplayışta <span class="op">0</span>\'a inersin?';
+  } else if(Q.mode==='sub'){
+    qEl.textContent=ayrilma(Q.bolunen)+' başla, her zıplayışta '+Q.bolen+' çıkar.';
+    sEl.innerHTML='<span>'+Q.bolunen+'</span>';
+  } else {
+    qEl.textContent='Sıfırdan başla, '+ulestir(Q.bolen)+' ileri zıpla, '+yonelme(Q.bolunen)+' çık.';
+    sEl.innerHTML='<span>'+Q.bolunen+'</span> <span class="op">÷</span> <span>'+Q.bolen+'</span> <span class="op">=</span> ?';
+  }
   Q.maxIndex=Q.bolum;
   var cnt=Q.bolum+1;
   for(var bi=0;bi<cnt;bi++){
@@ -698,7 +723,7 @@ function nextQuestion(){
   document.getElementById('arriveBtn').onclick=doBackArrive;
   document.getElementById('resetBtn').onclick=resetBack;
   document.getElementById('runsum').textContent = geri
-    ? Q.bolunen+' havuç · '+ulestir(Q.bolen)+' dağıtılıyor'
+    ? Q.bolunen+' havuç · '+ulestir(Q.bolen)+' çıkarılıyor'
     : '0\'dan başla · '+ulestir(Q.bolen)+' ilerle';
   if(autoRead) speakQuestion();
 }
@@ -800,7 +825,7 @@ function backTone(){
   var n=['C5','B4','A4','G4','F4','E4','D4','C4','B3','A3','G3'];
   Sfx.tone(n[Math.min(Q.bolum-cur, 10)]);
 }
-function yolModu(){ return Q && (Q.mode==='back'||Q.mode==='fwd'); }
+function yolModu(){ return Q && (Q.mode==='back'||Q.mode==='sub'||Q.mode==='fwd'); }
 function doBack(){
   if(!yolModu()||cozuldu) return;
   if(cur<=0){ nudge('Kâseye vardın! “Vardım!”a bas.'); return; }
@@ -814,10 +839,20 @@ function doBack(){
   guncelleSayac();
   backTone();
 }
+/* "Çıkara Çıkara": müfredatın istediği ardışık çıkarma zıpladıkça yazılır. */
+function cikarmaCumlesi(){
+  if(Q.mode!=='sub') return;
+  var atilan=Q.bolum-cur;
+  var h='<span>'+Q.bolunen+'</span>';
+  for(var i=0;i<atilan;i++) h+=' <span class="op">−</span> <span>'+Q.bolen+'</span>';
+  if(cur===0) h+=' <span class="op">=</span> <span>0</span>';
+  document.getElementById('sentence').innerHTML=h;
+}
 function guncelleSayac(){
-  var adim = (Q.mode==='back') ? (Q.bolum-cur) : cur;
+  cikarmaCumlesi();
+  var adim = (Q.mode==='back'||Q.mode==='sub') ? (Q.bolum-cur) : cur;
   var elde = cur*Q.bolen;
-  document.getElementById('runsum').textContent = (Q.mode==='back')
+  document.getElementById('runsum').textContent = (Q.mode!=='fwd')
     ? adim+'. zıplayış · elde '+elde
     : adim+'. zıplayış · '+elde+' noktasındasın';
 }
@@ -832,24 +867,24 @@ function doBackFwd(){
 }
 function doBackArrive(){
   if(!yolModu()||cozuldu) return;
-  var hedef = (Q.mode==='back') ? 0 : Q.bolum;
-  var baslangic = (Q.mode==='back') ? Q.bolum : 0;
+  var hedef = (Q.mode!=='fwd') ? 0 : Q.bolum;
+  var baslangic = (Q.mode!=='fwd') ? Q.bolum : 0;
   if(cur===hedef) succeed();
   else if(cur===baslangic) nudge('Önce zıplamaya başla!');
-  else if(Q.mode==='back') nudge('Kâseye daha inmedin — elinde '+(cur*Q.bolen)+' var.');
+  else if(Q.mode!=='fwd') nudge('Kâseye daha inmedin — elinde '+(cur*Q.bolen)+' var.');
   else nudge(yonelme(Q.bolunen)+' daha varmadın — '+(cur*Q.bolen)+' noktasındasın.');
 }
 function resetBack(){
   if(!yolModu()||cozuldu) return;
-  cur = (Q.mode==='back') ? Q.bolum : 0;
+  cur = (Q.mode!=='fwd') ? Q.bolum : 0;
   var ss=document.getElementById('stones').children;
   for(var i=0;i<ss.length;i++){ ss[i].classList.remove('hit');
     var sn=ss[i].querySelector('.snum');
-    if(sn) sn.textContent = (Q.mode==='back') ? (i===Q.bolum?Q.bolunen:'') : (i===0?0:''); }
+    if(sn) sn.textContent = (Q.mode!=='fwd') ? (i===Q.bolum?Q.bolunen:'') : (i===0?0:''); }
   ss[cur].classList.add('hit');
   placeRunner(cur, Q.bolum+1);
-  document.getElementById('runsum').textContent = (Q.mode==='back')
-    ? Q.bolunen+' havuç · '+ulestir(Q.bolen)+' dağıtılıyor'
+  document.getElementById('runsum').textContent = (Q.mode!=='fwd')
+    ? Q.bolunen+' havuç · '+ulestir(Q.bolen)+' çıkarılıyor'
     : '0\'dan başla · '+ulestir(Q.bolen)+' ilerle';
   document.getElementById('cheer').textContent='';
 }
@@ -921,14 +956,16 @@ function succeed(){
   document.getElementById('cheer').style.color='';
   document.getElementById('cheer').textContent = pick(
     Q.mode==='back' ? ['Kâse doldu! 🥣','Tam 0\'a indin!','Bravo!','Çok iyi!']
+    : Q.mode==='sub' ? ['Sıfıra indi! ➖','Çıkara çıkara bitti!','Bravo!','Çok iyi!']
     : Q.mode==='fwd' ? ['Tam vardın! 🎯','Harika zıpladın!','Bravo!','Çok iyi!']
     : Q.mode==='step'? ['Doğru adım! 👣','Buldun!','Bravo!','Süper!']
     : ['Havuç yakalandı! 🥕','Doğru!','Bravo!','Çok iyi!']);
   /* Müfredat çarpma–bölme bağını istiyor: ikisini birden göster. */
   document.getElementById('sentence').innerHTML=
     '<span>'+Q.bolunen+'</span> <span class="op">÷</span> <span>'+Q.bolen+'</span> <span class="op">=</span> <span>'+Q.bolum+'</span>';
-  document.getElementById('runsum').innerHTML=
-    Q.bolen+' × '+Q.bolum+' = '+Q.bolunen+'  ·  '+Q.bolum+' zıplayış × '+Q.bolen;
+  document.getElementById('runsum').innerHTML = (Q.mode==='back')
+    ? 'Bunun kısa yolu: '+Q.bolunen+' ÷ '+Q.bolen+' = '+Q.bolum
+    : Q.bolen+' × '+Q.bolum+' = '+Q.bolunen+'  ·  '+Q.bolum+' zıplayış × '+Q.bolen;
   var runner=document.getElementById('runner'); runner.classList.remove('hop'); void runner.offsetWidth; runner.classList.add('cheerjump');
   burst();
   if(correctCount>=GOAL){ if(LEVELS[curLevel].endless) setTimeout(sectionDone, 1300); else setTimeout(winLevel, 1250); }
@@ -990,7 +1027,8 @@ function speakerIcon(){return '<svg viewBox="0 0 24 24" fill="currentColor" aria
 function speakText(t){ Speech.speak(t); }
 function speakQuestion(){
   if(!Q) return; var t;
-  if(Q.mode==='back')      t=Q.bolunen+' bölü '+Q.bolen+' kaç eder? '+ayrilma(Q.bolunen)+' başla, '+ulestir(Q.bolen)+' geri zıpla, kâseye in.';
+  if(Q.mode==='sub')       t=ayrilma(Q.bolunen)+' başla, her zıplayışta '+Q.bolen+' çıkar. Kaç kere çıkarabilirsin?';
+  else if(Q.mode==='back') t=Q.bolunen+' bölü '+Q.bolen+' kaç eder? '+ayrilma(Q.bolunen)+' başla, '+ulestir(Q.bolen)+' geri zıpla, kâseye in.';
   else if(Q.mode==='fwd')  t='Sıfırdan '+ulestir(Q.bolen)+' zıplayarak '+yonelme(Q.bolunen)+' çık. Kaç zıplayış eder?';
   else if(Q.mode==='step') t=Q.bolunen+', '+Q.bolum+' zıplayışta bitiyor. Her zıplayış kaç olmalı?';
   else                     t=Q.bolunen+' bölü '+Q.bolen+' kaç eder? Doğru havuca zıpla.';
