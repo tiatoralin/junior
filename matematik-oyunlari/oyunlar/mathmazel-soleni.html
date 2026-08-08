@@ -43,7 +43,28 @@
   .bowl .lab{text-align:center; font-family:var(--disp); font-weight:700; font-size:13px;
     color:var(--muted); margin-top:5px}
   .bowl .lab b{color:var(--carrot-dk); font-size:17px}
-  .cookie{border:none; background:none; padding:0; line-height:0}
+  /* Ortak tabaktaki ikramlar tutulup sürüklenebilir görünsün */
+  .cookie{border:none; background:none; padding:0; line-height:0; display:block;
+    cursor:grab; touch-action:none; -webkit-tap-highlight-color:transparent;
+    transition:transform .12s ease}
+  .cookie:hover{transform:translateY(-3px) scale(1.08)}
+  .cookie.tutuluyor{opacity:.35; transform:scale(.85)}
+  body.suruklerken{cursor:grabbing; user-select:none; -webkit-user-select:none}
+  body.suruklerken .cookie{cursor:grabbing}
+
+  /* elde taşınan ikram */
+  .hayalet{position:fixed; left:0; top:0; z-index:60; pointer-events:none;
+    width:34px; height:34px; margin:-17px 0 0 -17px;
+    filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
+  .hayalet svg{width:100%; height:100%}
+
+  /* bırakılabilecek yer */
+  .seat.over{border-color:var(--carrot); background:#FFF3E6; transform:scale(1.06)}
+  .seat.hedef{border-style:dashed; border-color:#E8B98A}
+
+  .draghint{text-align:center; font-size:12.5px; font-weight:700; color:var(--muted);
+    margin:-4px 0 10px}
+  .draghint b{color:var(--carrot-dk)}
 
   /* ---- KONUKLAR / TABAKLAR ---- */
   .seats{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:10px}
@@ -156,6 +177,7 @@
       <div class="meterrow"><div class="meter" id="meter"></div><span class="sectbadge" id="sectionBadge"></span></div>
       <div class="task" id="task"></div>
       <div class="bowl" id="bowl"></div>
+      <div class="draghint" id="draghint"></div>
       <div class="seats" id="seats"></div>
       <div class="build" id="build"></div>
       <div class="answer"><div class="slot" id="slot">?</div></div>
@@ -458,9 +480,13 @@ function renderBowl(){
   if(Q.mode==='inverse'){ b.classList.add('hidden'); return; }
   b.classList.remove('hidden');
   var h='<div class="items">';
-  for(var i=0;i<kalan;i++) h+=c.svg;
+  for(var i=0;i<kalan;i++) h+='<span class="cookie" data-i="'+i+'" aria-hidden="true">'+c.svg+'</span>';
   h+='</div><div class="lab">Ortak tabakta <b>'+kalan+'</b> '+c.ad+' kaldı</div>';
   b.innerHTML=h;
+  var dh=document.getElementById('draghint');
+  if(dh) dh.innerHTML = kalan>0
+    ? '<b>Bir '+c.ad+' tut</b>, arkadaşının tabağına sürükle. (Dokunmak da olur.)'
+    : 'Hepsini dağıttın!';
 }
 
 function renderSeats(){
@@ -489,10 +515,10 @@ function renderSeats(){
 }
 
 /* bir ikramı seçilen tabağa uçur */
-function ver(i, btn){
+function ver(i, btn, ucusYok){
   if(locked || kalan<=0) return;
   if(Q.mode==='fill' && plates[i]>=Q.bolum) return;
-  var kaynak=document.querySelector('#bowl .items svg');
+  var kaynak=document.querySelector('#bowl .items .cookie');
   kalan--; plates[i]++;
   Sfx.tone(360+plates[i]*40, .06, 'triangle', .12);
   renderBowl();
@@ -501,6 +527,78 @@ function ver(i, btn){
   var hedef=document.querySelectorAll('#seats .seat')[i];
   ucur(kaynak, hedef);
 }
+/* ================= SÜRÜKLE-BIRAK =================
+   Pointer Events kullanır: fare, dokunmatik ve kalem aynı kodla çalışır.
+   HTML5 drag-and-drop mobilde hiç çalışmadığı için tercih edilmedi.
+   Koltuğa dokunma yolu duruyor — sürükleme klavyeyle yapılamaz. */
+var surukle=null;
+function suruklemeBaslat(e, kaynak){
+  if(locked || kalan<=0 || !Q || Q.mode==='inverse') return;
+  if(e.button!=null && e.button!==0) return;   /* sadece sol tuş */
+  e.preventDefault();
+
+  var hayalet=document.createElement('div');
+  hayalet.className='hayalet';
+  hayalet.innerHTML=treat().svg;
+  hayalet.style.transform='translate('+e.clientX+'px,'+e.clientY+'px)';
+  document.body.appendChild(hayalet);
+  document.body.classList.add('suruklerken');
+  kaynak.classList.add('tutuluyor');
+  /* bırakılabilecek yerleri göster */
+  Array.prototype.forEach.call(document.querySelectorAll('#seats .seat'),
+    function(st){ if(!st.disabled) st.classList.add('hedef'); });
+
+  surukle={hayalet:hayalet, kaynak:kaynak, uzerinde:null, id:e.pointerId};
+  try{ document.body.setPointerCapture && document.body.setPointerCapture(e.pointerId); }catch(_){}
+}
+function koltukAltinda(x,y){
+  var el=document.elementFromPoint(x,y);
+  while(el && el!==document.body){
+    if(el.classList && el.classList.contains('seat')) return el.disabled?null:el;
+    el=el.parentNode;
+  }
+  return null;
+}
+function suruklemeHareket(e){
+  if(!surukle) return;
+  e.preventDefault();
+  surukle.hayalet.style.transform='translate('+e.clientX+'px,'+e.clientY+'px)';
+  var st=koltukAltinda(e.clientX, e.clientY);
+  if(st!==surukle.uzerinde){
+    if(surukle.uzerinde) surukle.uzerinde.classList.remove('over');
+    if(st) st.classList.add('over');
+    surukle.uzerinde=st;
+  }
+}
+function suruklemeBitir(e){
+  if(!surukle) return;
+  var st=surukle.uzerinde || koltukAltinda(e.clientX, e.clientY);
+  if(surukle.hayalet.parentNode) surukle.hayalet.parentNode.removeChild(surukle.hayalet);
+  surukle.kaynak.classList.remove('tutuluyor');
+  document.body.classList.remove('suruklerken');
+  Array.prototype.forEach.call(document.querySelectorAll('#seats .seat'),
+    function(x){ x.classList.remove('hedef'); x.classList.remove('over'); });
+  surukle=null;
+  if(st){
+    var seats=[].slice.call(document.querySelectorAll('#seats .seat'));
+    var i=seats.indexOf(st);
+    if(i>-1) ver(i, st);
+  } else {
+    Sfx.click();   /* boşluğa bırakıldı — ikram tabakta kaldı */
+  }
+}
+(function(){
+  var bowl=document.getElementById('bowl');
+  bowl.addEventListener('pointerdown', function(e){
+    var t=e.target;
+    while(t && t!==bowl && !(t.classList && t.classList.contains('cookie'))) t=t.parentNode;
+    if(t && t.classList && t.classList.contains('cookie')) suruklemeBaslat(e, t);
+  });
+  document.addEventListener('pointermove', suruklemeHareket, {passive:false});
+  document.addEventListener('pointerup', suruklemeBitir);
+  document.addEventListener('pointercancel', suruklemeBitir);
+})();
+
 function ucur(fromEl, toEl){
   if(Celebrate.reduced || !fromEl || !toEl) return;
   var host=document.createElement('div'); host.className='fly';
