@@ -858,10 +858,18 @@ function guncelleSayac(){
 }
 function doBackFwd(){
   if(!yolModu()||cozuldu) return;
-  if(cur>=Q.bolum){ nudge('Başlangıçtasın — geri zıpla!'); return; }
+  if(cur>=Q.bolum){
+    /* İleri Say'da burası yolun sonu; geri modlarında başlangıç noktası. */
+    nudge(Q.mode==='fwd' ? 'Yolun sonundasın! “Vardım!”a bas.' : 'Başlangıçtasın — geri zıpla!');
+    return;
+  }
   cur++;
   placeRunner(cur, Q.bolum+1);
   var r=document.getElementById('runner'); r.classList.remove('hop'); void r.offsetWidth; r.classList.add('hop');
+  /* Taşın sayısını yazmayı bu fonksiyon atlıyordu: doBack'te vardı, burada yoktu.
+     "İleri Say" ileri düğmesiyle oynandığı için taşların altı boş kalıyordu. */
+  var st=document.getElementById('stones').children[cur];
+  if(st){ st.classList.add('hit'); var sn=st.querySelector('.snum'); if(sn) sn.textContent=(cur*Q.bolen); }
   guncelleSayac();
   backTone();
 }
