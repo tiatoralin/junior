@@ -158,7 +158,7 @@
     </div>
     <div class="booths" id="booths"></div>
     <div class="shelf"><h3>Ödül Rafım</h3><div class="prizes" id="shelf"></div></div>
-    <p class="note">Yıldızların bu cihazda saklanır — yarın kaldığın yerden devam edebilirsin.</p>
+    <p class="note">Yıldızların bu cihazda saklanır. Yarın kaldığın yerden devam edebilirsin.</p>
   </section>
 
   <section id="play" class="hidden">
@@ -327,7 +327,7 @@ var LEVELS=[
   {name:'Eşit Paylaştır',  sub:'Herkese aynı sayıda ver',        color:'#E8792B', prize:'tabak', mode:'share'},
   {name:'Kaç Tabak Gerek?',sub:'Her tabağa aynı sayıda koy',     color:'#3E8FC9', prize:'catal', mode:'fill'},
   {name:'Ters Yüz',        sub:'Çarpma ile bölme aynı ailedir',  color:'#8B5CD6', prize:'pasta', mode:'inverse'},
-  {name:'Şölen Sofrası',   sub:'Sonsuz bölüm — karışık görevler',color:'#D9455F', prize:'taci',  mode:'mixed', endless:true}
+  {name:'Şölen Sofrası',   sub:'Sonsuz bölüm, karışık görevler',color:'#D9455F', prize:'taci',  mode:'mixed', endless:true}
 ];
 var GOAL=5;
 
@@ -363,7 +363,7 @@ function renderMap(){
     var c=document.createElement('div'); c.className='prizecell';
     var d=document.createElement('div'); d.className='prize '+(extra||'')+' '+(got?'got':'empty');
     d.innerHTML=prizeSvg(id)+(got?'':'<span class="lockdot">'+lockIcon()+'</span>');
-    if(!got) d.setAttribute('aria-label', prizeAd(id)+' — henüz kazanılmadı');
+    if(!got) d.setAttribute('aria-label', prizeAd(id)+', henüz kazanılmadı');
     var nm=document.createElement('span'); nm.className='pname'+(got?'':' locked');
     nm.textContent = got ? prizeAd(id) : prizeNasil(id);
     c.appendChild(d); c.appendChild(nm); sh.appendChild(c);
@@ -650,13 +650,13 @@ function dagitimSorunu(){
   if(!Q || Q.mode==='inverse') return null;
   var konan=Q.bolunen-kalan;
   if(konan===0) return null;
-  if(kalan>0) return 'Ortak tabakta hâlâ '+kalan+' tane var — önce hepsini dağıt.';
+  if(kalan>0) return 'Ortak tabakta hâlâ '+kalan+' tane var. Önce hepsini dağıt.';
   if(Q.mode==='share'){
-    if(!esitMi()) return 'Tabaklar eşit değil. Herkeste aynı sayıda olmalı — “Baştan dağıt”a bas.';
+    if(!esitMi()) return 'Tabaklar eşit değil. Herkeste aynı sayıda olmalı. “Baştan dağıt”a bas.';
   } else {
     for(var i=0;i<plates.length;i++)
       if(plates[i]!==0 && plates[i]!==Q.bolum)
-        return 'Her tabakta tam '+Q.bolum+' tane olmalı — “Baştan dağıt”a bas.';
+        return 'Her tabakta tam '+Q.bolum+' tane olmalı. “Baştan dağıt”a bas.';
   }
   return null;
 }
@@ -691,11 +691,11 @@ function renderBuild(){
   }
   var h='';
   if(kalan>0){
-    h='<div class="hintline">Ortak tabakta '+kalan+' tane kaldı — hepsini dağıt</div>';
+    h='<div class="hintline">Ortak tabakta '+kalan+' tane kaldı, hepsini dağıt</div>';
   } else if(Q.mode==='share' && !esitMi()){
-    h='<div class="hintline" style="color:var(--berry-dk)">Tabaklar eşit değil! Herkeste aynı sayıda olmalı — “Baştan dağıt”a bas.</div>';
+    h='<div class="hintline" style="color:var(--berry-dk)">Tabaklar eşit değil! Herkeste aynı sayıda olmalı. “Baştan dağıt”a bas.</div>';
   } else if(Q.mode==='fill' && plates.some(function(x){ return x!==0 && x!==Q.bolum; })){
-    h='<div class="hintline" style="color:var(--berry-dk)">Yarım kalan tabak var! Her tabakta tam '+Q.bolum+' tane olmalı — “Baştan dağıt”a bas.</div>';
+    h='<div class="hintline" style="color:var(--berry-dk)">Yarım kalan tabak var! Her tabakta tam '+Q.bolum+' tane olmalı. “Baştan dağıt”a bas.</div>';
   } else {
     h='<div class="div"><span>'+Q.bolunen+'</span> <span class="op">÷</span> <span>'
       + (Q.mode==='fill'? Q.bolum : Q.bolen) +'</span> <span class="op">=</span> ?</div>';
@@ -826,7 +826,7 @@ function sectionDone(){
   var gotMaster=markTierAndMaster();
   var ch=document.getElementById('cheer'); ch.style.color='var(--grass-dk)';
   ch.textContent = gotMaster ? 'USTA ROZETİ senin! Üç zorluğu da bitirdin!'
-    : (first ? 'Tacı kazandın! Bölüm 1 tamam — devam!' : 'Bölüm '+sectionNo+' tamam! Devam!');
+    : (first ? 'Tacı kazandın! Bölüm 1 tamam, devam!' : 'Bölüm '+sectionNo+' tamam! Devam!');
   Sfx.pop(); Sfx.win();
   Celebrate.finale({count: gotMaster?110:60});
   sectionNo++; correctCount=0; updateMeter(); updateSectionBadge();

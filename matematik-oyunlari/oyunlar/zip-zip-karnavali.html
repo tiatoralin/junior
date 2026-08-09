@@ -151,7 +151,7 @@
     </div>
     <div class="booths" id="booths"></div>
     <div class="shelf"><h3>Ödül Rafım</h3><div class="prizes" id="shelf"></div></div>
-    <p class="note">Yıldızların ve ödüllerin bu cihazda saklanır — yarın kaldığın yerden devam edebilirsin.</p>
+    <p class="note">Yıldızların ve ödüllerin bu cihazda saklanır. Yarın kaldığın yerden devam edebilirsin.</p>
   </section>
 
   <!-- PLAY -->
@@ -329,7 +329,7 @@ var LEVELS=[
   {name:'Çarpımlar', sub:'Doğru sayıdaki havucu bul', color:'#EFB227', prize:'ribbon', mode:'choose',
     /* bMin:2 -> "5 x 1" gibi bos gecen sorular uretilmesin */
     tiers:{ kolay:{pool:[2,5,10],bMin:2,bMax:5}, orta:{pool:[2,3,4,5],bMin:2,bMax:8}, zor:{pool:[2,3,4,5,10],bMin:2,bMax:10} }},
-  {name:'Karışık Karnaval', sub:'Sonsuz bölüm — istediğin kadar oyna!', color:'#E24B7A', prize:'crown', mode:'choose', endless:true,
+  {name:'Karışık Karnaval', sub:'Sonsuz bölüm. İstediğin kadar oyna!', color:'#E24B7A', prize:'crown', mode:'choose', endless:true,
     /* 1 ile carpma mufredatta var ama 2. sinifa fazla kolay; sorularin yarisini
        kaplamasin. bMin:2 b=1 yolunu kapatir; kolay havuzu 10'ar ritmik saymayla
        genisletilince 1'in payi 1/3'ten 1/4'e iner; zor'da 1 hic cikmaz. */
@@ -379,7 +379,7 @@ function renderMap(){
     var nm=document.createElement('span');
     nm.className='pname'+(got?'':' locked');
     nm.textContent = got ? prizeAd(id) : prizeNasil(id);
-    if(!got) d.setAttribute('aria-label', prizeAd(id)+' — henüz kazanılmadı');
+    if(!got) d.setAttribute('aria-label', prizeAd(id)+', henüz kazanılmadı');
     cell.appendChild(d); cell.appendChild(nm);
     sh.appendChild(cell);
   }
@@ -418,7 +418,7 @@ function sectionDone(){
   var gotMaster=markTierAndMaster();
   var cheer=document.getElementById('cheer'); cheer.style.color='';
   cheer.textContent = gotMaster ? 'USTA ROZETİ senin! Üç zorluğu da bitirdin!'
-    : (first ? 'Tacı kazandın! Bölüm 1 tamam — devam!' : 'Bölüm '+sectionNo+' tamam! Devam!');
+    : (first ? 'Tacı kazandın! Bölüm 1 tamam, devam!' : 'Bölüm '+sectionNo+' tamam! Devam!');
   /* Sonsuz bölümün de bir "sonu" var: her bölüm tamamlanışı kutlanmalı.
      Usta Rozeti kazanıldıysa tam salvo, normal bölümde daha ölçülü. */
   Sfx.pop(); Sfx.win();
@@ -674,7 +674,7 @@ function doHop(){
 }
 function doHopBack(){
   if(!Q||Q.mode!=='hop'||cozuldu) return;
-  if(cur<=0){ nudge('Başlangıçtasın — ileri zıpla!'); return; }
+  if(cur<=0){ nudge('Başlangıçtasın. İleri zıpla!'); return; }
   cur--;
   placeRunner(cur, Q.maxIndex+1);
   var runner=document.getElementById('runner'); runner.classList.remove('hop'); void runner.offsetWidth; runner.classList.add('hop');
@@ -687,7 +687,7 @@ function doArrive(){
   if(cur===Q.g){ succeed(); }
   else if(onCarrot){ missedThisQ=true; nudge('Bu havuç '+(cur*Q.step)+'. Doğru sayıya zıpla!'); }
   else if(cur===0){ nudge('Önce zıplamaya başla!'); }
-  else { nudge('Burada havuç yok — havucun üstüne in.'); }
+  else { nudge('Burada havuç yok. Havucun üstüne in.'); }
 }
 function resetHops(){
   if(!Q||Q.mode!=='hop'||cozuldu) return; cur=0;

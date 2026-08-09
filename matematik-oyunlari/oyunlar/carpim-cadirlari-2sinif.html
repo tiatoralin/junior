@@ -1,7 +1,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F6F1FB">
-<title>Çarpım Çadırları — 2. Sınıf</title>
+<title>Çarpım Çadırları (2. sınıf)</title>
 <link rel="stylesheet" href="../shared/theme.css">
 <style>
   /* Bu oyunun kendi kimliği var (mor karnaval). Ortak temadan sadece
@@ -254,7 +254,7 @@
       </div>
     </div>
     <div class="tents" id="tents"></div>
-    <p class="note">Yıldızların bu cihazda saklanır — yarın kaldığın yerden devam edebilirsin.
+    <p class="note">Yıldızların bu cihazda saklanır. Yarın kaldığın yerden devam edebilirsin.
        Bu bölüm <b>2. sınıf</b> müfredatına göredir: çarpanlardan biri 1-5 arası, diğeri en çok 10.</p>
   </section>
 
@@ -391,7 +391,7 @@ function buildPattern(){
   var p = el('div','panel');
   p.innerHTML =
     '<div class="ghead">'+iconWrap(mathmazel(44))+'<div><h2>Örüntü Bul</h2>'
-    +'<p>Bir sayı seç. Kutulara dokun, açılsınlar. Sayılarda gizli bir kural var — onu sen bul!</p></div></div>'
+    +'<p>Bir sayı seç. Kutulara dokun, açılsınlar. Sayılarda gizli bir kural var. Onu sen bul!</p></div></div>'
     +'<div class="chips" id="pchips"></div>'
     +'<div class="ptitle" id="ptitle"></div>'
     +'<div class="plabels" id="plabels"></div>'
@@ -629,9 +629,9 @@ function buildHunt(){
     '9x3':'10 tane 3 = 30, bir grup 3 az → 27.',
     '9x4':'10 tane 4 = 40, bir grup 4 az → 36.',
     '9x5':'10 tane 5 = 50, bir grup 5 az → 45.',
-    '10x3':'10 tane 3 — sonuna sıfır ekle → 30.',
-    '10x4':'10 tane 4 — sonuna sıfır ekle → 40.',
-    '10x5':'10 tane 5 — sonuna sıfır ekle → 50.'
+    '10x3':'10 tane 3, sonuna sıfır ekle → 30.',
+    '10x4':'10 tane 4, sonuna sıfır ekle → 40.',
+    '10x5':'10 tane 5, sonuna sıfır ekle → 50.'
   };
   var cur=null;
 
@@ -676,7 +676,7 @@ function buildHunt(){
       var k=coreKey(c[0],c[1]), m=mastery[k], usta=(m>=HEDEF);
       starsEl.children[i].classList.toggle('on', usta);
       starsEl.children[i].setAttribute('aria-label',
-        c[0]+' × '+c[1]+': '+Math.min(m,HEDEF)+'/'+HEDEF+(usta?' — ustalaştın':''));
+        c[0]+' × '+c[1]+': '+Math.min(m,HEDEF)+'/'+HEDEF+(usta?', ustalaştın':''));
       if(usta) done++;
     });
     /* Kutlama yalnız oyun içinde kazanınca — çadıra girerken değil. */
@@ -784,8 +784,8 @@ function ulestir(n){
 function buildRhythm(){
   var p=el('div','panel');
   p.innerHTML='<div class="ghead">'+iconWrap(mathmazel(44))+'<div><h2>Ritimle Say</h2>'
-    +'<p>Bir adım seç ve ritme uyarak say. Her basışta sayı ilerler; '
-    +'vuruşa denk gelirsen yıldız kazanırsın.</p></div></div>'
+    +'<p>Bir adım seç ve ritme uyarak say. Her basışta sayı ilerler. '
+    +'Vuruşa denk gelirsen yıldız kazanırsın.</p></div></div>'
     +'<div class="chips" id="rchips"></div>'
     +'<div class="beatface"><div class="bignum" id="rnum">0</div>'
     +'<div class="beatdots" id="rdots"></div></div>'
@@ -828,7 +828,7 @@ function buildRhythm(){
   function drawBridge(done){
     var taps=count/step, b=document.getElementById('rbridge');
     if(!b) return;
-    if(!taps){ b.innerHTML='<div class="say">Her “Say!” bir adım — '+ulestir(step)+' ilerlersin.</div>'; return; }
+    if(!taps){ b.innerHTML='<div class="say">Her “Say!” bir adım. '+ulestir(step)+' ilerlersin.</div>'; return; }
     b.innerHTML='<div class="say">'+taps+' kere '+ulestir(step)+' saydın</div>'
       +'<div class="carp'+(done?' big':'')+'">'+taps+' <span style="opacity:.6">×</span> '+step+' = '+count+'</div>';
   }

@@ -213,7 +213,7 @@
       <p class="hbnote" id="howNote"></p>
       <div id="howRows"></div>
     </section>
-    <p class="note">Yıldızların bu cihazda saklanır — yarın kaldığın yerden devam edebilirsin.</p>
+    <p class="note">Yıldızların bu cihazda saklanır. Yarın kaldığın yerden devam edebilirsin.</p>
   </section>
 
   <!-- OYUN -->
@@ -365,7 +365,7 @@ var LEVELS=[
   {name:'Sen Topla',        sub:'Her bahçeden söylenen kadar topla', color:'#E8792B', prize:'fide',  mode:'harvest'},
   {name:'Kaç Bahçe Gerek?', sub:'Sepeti doldurmak için kaç bahçe?', color:'#3E8FC9', prize:'sepet', mode:'howmany'},
   {name:'Pazar Siparişi',   sub:'Problemi oku, kaç tane gerektiğini bul', color:'#8B5CD6', prize:'tartı', mode:'word'},
-  {name:'Serbest Bahçe',    sub:'Sonsuz bölüm — karışık görevler',  color:'#D9455F', prize:'taci',  mode:'mixed', endless:true}
+  {name:'Serbest Bahçe',    sub:'Sonsuz bölüm, karışık görevler',  color:'#D9455F', prize:'taci',  mode:'mixed', endless:true}
 ];
 var GOAL=5;
 
@@ -401,7 +401,7 @@ function renderMap(){
     var cell=document.createElement('div'); cell.className='prizecell';
     var d=document.createElement('div'); d.className='prize '+(extra||'')+' '+(got?'got':'empty');
     d.innerHTML=prizeSvg(id)+(got?'':'<span class="lockdot">'+lockIcon()+'</span>');
-    if(!got) d.setAttribute('aria-label', prizeAd(id)+' — henüz kazanılmadı');
+    if(!got) d.setAttribute('aria-label', prizeAd(id)+', henüz kazanılmadı');
     var nm=document.createElement('span'); nm.className='pname'+(got?'':' locked');
     nm.textContent = got ? prizeAd(id) : prizeNasil(id);
     cell.appendChild(d); cell.appendChild(nm); sh.appendChild(cell);
@@ -570,7 +570,7 @@ function renderGardens(){
     wrap.classList.remove('hidden');
     for(var k=0;k<Q.g;k++){
       var e=document.createElement('div'); e.className='gplot open'+(agac?' tree':'');
-      e.innerHTML=plotHTML(c, Q.n, Math.min(Q.n,5), false, (k+1)+'. sepet · '+Q.n+' tane');
+      e.innerHTML=plotHTML(c, Q.n, Math.min(Q.n,5), false, (k+1)+'. sepet, '+Q.n+' tane');
       wrap.appendChild(e);
     }
     return;
@@ -645,7 +645,7 @@ function renderBasket(){
   var items=document.getElementById('bitems');
   var say=gDone*Q.n+picked;
   if(!items.childNodes.length && say===0){
-    items.innerHTML='<div class="bempty">Sepet boş — bahçeden topla</div>';
+    items.innerHTML='<div class="bempty">Sepet boş, bahçeden topla</div>';
   }
   document.getElementById('bcount').innerHTML =
     '<span class="bk">'+basketIcon()+'</span><b>'+say+'</b><span>sepette</span>';
@@ -703,19 +703,19 @@ function renderBuild(){
   if(Q.mode==='count'){
     /* Çarpma cümlesini baştan vermiyoruz — bu bölüm "eşit grup" kavramı için.
        Doğru cevaptan sonra zaten yazılıyor. */
-    b.innerHTML='<div class="hintline">'+Q.g+' bahçe · her bahçede '+Q.n+' tane</div>'
+    b.innerHTML='<div class="hintline">'+Q.g+' bahçe, her bahçede '+Q.n+' tane</div>'
       + soruSatiri();
     return;
   }
   if(Q.mode==='word'){
     b.innerHTML = (wordAcik
-      ? '<div class="hintline">'+Q.g+' sepet · her sepette '+Q.n+' tane</div>'
+      ? '<div class="hintline">'+Q.g+' sepet, her sepette '+Q.n+' tane</div>'
         +'<div class="mul">'+Q.g+' <span class="op">×</span> '+Q.n+' <span class="op">=</span> ?</div>'
       : '<div class="hintline">Problemi oku. Takılırsan bahçeyi açıp sayabilirsin.</div>');
     return;
   }
   if(Q.mode==='howmany'){
-    b.innerHTML='<div class="hintline">Her bahçeden '+Q.n+' tane · hedef '+Q.toplam+'</div>'
+    b.innerHTML='<div class="hintline">Her bahçeden '+Q.n+' tane, hedef '+Q.toplam+'</div>'
       +'<div class="mul">? <span class="op">×</span> '+Q.n+' <span class="op">=</span> '+Q.toplam+'</div>';
     return;
   }
@@ -889,7 +889,7 @@ function sectionDone(){
   var gotMaster=markTierAndMaster();
   var ch=document.getElementById('cheer'); ch.style.color='var(--grass-dk)';
   ch.textContent = gotMaster ? 'USTA ROZETİ senin! Üç zorluğu da bitirdin!'
-    : (first ? 'Tacı kazandın! Bölüm 1 tamam — devam!' : 'Bölüm '+sectionNo+' tamam! Devam!');
+    : (first ? 'Tacı kazandın! Bölüm 1 tamam, devam!' : 'Bölüm '+sectionNo+' tamam! Devam!');
   Sfx.pop(); Sfx.win();
   Celebrate.finale({count: gotMaster ? 110 : 60});
   sectionNo++; correctCount=0; updateMeter(); updateSectionBadge();
