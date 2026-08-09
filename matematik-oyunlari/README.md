@@ -25,6 +25,7 @@ shared/
   storage.js            ilerleme kaydı (localStorage)
   hud.js                oyun içi "Menü" ve "Ses" düğmeleri
   celebrate.js          kutlama efektleri (uçan yıldız, konfeti)
+  bolme.js              bölmenin dik (bölü çizgili) gösterimi
 oyunlar/
   balon-standi.html            2. sınıf
   zip-zip-karnavali.html       2. sınıf
@@ -91,6 +92,12 @@ Progress.logMiss(3, 4);        // ilk denemede bilemedi
 Progress.hardFacts(12);        // [{fact:'3x4', miss:2, seen:5, rate:.4}, ...]
 Progress.clearMisses();
 
+// bölmenin dik gösterimi (ders kitabındaki bölü çizgili düzen)
+Bolme.dik(12, 3);                    // '<div class="dikbol">…'
+Bolme.dik(12, 3, {etiket:true});     // bölünen/bölen/bölüm/kalan adlarıyla
+Bolme.goster(board, 12, 3, 2000);    // tahtanın üstünde kaplama kart
+Bolme.okunus(12, 3);                 // '12 bölü 3 eşittir 4'
+
 // ayarlar
 Settings.get('autoRead', false);
 Settings.set('autoRead', true);
@@ -115,6 +122,28 @@ Yani her soruda **çarpanlardan biri 1-5 arasında, diğeri en çok 10** olur.
 Bunu iki oyunda da `scopeClamp()` / `makeQuestion()` içindeki kelepçe garanti eder;
 üretilebilen en büyük çarpım 50'dir. Yeni bir seviye eklerken bu kelepçeyi
 atlama — `zor` havuzuna 10 koyup çarpanı da 10'a çıkarırsan kapsam dışına çıkarsın.
+
+## Bölü çizgisi
+
+Ders Kitabı 2 bölmeyi dokuz sayfada dik düzende yazıyor (s.25-28, 33, 37-39
+ve tema değerlendirmesinde s.51). Oyunlar uzun süre yalnızca `12 ÷ 3 = 4`
+satırını gösterdi; çocuk kitabı açtığında bu düzenle ilk kez karşılaşmasın
+diye `shared/bolme.js` aynısını çiziyor:
+
+```
+bölünen →  12 │ 3  ← bölen
+         − 12 │ 4  ← bölüm
+           ────
+  kalan →  00
+```
+
+Geri Zıp Zıp ve Şölen'de bölüm sonunda çıkar. Bölüm sonu ekranı olan
+standlarda `#winBol` içine, sonsuz standlarda tahtanın üstüne kaplama kart
+olarak — kaplama, düzeni aşağı itmediği için oyun alanı kaymaz.
+
+2. sınıfta bölme hep kalansız, yani kalan her zaman 0. Kitap yine de
+çocuktan yazmasını istiyor, biz de yazıyoruz; kalan bölünenin basamak
+sayısı kadar sıfırla gösteriliyor (12 için `00`, 8 için `0`) — kitap da böyle.
 
 ## Notlar
 

@@ -193,6 +193,7 @@
       <p class="added" id="winAdded">Ödül Rafına eklendi ✓</p>
       <h2 id="winTitle"></h2>
       <p id="winMsg"></p>
+      <div class="winbol" id="winBol"></div>
       <p class="winsug hidden" id="winSuggest"></p>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
         <button class="primary" id="winNext">Sonraki sofra ›</button>
@@ -205,6 +206,7 @@
 <script src="../shared/storage.js"></script>
 <script src="../shared/audio.js"></script>
 <script src="../shared/celebrate.js"></script>
+<script src="../shared/bolme.js"></script>
 <script>
 /* ================= DURUM ================= */
 var GAME_ID='mathmazel-soleni';
@@ -778,8 +780,12 @@ function yanlis(){
   }, 1100);
 }
 
+/* Bölüm sonunda kitaptaki dik gösterimi yazabilmek için son çözülen
+   bölmeyi saklıyoruz — o an Q çoktan yenilenmiş oluyor. */
+var sonBolme=null;
 function dogru(){
   locked=true;
+  sonBolme={bolunen:Q.bolunen, bolen:Q.bolen};
   if(missedThisQ) Progress.logMiss(Q.bolen, Q.bolum); else Progress.logHit(Q.bolen, Q.bolum);
   Sfx.good();
   addStar(1); correctCount++; updateMeter(correctCount-1);
@@ -829,6 +835,10 @@ function sectionDone(){
     : (first ? 'Tacı kazandın! Bölüm 1 tamam, devam!' : 'Bölüm '+sectionNo+' tamam! Devam!');
   Sfx.pop(); Sfx.win();
   Celebrate.finale({count: gotMaster?110:60});
+  /* Sonsuz bölümde kazanma ekranı yok; dik gösterimi tahtanın
+     üstünde kaplama kartla göster. 2,2 sn'lik ara zaten var. */
+  if(sonBolme) Bolme.goster(document.querySelector('.board'),
+    sonBolme.bolunen, sonBolme.bolen, 2000);
   sectionNo++; correctCount=0; updateMeter(); updateSectionBadge();
   setTimeout(function(){ locked=false; nextTask(); }, 2200);
 }
@@ -850,9 +860,18 @@ function winLevel(){
   document.getElementById('winMsg').textContent = last
     ? 'Bütün sofraları kurdun! Sen bir paylaşma ustasısın.'
     : 'Yeni bir ödülün var ve yeni sofra açıldı!';
+  yazDikBolme();
   var sug=tierSuggestion(), sEl=document.getElementById('winSuggest');
   if(sEl){ sEl.innerHTML=sug; sEl.classList.toggle('hidden', !sug); }
   document.getElementById('winNext').classList.toggle('hidden', last);
+}
+/* Kitabın dik ("bölü çizgili") düzeni. Oyun içinde kutlama kısa
+   sürüyor; bölüm sonu ekranı sakin ve yer bol. */
+function yazDikBolme(){
+  var el=document.getElementById('winBol'); if(!el) return;
+  if(!sonBolme){ el.innerHTML=''; return; }
+  el.innerHTML='<p class="winbol-t">Bunu kitaptaki gibi de yazabiliriz:</p>'
+    + Bolme.dik(sonBolme.bolunen, sonBolme.bolen, {etiket:true});
 }
 document.getElementById('winNext').onclick=function(){ var nx=curLevel+1; if(nx<LEVELS.length) startLevel(nx); else showMap(); };
 document.getElementById('winMap').onclick=showMap;

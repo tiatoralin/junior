@@ -205,6 +205,7 @@
       <p class="added" id="winAdded">Ödül Rafına eklendi ✓</p>
       <h2 id="winTitle"></h2>
       <p id="winMsg"></p>
+      <div class="winbol" id="winBol"></div>
       <p class="winsug hidden" id="winSuggest"></p>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
         <button class="primary" id="winNext">Sonraki stant ›</button>
@@ -217,6 +218,7 @@
 <script src="../shared/storage.js"></script>
 <script src="../shared/audio.js"></script>
 <script src="../shared/celebrate.js"></script>
+<script src="../shared/bolme.js"></script>
 <script>
 /* ---------- state ---------- */
 var GAME_ID='geri-zip-zip';
@@ -457,6 +459,10 @@ function sectionDone(){
   /* Sonsuz bölüm winLevel'a girmiyor; sonraki standı burada aç. */
   if(curLevel+2>S.unlocked && curLevel+1<LEVELS.length) S.unlocked=curLevel+2;
   persist();
+  /* Sonsuz bölümde kazanma ekranı yok; dik gösterimi tahtanın
+     üstünde kaplama kartla göster. 2,2 sn'lik ara zaten var. */
+  if(sonBolme) Bolme.goster(document.querySelector('.board'),
+    sonBolme.bolunen, sonBolme.bolen, 2000);
   sectionNo++; correctCount=0; updateMeter(); updateSectionBadge();
   setTimeout(nextQuestion, 2200);
 }
@@ -957,6 +963,9 @@ function nudge(msg){ document.getElementById('cheer').style.color='var(--muted)'
   setTimeout(function(){ document.getElementById('cheer').textContent=''; document.getElementById('cheer').style.color=''; }, 1200); }
 
 var cozuldu=false;   /* bu soru çözüldü mü — tekrar ödül verilmesin */
+/* Bölüm sonunda kitaptaki dik gösterimi yazabilmek için son çözülen
+   bölmeyi saklıyoruz — o an Q çoktan yenilenmiş oluyor. */
+var sonBolme=null;
 function succeed(){
   /* "Vardım!" tuşuna havucun üstündeyken tekrar tekrar basılınca her basış
      yeni yıldız veriyordu: cur hâlâ Q.g'ye eşit, hiçbir kilit yoktu. */
@@ -970,6 +979,7 @@ function succeed(){
   if(Q){
     if(missedThisQ) Progress.logMiss(Q.bolen, Q.bolum); else Progress.logHit(Q.bolen, Q.bolum);
   }
+  sonBolme={bolunen:Q.bolunen, bolen:Q.bolen};
   addStar(); correctCount++; updateMeter(correctCount-1);
   Celebrate.flyStar(document.getElementById('runner'), scEl, catchStar);
   document.getElementById('cheer').style.color='';
@@ -1032,10 +1042,19 @@ function winLevel(){
   document.getElementById('winMsg').textContent=last
     ? 'Tüm standları bitirdin ve tacı kazandın! Sen bir zıplama şampiyonusun.'
     : 'Yeni bir ödülün var ve yeni stant açıldı!';
+  yazDikBolme();
   var sug=tierSuggestion();
   var sEl=document.getElementById('winSuggest');
   if(sEl){ sEl.innerHTML=sug; sEl.classList.toggle('hidden', !sug); }
   document.getElementById('winNext').classList.toggle('hidden', last);
+}
+/* Kitabın dik ("bölü çizgili") düzeni. Oyun içinde 1,3 saniyelik
+   kutlamada okunamıyor; bölüm sonu ekranı sakin ve yer bol. */
+function yazDikBolme(){
+  var el=document.getElementById('winBol'); if(!el) return;
+  if(!sonBolme){ el.innerHTML=''; return; }
+  el.innerHTML='<p class="winbol-t">Bunu kitaptaki gibi de yazabiliriz:</p>'
+    + Bolme.dik(sonBolme.bolunen, sonBolme.bolen, {etiket:true});
 }
 document.getElementById('winNext').onclick=function(){ var nx=curLevel+1; if(nx<LEVELS.length) startLevel(nx); else showMap(); };
 document.getElementById('winMap').onclick=showMap;

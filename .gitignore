@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# MEB ders ve çalışma kitapları — kaynak olarak yerelde duruyor.
+# Depoya girmemeli: toplam ~420 MB ve tek bir dosya 162 MB, yani
+# GitHub'ın 100 MB dosya sınırının üstünde. Ayrıca bize lazım olan
+# şey PDF'ler değil, onlardan çıkardığımız müfredat kuralları —
+# onlar da README'de ve kodun yorumlarında yazılı.
+2 sınıf kitap/
