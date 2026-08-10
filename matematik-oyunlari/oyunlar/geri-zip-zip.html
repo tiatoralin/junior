@@ -837,7 +837,7 @@ function nextQuestion(){
 
   /* --- KONTROL ET: çarpmayı onu doğrulayan bölmeyle eşleştir --- */
   if(Q.mode==='check'){
-    qEl.textContent='Her çarpmayı, onu kontrol eden bölmeyle eşleştir.';
+    qEl.textContent='Her çarpmayı doğru bölmeyle eşleştir.';
     sEl.innerHTML='';
     ctrl.innerHTML='';
     document.getElementById('eslesme').className='eslesme';
@@ -856,7 +856,7 @@ function nextQuestion(){
 
   /* --- HAVUCU SEÇ: şıklardan doğru sonucu bul --- */
   if(Q.mode==='choose'){
-    qEl.textContent='Doğru sonucun üstündeki taşa zıpla';
+    qEl.textContent='Doğru sonucun taşına zıpla.';
     sEl.innerHTML='<span>'+Q.bolunen+'</span> <span class="op">÷</span> <span>'+Q.bolen+'</span> <span class="op">=</span> ?';
     var opts=optionSet(Q.bolum, Q.bolen, Q.bolunen);
     var st0=document.createElement('div'); st0.className='stone'; stns.appendChild(st0);
@@ -884,7 +884,7 @@ function nextQuestion(){
 
   /* --- KAÇAR KAÇAR: önce zıplayışın boyunu seç --- */
   if(Q.mode==='step'){
-    qEl.textContent=ayrilma(Q.bolunen)+' başlayıp '+Q.bolum+' zıplayışta tam 0\'a in.';
+    qEl.textContent=ayrilma(Q.bolunen)+' başla. '+Q.bolum+' zıplayışta tam 0\'a in.';
     sEl.innerHTML='<span>'+Q.bolunen+'</span> <span class="op">÷</span> <span>?</span> <span class="op">=</span> <span>'+Q.bolum+'</span>';
     document.getElementById('hintwrap').innerHTML=
       '<div class="adimsec" id="adimsec"><span class="lb">Her zıplayış kaç olsun?</span></div>';
@@ -909,13 +909,13 @@ function nextQuestion(){
   var geri = (Q.mode==='back'||Q.mode==='sub');
   if(Q.mode==='back'){
     /* İlk bölüm: sembol YOK. Çocuk önce eylemi yapsın. */
-    qEl.textContent=ayrilma(Q.bolunen)+' başla, '+ulestir(Q.bolen)+' geri zıpla.';
+    qEl.textContent=ayrilma(Q.bolunen)+' başla. '+ulestir(Q.bolen)+' geri zıpla.';
     sEl.innerHTML='Kaç zıplayışta <span class="op">0</span>\'a inersin?';
   } else if(Q.mode==='sub'){
-    qEl.textContent=ayrilma(Q.bolunen)+' başla, her zıplayışta '+Q.bolen+' çıkar.';
+    qEl.textContent=ayrilma(Q.bolunen)+' başla. Her zıplayışta '+Q.bolen+' çıkar.';
     sEl.innerHTML='<span>'+Q.bolunen+'</span>';
   } else {
-    qEl.textContent='Sıfırdan başla, '+ulestir(Q.bolen)+' ileri zıpla, '+yonelme(Q.bolunen)+' çık.';
+    qEl.textContent='Sıfırdan başla. '+ulestir(Q.bolen)+' ileri zıpla. '+yonelme(Q.bolunen)+' çık.';
     sEl.innerHTML='<span>'+Q.bolunen+'</span> <span class="op">÷</span> <span>'+Q.bolen+'</span> <span class="op">=</span> ?';
   }
   Q.maxIndex=Q.bolum;
@@ -1386,13 +1386,13 @@ function speakerIcon(){return '<svg viewBox="0 0 24 24" fill="currentColor" aria
 function speakText(t){ Speech.speak(t); }
 function speakQuestion(){
   if(!Q) return; var t;
-  if(Q.mode==='sub')       t=ayrilma(Q.bolunen)+' başla, her zıplayışta '+Q.bolen+' çıkar. Kaç kere çıkarabilirsin?';
-  else if(Q.mode==='back') t=Q.bolunen+' bölü '+Q.bolen+' kaç eder? '+ayrilma(Q.bolunen)+' başla, '+ulestir(Q.bolen)+' geri zıpla, kâseye in.';
-  else if(Q.mode==='fwd')  t='Sıfırdan '+ulestir(Q.bolen)+' zıplayarak '+yonelme(Q.bolunen)+' çık. Kaç zıplayış eder?';
+  if(Q.mode==='sub')       t=ayrilma(Q.bolunen)+' başla. Her zıplayışta '+Q.bolen+' çıkar. Kaç kere çıkarabilirsin?';
+  else if(Q.mode==='back') t=Q.bolunen+' bölü '+Q.bolen+' kaç eder? '+ayrilma(Q.bolunen)+' başla. '+ulestir(Q.bolen)+' geri zıpla.';
+  else if(Q.mode==='fwd')  t='Sıfırdan başla. '+ulestir(Q.bolen)+' ileri zıpla. Kaç zıplayışta '+yonelme(Q.bolunen)+' çıkarsın?';
   else if(Q.mode==='step') t=Q.bolunen+', '+Q.bolum+' zıplayışta bitiyor. Her zıplayış kaç olmalı?';
   /* Kontrol Et'te tek bir soru yok, tahta dolusu çift var; Q.bolunen
      ilk çifti tutuyor, onu okumak yanıltır. Görevi okuyoruz. */
-  else if(Q.mode==='check') t='Her çarpmayı, onu kontrol eden bölmeyle eşleştir. '
+  else if(Q.mode==='check') t='Her çarpmayı doğru bölmeyle eşleştir. '
                              +'Çarpmayı yap, sonucu bölmenin üstünde ara.';
   else if(Q.mode==='check1') t=Q.bolum+' kere '+Q.bolen+'. Bu çarpmayı hangi bölme kontrol eder?';
   else                     t=Q.bolunen+' bölü '+Q.bolen+' kaç eder? Doğru havuca zıpla.';

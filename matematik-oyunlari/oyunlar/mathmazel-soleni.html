@@ -657,13 +657,13 @@ function resetDagitim(){
 function renderTask(){
   var t=document.getElementById('task'), c=treat(), s='';
   if(Q.mode==='share')
-    s='<b>'+Q.bolunen+' '+c.ad+'</b> var, <b>'+Q.bolen+' arkadaş</b> geldi. Herkese <b>eşit</b> paylaştır.';
+    s='<b>'+Q.bolunen+' '+c.ad+'</b> var. <b>'+Q.bolen+' arkadaş</b> geldi. Herkese <b>eşit</b> paylaştır.';
   else if(Q.mode==='fill')
     s='<b>'+Q.bolunen+' '+c.ad+'</b> var. Her tabağa <b>'+Q.bolum+' tane</b> koy.';
   else if(Q.mode==='terazi')
     s='Terazinin iki tarafı <b>eşit</b> olsun. Boş yere hangi sayı gelmeli?';
   else
-    s='<b>'+Q.bolen+'</b> arkadaş, her birine <b>'+Q.bolum+'</b> '+c.ad+' düştü. Baştan kaç '+c.ad+' vardı?';
+    s='<b>'+Q.bolen+' arkadaş</b> var. Her birine <b>'+Q.bolum+'</b> '+c.ad+' düştü. Baştan kaç '+c.ad+' vardı?';
   t.innerHTML='<span class="who">'+mathmazel(38)+'</span><p>'+s+'</p>';
 }
 

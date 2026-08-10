@@ -608,13 +608,13 @@ function nextQuestion(){
     Q.maxIndex=startIdx+3;   // track runs one stone past the furthest carrot
     if(Q.frame==='count'){
       qEl.textContent='Her zıplayışta '+Q.step+' ilerle.';
-      sEl.innerHTML='Havuç <span class="op">'+Q.ans+'</span> sayısında';
+      sEl.innerHTML='Havuç <span class="op">'+Q.ans+'</span> sayısında.';
     } else if(Q.frame==='add'){
-      qEl.textContent='Zıplaya zıplaya topla, doğru havuca in.';
+      qEl.textContent='Zıplaya zıplaya topla. Doğru havuca in.';
       var parts=[]; for(var k=0;k<Q.g;k++) parts.push(Q.step);
       sEl.innerHTML=parts.join(' <span class="op">+</span> ')+' <span class="op">=</span> ?';
     } else {
-      qEl.textContent='Zıplaya zıplaya çöz, doğru havuca in.';
+      qEl.textContent='Zıplaya zıplaya çöz. Doğru havuca in.';
       sEl.innerHTML='<span>'+Q.g+'</span> <span class="op">×</span> <span>'+Q.step+'</span> <span class="op">=</span> ?';
     }
     var count=Q.maxIndex+1, stones=document.getElementById('stones'); stones.innerHTML='';
@@ -633,7 +633,7 @@ function nextQuestion(){
     document.getElementById('arriveBtn').onclick=doArrive;
     document.getElementById('resetBtn').onclick=resetHops;
   } else {
-    qEl.textContent='Doğru havucun üstündeki taşa zıpla';
+    qEl.textContent='Doğru havucun taşına zıpla.';
     sEl.innerHTML='<span>'+Q.a+'</span> <span class="op">×</span> <span>'+Q.b+'</span> <span class="op">=</span> ?';
     var opts=optionSet(Q.ans,Q.a,Q.b);
     var count2=opts.length+1, stones2=document.getElementById('stones'); stones2.innerHTML='';

@@ -161,6 +161,25 @@ farklıdır (`12÷3 ⚖ 2+?` için denge 4, taş 2). Kodda ilki `Q.deger`, ikinc
 Bilinmeyenin bölen olması da 2. sınıf kapsamında (Çalışma-2 s.42 üç konumu da
 boş bırakıyor); terazide bölünen tercih edildi, `? ÷ 2` okuması daha kolay.
 
+## Cümle kuralları
+
+Çocuğun ekranda okuduğu her satır 2. sınıf seviyesinde olmalı:
+
+1. **Her cümle noktalama ile bitsin.** Yarıda kesilen satır ("2 grup, her
+   grupta 3 balon") çocuğa eksik geliyor.
+2. **Sıfat-fiil yok.** "Doğru cevabı *taşıyan* balonu patlat" yerine
+   "Cevabı bul. O sayının balonuna dokun."
+3. **Edilgen çatı yok.** "Her bahçeden 5 tane *toplanıyor*" yerine
+   "Her bahçeden 5 tane *topluyoruz*".
+4. **Bir cümlede en çok 9 kelime.**
+5. **Virgülle emir zinciri yok.** "Sıfırdan başla, 2'şer zıpla, 10'a çık"
+   üç işi tek satıra sıkıştırıyor; ayrı cümleler olsun.
+6. **Önce durum, sonra emir.** "3 bahçe var. Her bahçeden 4 çilek topla."
+7. **Ağır ek yığınlarından kaçın.** "sepettekileri" yerine "sepeti".
+
+Paralel betimleme kuralı çiğnemez: "2 grup var, her grupta 3 balon var."
+istenen biçimdir — virgül iki *emri* değil iki benzer *bilgiyi* bağlıyor.
+
 ## Nasıl oynanır kartı
 
 `shared/nasil.js`. Çocuklar bölüme girip ne yapacaklarını anlamıyordu:

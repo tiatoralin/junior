@@ -399,14 +399,20 @@ function makeQuestionHam(L){
     if(Math.random()<0.5){ var t=a; a=b; b=t; }   // vary order
     g=a; n=b; ans=a*b;
     sentence='<span>'+a+'</span> <span class="op">×</span> <span>'+b+'</span> <span class="op">=</span> ?';
-    q='Doğru cevabı taşıyan balonu patlat';
+    q='Cevabı bul. O sayının balonuna dokun.';
   } else {
     g=rint(T.gMin,T.gMax); n=rint(T.nMin,T.nMax); ans=g*n;
     visual=groupsHTML(g,n);
-    if(L.mode==='count'){ q=g+' grup, her grupta '+n+' balon'; sentence='Kaç balon var?'; }
-    else if(L.mode==='add'){ var add=[]; for(var k=0;k<g;k++) add.push(n); q=g+' grup, her grupta '+n;
+    /* Görev satırı tam cümle olmalı. Eskiden "2 grup, her grupta 3 balon"
+       diye yarıda kesiliyordu; 2. bölümde daha da beteri, "3 grup, her
+       grupta 2" deyip nesneyi bile söylemeden bitiyordu. Üç bölümde de
+       aynı cümle kuruluyor: resim aynı, değişen tek şey altındaki
+       matematik satırı — bölümlerin amacı zaten bu köprü. */
+    var betim = g+' grup var, her grupta '+n+' balon var.';
+    if(L.mode==='count'){ q=betim; sentence='Toplam kaç balon var?'; }
+    else if(L.mode==='add'){ var add=[]; for(var k=0;k<g;k++) add.push(n); q=betim;
       sentence=add.join(' <span class="op">+</span> ')+' <span class="op">=</span> ?'; }
-    else { q=g+' grup × '+n+' balon'; sentence='<span>'+g+'</span> <span class="op">×</span> <span>'+n+'</span> <span class="op">=</span> ?'; }
+    else { q=betim; sentence='<span>'+g+'</span> <span class="op">×</span> <span>'+n+'</span> <span class="op">=</span> ?'; }
   }
   return {ans:ans, visual:visual, sentence:sentence, q:q, g:g, n:n, mode:L.mode};
 }
@@ -463,7 +469,7 @@ function nextQuestion(){
       document.getElementById('hintArea').innerHTML=
           '<div class="hintbox">'
         +   groupsHTML(Q.g, Q.n)
-        +   '<div class="skiphint">'+Q.g+' grup, her grupta '+Q.n+' balon</div>'
+        +   '<div class="skiphint">'+Q.g+' grup var, her grupta '+Q.n+' balon var.</div>'
         +   (Q.g>1 ? '<div class="addline">'+add.join(' <span class="op">+</span> ')
                      +' <span class="op">=</span> ?</div>' : '')
         + '</div>';
@@ -590,7 +596,7 @@ function speakerIcon(){return '<svg viewBox="0 0 24 24" fill="currentColor" aria
 function speakText(t){ Speech.speak(t); }
 function speakQuestion(){
   if(!curQ) return; var Q=curQ, t='';
-  if(Q.mode==='count'){ t=Q.g+' grup var, her grupta '+Q.n+' balon. Kaç balon var? Doğru balonu patlat.'; }
+  if(Q.mode==='count'){ t=Q.g+' grup var, her grupta '+Q.n+' balon var. Toplam kaç balon var? Doğru balonu patlat.'; }
   else if(Q.mode==='add'){ var p=[]; for(var k=0;k<Q.g;k++) p.push(Q.n); t=p.join(' artı ')+' kaç eder? Doğru balonu patlat.'; }
   else { t=Q.g+' kere '+Q.n+' kaç eder? Doğru balonu patlat.'; }
   speakText(t);

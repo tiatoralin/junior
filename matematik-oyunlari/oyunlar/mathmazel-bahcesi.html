@@ -525,9 +525,9 @@ function nextTask(){
 
 function renderTask(){
   var c=cropOf(), t=document.getElementById('task'), s='';
-  if(Q.mode==='count')   s='Her bahçeden <b>'+Q.n+' '+c.ad+'</b> topla. '+Q.g+' bahçe var. Sonra <b>sepettekileri say</b>.';
-  else if(Q.mode==='harvest') s='Her bahçeden <b>'+Q.n+' '+c.ad+'</b> topla. '+Q.g+' bahçe var.';
-  else if(Q.mode==='howmany') s='Sepete <b>'+Q.toplam+' '+c.ad+'</b> lazım. Her bahçeden <b>'+Q.n+'</b> tane toplanıyor. <b>Kaç bahçe gerekir?</b>';
+  if(Q.mode==='count')   s=Q.g+' bahçe var. Her bahçeden <b>'+Q.n+' '+c.ad+'</b> topla. Sonra <b>sepeti say</b>.';
+  else if(Q.mode==='harvest') s=Q.g+' bahçe var. Her bahçeden <b>'+Q.n+' '+c.ad+'</b> topla.';
+  else if(Q.mode==='howmany') s='Sepete <b>'+Q.toplam+' '+c.ad+'</b> lazım. Her bahçeden <b>'+Q.n+'</b> tane topluyoruz. <b>Kaç bahçe gerekir?</b>';
   else s='Pazara <b>'+Q.g+' sepet</b> götüreceğiz. Her sepete <b>'+Q.n+' '+c.ad+'</b> koyacağız. <b>Toplam kaç '+c.ad+' gerekir?</b>';
   t.innerHTML='<span class="who">'+mathmazel(38)+'</span><p>'+s+'</p>';
 }
