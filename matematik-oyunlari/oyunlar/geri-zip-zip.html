@@ -58,6 +58,29 @@
   .critter small{font-weight:800; font-size:11px; color:var(--muted)}
   .critter.on{border-color:var(--grass); background:#F1FAF0; box-shadow:0 2px 0 var(--soft)}
 
+  /* --- KONTROL ET: eşleştirme tahtası --- */
+  .eslesme{display:grid; grid-template-columns:1fr 1fr; gap:10px 12px; margin:10px 0 4px}
+  .eslesme .sut{display:flex; flex-direction:column; gap:9px}
+  .eslesme .sbas{font-family:var(--disp); font-weight:700; font-size:13px;
+    color:var(--muted); text-align:center; margin-bottom:2px}
+  .kart{display:flex; align-items:center; justify-content:center; min-height:64px;
+    padding:8px 6px; border:2.5px solid var(--line); border-radius:16px;
+    background:var(--surface); cursor:pointer; font-family:var(--disp);
+    font-weight:800; font-size:clamp(19px,5.2vw,26px); color:var(--ink);
+    -webkit-tap-highlight-color:transparent; transition:transform .12s, border-color .12s}
+  .kart:disabled{cursor:default}
+  .kart.on{border-color:var(--carrot); background:#FFF4E8; transform:scale(1.04)}
+  .kart.esti{border-color:var(--grass); background:#EFF8E9; cursor:default}
+  .kart.esti .tik{color:var(--grass-dk); margin-left:6px; font-size:.8em}
+  .kart.yanlis{animation:kartsalla 420ms both}
+  @keyframes kartsalla{
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-7px)} 40%{transform:translateX(7px)}
+    60%{transform:translateX(-4px)} 80%{transform:translateX(4px)}
+  }
+  /* Bölme kartı dik gösterimi taşıyor; yazı boyu kart içinde küçülsün */
+  .kart .dikbol{font-size:clamp(16px,4.4vw,21px)}
+  @media (max-width:380px){ .eslesme{gap:8px} .kart{min-height:58px} }
   .runsum{text-align:center; font-family:var(--disp); font-weight:600; font-size:18px; color:var(--sky-dk); min-height:24px}
 
   /* sayı doğrusu pisti */
@@ -186,6 +209,7 @@
       <div class="prompt"><div class="q" id="q"></div></div>
       <div class="sentence" id="sentence"></div>
       <div class="runsum" id="runsum"></div>
+      <div class="eslesme hidden" id="eslesme"></div>
       <div class="track" id="track">
         <div class="ground"></div>
         <div class="stones" id="stones"></div>
@@ -229,10 +253,21 @@ var S=Progress.load(GAME_ID, {
 /* Geri Zıpla eklenmeden önce kaydedilmiş oyunlarda diziler 5 uzunluğunda.
    Progress.load kaydı varsayılanın üstüne yazdığı için 6. bölüm tanımsız
    kalıyordu — burada tamamlanıyor. */
-(function(){
-  while(S.levelStars.length < 6) S.levelStars.push(0);
-  while(S.tierDone.length  < 6) S.tierDone.push({});
-})();
+function kayitGocu(){
+  /* "Kontrol Et" 6. sıraya girdi, "Kaçar Kaçar" 7'ye kaydı. Altı bölümlük
+     eski kayıtlarda 6. gözde Kaçar Kaçar'ın yıldızları duruyor; olduğu
+     yerde bırakılırsa çocuk hiç oynamadığı Kontrol Et'i bitmiş görür.
+     Bu yüzden önce kaydırıyor, sonra tamamlıyoruz. */
+  if(S.levelStars.length === 6){
+    S.levelStars.splice(5, 0, 0);
+    S.tierDone.splice(5, 0, {});
+    /* Açılmış bölüm sayısı da bir kayıyor ki Kaçar Kaçar kilitlenmesin. */
+    if(S.unlocked >= 6) S.unlocked = S.unlocked + 1;
+  }
+  while(S.levelStars.length < LEVELS.length) S.levelStars.push(0);
+  while(S.tierDone.length  < LEVELS.length) S.tierDone.push({});
+  if(S.unlocked > LEVELS.length) S.unlocked = LEVELS.length;
+}
 function persist(){ Progress.save(GAME_ID, S); }
 var totalEl=document.getElementById('starTotal');
 var scEl=document.querySelector('.starcount');
@@ -363,8 +398,10 @@ var LEVELS=[
   {name:'Karışık Yol',   sub:'Sonsuz bölüm. İstediğin kadar oyna!',color:'#8B5CD6', prize:'crown', mode:'mixed', endless:true, tiers:DIVT},
   /* 2. sınıf müfredatında YOK: bölmede verilmeyen sayıyı bulmak cebirsel
      düşünme işi. Silinmedi, ileri seviye olarak burada duruyor. */
+  {name:'Kontrol Et',    sub:'Çarpmanı bölmeyle doğrula',           color:'#4FA03A', prize:'muhur',  mode:'check',  tiers:DIVT},
   {name:'Kaçar Kaçar?',  sub:'Her zıplayış kaç olmalı?',           color:'#5E7268', prize:'pusula2',mode:'step',  ileri:true, tiers:DIVT}
 ];
+kayitGocu();   /* LEVELS tanımlandıktan sonra: göç uzunluğu ondan okuyor */
 var GOAL=5;
 
 /* Ödüllerin adı ve nasıl kazanıldığı */
@@ -374,6 +411,7 @@ var PRIZES={
   harita:{ad:'Yol Haritası',   nasil:'3. standı bitir'},
   ribbon:{ad:'Şeref Kurdelesi',nasil:'4. standı bitir'},
   crown: {ad:'Geri Sayım Tacı',nasil:'5. standı bitir'},
+  muhur: {ad:'Kontrol Mührü',  nasil:'6. standı bitir'},
   pusula2:{ad:'Usta Pusulası', nasil:'İleri standı bitir'},
   usta:  {ad:'Usta Rozeti',    nasil:'Karışık Yol\'u üç zorlukta da bitir'}
 };
@@ -547,6 +585,22 @@ function makeQuestionHam(L){
   var T=(L.tiers&&L.tiers[S.diff])||DIVT.kolay;
   var mode=L.mode;
   if(mode==='mixed') mode=pick(['back','sub','fwd','choose']);   /* step ileri seviye, karışığa girmez */
+  /* KONTROL ET tek bir çift değil, bir tahta dolusu çift ister.
+     Çarpımlar BİRBİRİNDEN FARKLI seçiliyor: aynı çarpım iki kez
+     olursa (ör. 12÷3 ve 12÷4) bir çarpmayı iki bölme birden
+     doğrular ve eşleştirmenin tek doğru cevabı kalmaz. */
+  if(mode==='check'){
+    var havuz=tumCiftler(T).slice(), secili=[], gorulen={};
+    for(var k=havuz.length-1;k>0;k--){ var r=Math.floor(Math.random()*(k+1)); var t=havuz[k]; havuz[k]=havuz[r]; havuz[r]=t; }
+    for(var h=0; h<havuz.length && secili.length<GOAL; h++){
+      var pr=havuz[h][0]*havuz[h][1];
+      if(gorulen[pr]) continue;
+      gorulen[pr]=1;
+      secili.push({bolen:havuz[h][0], bolum:havuz[h][1], bolunen:pr});
+    }
+    return {mode:'check', ciftler:secili,
+            bolen:secili[0].bolen, bolum:secili[0].bolum, bolunen:secili[0].bolunen};
+  }
   var c=ciftSec(T), bolen=c[0], bolum=c[1];
   /* back / fwd : cevap kaç zıplayış (bölüm)
      step       : cevap her zıplayışın boyu (bölen)
@@ -647,6 +701,30 @@ function nextQuestion(){
   var runner=document.getElementById('runner'); runner.className='runner';
   sEl.classList.remove('orta','kucuk');
   stns.innerHTML='';
+  /* Kontrol Et sayı doğrusu kullanmıyor: yolu gizle, tahtayı aç.
+     Diğer bütün modlarda tersi. */
+  var esEl=document.getElementById('eslesme'), trEl=document.getElementById('track');
+  esEl.classList.toggle('hidden', Q.mode!=='check');
+  trEl.classList.toggle('hidden', Q.mode==='check');
+  if(Q.mode!=='check') esEl.innerHTML='';
+
+  /* --- KONTROL ET: çarpmayı onu doğrulayan bölmeyle eşleştir --- */
+  if(Q.mode==='check'){
+    qEl.textContent='Her çarpmayı, onu kontrol eden bölmeyle eşleştir.';
+    sEl.innerHTML='';
+    ctrl.innerHTML='';
+    kurEslesme();
+    document.getElementById('hintwrap').innerHTML=
+      '<button class="hintbtn" type="button" id="hintBtn"><span class="m">'+mathmazel(22)+'</span> Kontrol nasıl yapılır?</button>';
+    document.getElementById('hintBtn').onclick=function(){
+      this.style.display='none';
+      document.getElementById('hintwrap').insertAdjacentHTML('beforeend',
+        '<div class="skiphint">Çarpmayı yap, sonucu bul. O sonuç hangi bölmenin '
+        +'en üstünde yazıyorsa kontrolü odur. Örnek: 5 × 4 = 20, kontrolü 20 ÷ 4 = 5.</div>');
+    };
+    if(autoRead) speakQuestion();
+    return;
+  }
 
   /* --- HAVUCU SEÇ: şıklardan doğru sonucu bul --- */
   if(Q.mode==='choose'){
@@ -962,6 +1040,103 @@ function nudge(msg){ document.getElementById('cheer').style.color='var(--muted)'
   document.getElementById('cheer').textContent=msg;
   setTimeout(function(){ document.getElementById('cheer').textContent=''; document.getElementById('cheer').style.color=''; }, 1200); }
 
+/* ============================================================
+   KONTROL ET  (MAT.2.2.5 b)
+
+   Ders Kitabı 2 s.38'de Ayşe soruyor: "Bulduğun sonucun doğru
+   olduğundan emin misin? Sonucu kontrol etmek için hangi işlemi
+   yapabiliriz?" Cevap bölme. Aynı görev s.39'da eşleştirme olarak,
+   s.51'de de tema değerlendirmesinde çıkıyor.
+
+   Solda çarpmalar, sağda bölmeler — bölmeler ders kitabındaki dik
+   düzende ve bölümleri boş. Çocuk çarpmayı yapar, sonucu hangi
+   bölmenin üstünde görürse onunla eşler.
+   ============================================================ */
+var seciliCarpma=null, eslesenSayisi=0;
+
+function karistir(a){
+  var b=a.slice();
+  for(var i=b.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=b[i]; b[i]=b[j]; b[j]=t; }
+  return b;
+}
+function kurEslesme(){
+  seciliCarpma=null; eslesenSayisi=0;
+  var kutu=document.getElementById('eslesme');
+  var carpmalar=karistir(Q.ciftler), bolmeler=karistir(Q.ciftler);
+  var solHtml='<div class="sut"><div class="sbas">Çarpma</div>',
+      sagHtml='<div class="sut"><div class="sbas">Kontrol</div>';
+  carpmalar.forEach(function(c){
+    solHtml+='<button type="button" class="kart carpma" data-p="'+c.bolunen+'"'
+      +' aria-label="'+c.bolum+' kere '+c.bolen+'">'+c.bolum+' &times; '+c.bolen+'</button>';
+  });
+  bolmeler.forEach(function(c){
+    sagHtml+='<button type="button" class="kart bolme" data-p="'+c.bolunen+'" data-b="'+c.bolen+'">'
+      + Bolme.dik(c.bolunen, c.bolen, {soru:true}) + '</button>';
+  });
+  kutu.innerHTML = solHtml+'</div>' + sagHtml+'</div>';
+
+  Array.prototype.forEach.call(kutu.querySelectorAll('.kart.carpma'), function(k){
+    k.onclick=function(){ carpmaSec(k); };
+  });
+  Array.prototype.forEach.call(kutu.querySelectorAll('.kart.bolme'), function(k){
+    k.onclick=function(){ bolmeSec(k); };
+  });
+}
+function carpmaSec(k){
+  if(k.disabled) return;
+  Sfx.click();
+  var kutu=document.getElementById('eslesme');
+  Array.prototype.forEach.call(kutu.querySelectorAll('.kart.carpma'),
+    function(x){ x.classList.remove('on'); });
+  if(seciliCarpma===k){ seciliCarpma=null; return; }   /* aynısına basınca seçimi bırak */
+  k.classList.add('on'); seciliCarpma=k;
+}
+function bolmeSec(k){
+  if(k.disabled) return;
+  if(!seciliCarpma){ nudge('Önce soldan bir çarpma seç.'); Sfx.click(); return; }
+  var carpma=seciliCarpma;
+  if(carpma.dataset.p === k.dataset.p) eslesmeDogru(carpma, k);
+  else eslesmeYanlis(carpma, k);
+}
+function eslesmeYanlis(carpma, bolme){
+  missedThisQ=true;
+  Sfx.bad();
+  [carpma, bolme].forEach(function(x){
+    x.classList.remove('on','yanlis'); void x.offsetWidth; x.classList.add('yanlis');
+    setTimeout(function(){ x.classList.remove('yanlis'); }, 460);
+  });
+  seciliCarpma=null;
+  nudge('Bu ikisi eşleşmiyor. Çarpmanın sonucunu bölmenin üstünde ara.');
+}
+function eslesmeDogru(carpma, bolme){
+  var bolunen=+bolme.dataset.p, bolen=+bolme.dataset.b, bolum=bolunen/bolen;
+  Sfx.good();
+  if(missedThisQ) Progress.logMiss(bolen, bolum); else Progress.logHit(bolen, bolum);
+  missedThisQ=false;                       /* sonraki çift temiz sayfa açsın */
+  sonBolme={bolunen:bolunen, bolen:bolen};
+
+  /* Cevapları aç: çarpım görünür olsun, bölme de tam hâlini alsın. */
+  carpma.innerHTML = bolum+' &times; '+bolen+' = '+bolunen+'<span class="tik">&#10003;</span>';
+  carpma.setAttribute('aria-label', bolum+' kere '+bolen+' eşittir '+bolunen+', eşleşti');
+  bolme.innerHTML = Bolme.dik(bolunen, bolen);
+  [carpma, bolme].forEach(function(x){
+    x.classList.remove('on'); x.classList.add('esti'); x.disabled=true;
+  });
+  seciliCarpma=null;
+
+  eslesenSayisi++; correctCount++;
+  addStar(); updateMeter(correctCount-1);
+  Celebrate.flyStar(bolme, scEl, catchStar);
+  document.getElementById('cheer').style.color='';
+  document.getElementById('cheer').textContent=pick(['Kontrol tamam! ✓','Doğru çift!','Bravo!','İşte bu!']);
+
+  if(eslesenSayisi >= Q.ciftler.length){
+    burst();
+    if(LEVELS[curLevel].endless) setTimeout(sectionDone, 1400);
+    else setTimeout(winLevel, 1350);
+  }
+}
+
 var cozuldu=false;   /* bu soru çözüldü mü — tekrar ödül verilmesin */
 /* Bölüm sonunda kitaptaki dik gösterimi yazabilmek için son çözülen
    bölmeyi saklıyoruz — o an Q çoktan yenilenmiş oluyor. */
@@ -1069,6 +1244,10 @@ function speakQuestion(){
   else if(Q.mode==='back') t=Q.bolunen+' bölü '+Q.bolen+' kaç eder? '+ayrilma(Q.bolunen)+' başla, '+ulestir(Q.bolen)+' geri zıpla, kâseye in.';
   else if(Q.mode==='fwd')  t='Sıfırdan '+ulestir(Q.bolen)+' zıplayarak '+yonelme(Q.bolunen)+' çık. Kaç zıplayış eder?';
   else if(Q.mode==='step') t=Q.bolunen+', '+Q.bolum+' zıplayışta bitiyor. Her zıplayış kaç olmalı?';
+  /* Kontrol Et'te tek bir soru yok, tahta dolusu çift var; Q.bolunen
+     ilk çifti tutuyor, onu okumak yanıltır. Görevi okuyoruz. */
+  else if(Q.mode==='check') t='Her çarpmayı, onu kontrol eden bölmeyle eşleştir. '
+                             +'Çarpmayı yap, sonucu bölmenin üstünde ara.';
   else                     t=Q.bolunen+' bölü '+Q.bolen+' kaç eder? Doğru havuca zıpla.';
   speakText(t);
 }

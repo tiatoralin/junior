@@ -89,6 +89,54 @@
   .fly svg{width:100%;height:100%}
 
   /* ---- CÜMLE / CEVAP ---- */
+  /* --- DENGE TERAZİSİ ---
+     Eğim custom property yerine sınıfla veriliyor: transform içinde
+     calc()+değişken çok eski Safari'de çalışmıyor, sınıf her yerde çalışır. */
+  .terazi{margin:6px 0 2px; padding-top:6px}
+  .terazi .kol{position:relative; height:104px}
+  .terazi .kiris{position:absolute; left:6%; right:6%; top:34px; height:7px;
+    border-radius:4px; background:#8A6410;
+    transform-origin:50% 50%; transform:rotate(0deg);
+    transition:transform 480ms cubic-bezier(.35,1.35,.5,1)}
+  .terazi .tepe{position:absolute; left:50%; top:22px; width:16px; height:16px;
+    margin-left:-8px; border-radius:50%; background:var(--carrot); z-index:2}
+  .terazi .direk{position:absolute; left:50%; top:34px; bottom:10px; width:7px;
+    margin-left:-3.5px; background:#8A6410; border-radius:4px}
+  .terazi .taban{position:absolute; left:28%; right:28%; bottom:2px; height:9px;
+    border-radius:5px; background:#6E5210}
+  .terazi .kefe{position:absolute; top:0; width:40%; min-height:62px;
+    display:flex; align-items:center; justify-content:center; padding:8px 4px;
+    border:2.5px solid var(--line); border-radius:14px; background:var(--surface);
+    font-family:var(--disp); font-weight:800; font-size:clamp(19px,5.4vw,26px);
+    color:var(--ink); text-align:center;
+    transition:transform 480ms cubic-bezier(.35,1.35,.5,1)}
+  .terazi .kefe.sol{left:2%}
+  .terazi .kefe.sag{right:2%}
+  .terazi .kefe .bos{color:var(--carrot-dk)}
+  .terazi .kefe .op{color:var(--carrot)}
+  /* Sol ağırsa kiriş sola yatar; kefeler dik kalsın diye ters dönerler. */
+  .terazi.egik-sol .kiris{transform:rotate(-8deg)}
+  .terazi.egik-sol .kefe.sol{transform:translateY(13px)}
+  .terazi.egik-sol .kefe.sag{transform:translateY(-13px)}
+  .terazi.egik-sag .kiris{transform:rotate(8deg)}
+  .terazi.egik-sag .kefe.sol{transform:translateY(-13px)}
+  .terazi.egik-sag .kefe.sag{transform:translateY(13px)}
+  .terazi.denge .kefe{border-color:var(--grass); background:#EFF8E9}
+  .terazi.denge .kiris{background:var(--grass-dk)}
+  .terazi .esit{text-align:center; font-family:var(--disp); font-weight:800;
+    font-size:16px; color:var(--muted); margin-top:2px; min-height:22px}
+  .terazi.denge .esit{color:var(--grass-dk)}
+  /* Sayı taşları */
+  .taslar{display:flex; flex-wrap:wrap; gap:9px; justify-content:center; margin:10px 0 2px}
+  .taslar button{min-width:62px; padding:12px 14px; border-radius:16px;
+    border:2.5px solid var(--line); background:var(--surface); cursor:pointer;
+    font-family:var(--disp); font-weight:800; font-size:clamp(20px,5.4vw,26px);
+    color:var(--ink); -webkit-tap-highlight-color:transparent;
+    transition:transform .12s, border-color .12s}
+  .taslar button:disabled{opacity:.45; cursor:default}
+  .taslar button.wrong{border-color:var(--berry); animation:tassalla 420ms both}
+  @keyframes tassalla{0%,100%{transform:translateX(0)}
+    25%{transform:translateX(-6px)} 50%{transform:translateX(6px)} 75%{transform:translateX(-3px)}}
   .build{text-align:center; margin:6px 0 4px; min-height:48px}
   .build .div{font-family:var(--disp); font-weight:700; font-size:clamp(22px,6vw,32px); color:var(--ink)}
   .build .div .op{color:var(--carrot)}
@@ -176,6 +224,7 @@
     <div class="board">
       <div class="meterrow"><div class="meter" id="meter"></div><span class="sectbadge" id="sectionBadge"></span></div>
       <div class="task" id="task"></div>
+      <div class="terazi hidden" id="terazi"></div>
       <div class="bowl" id="bowl"></div>
       <div class="draghint" id="draghint"></div>
       <div class="seats" id="seats"></div>
@@ -213,6 +262,14 @@ var GAME_ID='mathmazel-soleni';
 var S=Progress.load(GAME_ID, {
   stars:0, unlocked:1, prizes:[], levelStars:[0,0,0,0], diff:'kolay', tierDone:[{},{},{},{}]
 });
+/* Denge Terazisi eklenince diziler 4'ten 5'e çıktı. Progress.load kaydı
+   varsayılanın üstüne yazdığı için eski kayıtlarda son bölüm tanımsız
+   kalıyordu; burada tamamlanıyor. Sona eklendiği için kaydırma gerekmiyor. */
+function kayitGocu(){
+  while(S.levelStars.length < LEVELS.length) S.levelStars.push(0);
+  while(S.tierDone.length  < LEVELS.length) S.tierDone.push({});
+  if(S.unlocked > LEVELS.length) S.unlocked = LEVELS.length;
+}
 function persist(){ Progress.save(GAME_ID, S); }
 var totalEl=document.getElementById('starTotal');
 var scEl=document.querySelector('.starcount');
@@ -251,6 +308,7 @@ function prizeSvg(id){
     catal:'<svg viewBox="0 0 48 48"><path d="M14 6 v10 a4 4 0 0 0 8 0 V6" fill="none" stroke="#9AA6AE" stroke-width="3" stroke-linecap="round"/><path d="M18 16 v26" stroke="#9AA6AE" stroke-width="3" stroke-linecap="round"/><path d="M32 6 c5 0 6 12 0 14 v22" fill="none" stroke="#C8A24B" stroke-width="3" stroke-linecap="round"/></svg>',
     pasta:'<svg viewBox="0 0 48 48"><rect x="9" y="22" width="30" height="18" rx="4" fill="#F3D6A8"/><path d="M9 26 q6 5 10 0 q6 5 10 0 q6 5 10 0 v-4 H9 Z" fill="#D9455F"/><rect x="22" y="10" width="4" height="10" rx="2" fill="#FBF5EC"/><circle cx="24" cy="8" r="3" fill="#EFB227"/></svg>',
     taci:'<svg viewBox="0 0 48 48"><path d="M8 34 L10 16 L19 26 L24 12 L29 26 L38 16 L40 34 Z" fill="#EFB227" stroke="#8A6410" stroke-width="1.5" stroke-linejoin="round"/><circle cx="24" cy="12" r="2.5" fill="#E8792B"/><rect x="8" y="34" width="32" height="5" rx="2" fill="#D89A17"/></svg>',
+    terazi:'<svg viewBox="0 0 48 48"><path d="M24 8 v30" stroke="#8A6410" stroke-width="3" stroke-linecap="round"/><path d="M14 40 h20" stroke="#8A6410" stroke-width="3" stroke-linecap="round"/><path d="M8 14 h32" stroke="#8A6410" stroke-width="3" stroke-linecap="round"/><path d="M4 18 q4 8 8 0 Z" fill="#4FA03A"/><path d="M8 14 v4" stroke="#8A6410" stroke-width="1.6"/><path d="M36 18 q4 8 8 0 Z" fill="#4FA03A"/><path d="M40 14 v4" stroke="#8A6410" stroke-width="1.6"/><circle cx="24" cy="8" r="3" fill="#EFB227"/></svg>',
     usta:'<svg viewBox="0 0 48 48"><path d="M16 30 L11 46 L20 40 Z" fill="#D9455F"/><path d="M32 30 L37 46 L28 40 Z" fill="#E8792B"/><circle cx="24" cy="20" r="14" fill="#EFB227" stroke="#8A6410" stroke-width="2"/><path d="M24 10l2.9 6 6.5.7-4.8 4.4 1.3 6.4L24 30.6 18.1 27.9 19.4 21.5 14.6 17.1 21.1 16.4z" fill="#fff"/></svg>'
   };
   return p[id]||p.tabak;
@@ -260,6 +318,7 @@ var PRIZES={
   catal:{ad:'Gümüş Çatal',  nasil:'2. sofrayı bitir'},
   pasta:{ad:'Doğum Pastası',nasil:'3. sofrayı bitir'},
   taci: {ad:'Şölen Tacı',   nasil:'4. sofrayı bitir'},
+  terazi:{ad:'Denge Terazisi',nasil:'5. sofrayı bitir'},
   usta: {ad:'Usta Rozeti',  nasil:'Şölen Sofrası\'nı üç zorlukta da bitir'}
 };
 function prizeAd(id){ return (PRIZES[id]||{}).ad||'Ödül'; }
@@ -329,9 +388,13 @@ var LEVELS=[
   {name:'Eşit Paylaştır',  sub:'Herkese aynı sayıda ver',        color:'#E8792B', prize:'tabak', mode:'share'},
   {name:'Kaç Tabak Gerek?',sub:'Her tabağa aynı sayıda koy',     color:'#3E8FC9', prize:'catal', mode:'fill'},
   {name:'Ters Yüz',        sub:'Çarpma ile bölme aynı ailedir',  color:'#8B5CD6', prize:'pasta', mode:'inverse'},
-  {name:'Şölen Sofrası',   sub:'Sonsuz bölüm, karışık görevler',color:'#D9455F', prize:'taci',  mode:'mixed', endless:true}
+  {name:'Şölen Sofrası',   sub:'Sonsuz bölüm, karışık görevler',color:'#D9455F', prize:'taci',  mode:'mixed', endless:true},
+  /* MAT.2.2.6: eşitliğin "iki taraf aynı değerde" anlamı. Ders Kitabı 2
+     s.44, s.45 ve s.47 bunu üç ayrı etkinlikle çalıştırıyor. */
+  {name:'Denge Terazisi',  sub:'İki taraf eşit olsun',           color:'#4FA03A', prize:'terazi',mode:'terazi'}
 ];
 var GOAL=5;
+kayitGocu();   /* LEVELS tanımlandıktan sonra */
 
 var mapEl=document.getElementById('map'), playEl=document.getElementById('play'), winEl=document.getElementById('winScreen');
 function rint(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
@@ -446,10 +509,67 @@ function ciftSec(T){
   sonSoru=s[0]+'x'+s[1];
   return s;
 }
+/* ============================================================
+   DENGE TERAZİSİ  (MAT.2.2.6)
+
+   "=" işareti "cevap buraya" değil, "iki taraf aynı değerde"
+   demek. Ders Kitabı 2 bunu üç etkinlikle çalıştırıyor: s.44
+   (çektiğin sayıyı veren herhangi bir işlem yaz), s.45 (eşitlik
+   doğru mu, D/Y), s.47 (aynı sonucu veren farklı işlemler).
+
+   Dört soru tipi, basitten karmaşığa:
+     a  12 ÷ 3  ⚖  ?          tanıdık
+     b  ?       ⚖  12 ÷ 3     sonuç solda da olabilir
+     c  12 ÷ 3  ⚖  2 + ?      iki tarafta da işlem var
+     d  ? ÷ 2   ⚖  8 ÷ 4      iki bölmeyi eşitle
+
+   d tipinde bilinmeyen BÖLÜNEN. Bilinmeyen bölen de 2. sınıf
+   kapsamında (Çalışma Kitabı 2, s.42 üç konumu da boş bırakıyor)
+   ama terazide "? ÷ 2" okuması çocuğa daha kolay geliyor. */
+function teraziSorusu(T){
+  var tip=pick(['a','b','c','d']);
+  var c=ciftSec(T), bolen=c[0], bolum=c[1], bolunen=bolen*bolum;
+  var sol, sag, cevap;
+  if(tip==='a'){ sol=ifade(bolunen,'÷',bolen); sag=null; cevap=bolum; }
+  else if(tip==='b'){ sol=null; sag=ifade(bolunen,'÷',bolen); cevap=bolum; }
+  else if(tip==='c'){
+    /* 12 ÷ 3 = 2 + ?  — eklenen 1..bolum-1 arası, cevap pozitif kalsın */
+    var ek=rint(1, bolum-1);
+    sol=ifade(bolunen,'÷',bolen); sag={pre:ek+' +', bos:true}; cevap=bolum-ek;
+  } else {
+    /* ? ÷ d = (sağdaki bölmenin sonucu). Bölünen kapsam içinde kalmalı. */
+    var uygun=[];
+    T.bolen.forEach(function(d){ if(d*bolum<=T.enCok) uygun.push(d); });
+    var d1=pick(uygun);
+    sol={pre:'', bos:true, post:'÷ '+d1}; sag=ifade(bolunen,'÷',bolen); cevap=d1*bolum;
+  }
+  /* deger: terazinin dengelendiği ortak değer. Dört tipte de bolum'a
+     eşit. ans ise kefeye konan taş — c ve d tipinde ikisi farklıdır
+     (12÷3 ⚖ 2+? için deger 4, ans 2). */
+  return {mode:'terazi', tip:tip, sol:sol, sag:sag, ans:cevap, deger:bolum,
+          bolen:bolen, bolum:bolum, bolunen:bolunen};
+}
+function ifade(a,op,b){ return {metin:a+' <span class="op">'+op+'</span> '+b}; }
+
+/* Şıklar: doğru cevap + yakın çeldiriciler, hepsi 1..20 arası ve farklı. */
+function teraziTaslari(dogruCevap){
+  var set=[dogruCevap], aday=[dogruCevap+1, dogruCevap-1, dogruCevap+2,
+                              dogruCevap-2, dogruCevap*2, dogruCevap+5];
+  for(var i=0;i<aday.length && set.length<4;i++){
+    var v=aday[i];
+    if(v>=1 && v<=20 && set.indexOf(v)<0) set.push(v);
+  }
+  var k=2;
+  while(set.length<4){ if(set.indexOf(k)<0) set.push(k); k++; }
+  for(var j=set.length-1;j>0;j--){ var r=Math.floor(Math.random()*(j+1)); var t=set[j]; set[j]=set[r]; set[r]=t; }
+  return set;
+}
+
 function makeTask(){
   var L=LEVELS[curLevel], mode=L.mode;
   if(mode==='mixed') mode=pick(['share','fill','inverse']);
   var T=TIERS[S.diff]||TIERS.kolay;
+  if(mode==='terazi') return teraziSorusu(T);
   var c=ciftSec(T), bolen=c[0], bolum=c[1], bolunen=bolen*bolum;
   /* Hangi bilinmeyen soruluyor, moda göre değişir:
        share  : "her arkadaşa kaç düştü?"  -> bolum
@@ -472,7 +592,24 @@ function nextTask(){
   updateMeter();
   document.getElementById('cheer').textContent='';
   setSlot('');
-  renderTask(); renderBowl(); renderSeats(); renderBuild(); renderPad();
+  renderTask();
+  /* Terazi sofrayı kullanmıyor: kâse, koltuklar, cümle ve tuş takımı
+     kapanır, yerine terazi ve sayı taşları gelir. */
+  var teraziMi = (Q.mode==='terazi');
+  document.getElementById('terazi').classList.toggle('hidden', !teraziMi);
+  document.querySelector('.modebar').classList.toggle('hidden', teraziMi);
+  if(teraziMi){
+    ['bowl','draghint','seats','build','pad'].forEach(function(id){
+      document.getElementById(id).classList.add('hidden');
+    });
+    document.querySelector('.answer').classList.add('hidden');
+    renderTerazi();
+    return;
+  }
+  ['bowl','draghint','seats','build','pad'].forEach(function(id){
+    document.getElementById(id).classList.remove('hidden');
+  });
+  renderBowl(); renderSeats(); renderBuild(); renderPad();
 }
 function resetDagitim(){
   if(locked || !Q || Q.mode==='inverse') return;
@@ -488,6 +625,8 @@ function renderTask(){
     s='<b>'+Q.bolunen+' '+c.ad+'</b> var, <b>'+Q.bolen+' arkadaş</b> geldi. Herkese <b>eşit</b> paylaştır.';
   else if(Q.mode==='fill')
     s='<b>'+Q.bolunen+' '+c.ad+'</b> var. Her tabağa <b>'+Q.bolum+' tane</b> koy.';
+  else if(Q.mode==='terazi')
+    s='Terazinin iki tarafı <b>eşit</b> olsun. Boş yere hangi sayı gelmeli?';
   else
     s='<b>'+Q.bolen+'</b> arkadaş, her birine <b>'+Q.bolum+'</b> '+c.ad+' düştü. Baştan kaç '+c.ad+' vardı?';
   t.innerHTML='<span class="who">'+mathmazel(38)+'</span><p>'+s+'</p>';
@@ -649,7 +788,7 @@ function esitMi(){
    Kural: bir kez ikram koyduysan, dağıtımı doğru bitirmeden cevap sayılmaz.
    Hiç dokunmadıysan serbestsin — zaten hesaplayarak buluyorsun. */
 function dagitimSorunu(){
-  if(!Q || Q.mode==='inverse') return null;
+  if(!Q || Q.mode==='inverse' || Q.mode==='terazi') return null;
   var konan=Q.bolunen-kalan;
   if(konan===0) return null;
   if(kalan>0) return 'Ortak tabakta hâlâ '+kalan+' tane var. Önce hepsini dağıt.';
@@ -758,6 +897,98 @@ function renderPad(){
     p.appendChild(b);
   });
 }
+/* ---------- DENGE TERAZİSİ: çizim ve oynanış ---------- */
+function kefeHtml(taraf){
+  /* null  -> boş kefe, sadece "?"
+     metin -> hazır ifade
+     bos   -> önek/sonek arasında "?" (ör. "2 + ?" ya da "? ÷ 2") */
+  if(!taraf) return '<span class="bos">?</span>';
+  if(taraf.metin) return taraf.metin;
+  var p = taraf.pre ? taraf.pre.replace('+','<span class="op">+</span>')+' ' : '';
+  var q = taraf.post ? ' '+taraf.post.replace('÷','<span class="op">÷</span>') : '';
+  return p+'<span class="bos">?</span>'+q;
+}
+/* Boşluk hangi tarafta? O taraf "hafif" sayılır, terazi diğer yana yatar. */
+function bosTaraf(){ return (!Q.sol || Q.sol.bos) ? 'sol' : 'sag'; }
+
+function renderTerazi(konan){
+  var t=document.getElementById('terazi');
+  var bos=bosTaraf();
+  var solIc = (bos==='sol' && konan!=null) ? kefeDolu(Q.sol, konan) : kefeHtml(Q.sol);
+  var sagIc = (bos==='sag' && konan!=null) ? kefeDolu(Q.sag, konan) : kefeHtml(Q.sag);
+  t.innerHTML =
+      '<div class="kol">'
+    +   '<div class="kiris"></div><div class="tepe"></div>'
+    +   '<div class="direk"></div><div class="taban"></div>'
+    +   '<div class="kefe sol">'+solIc+'</div>'
+    +   '<div class="kefe sag">'+sagIc+'</div>'
+    + '</div>'
+    + '<div class="esit" id="teraziDurum"></div>'
+    + '<div class="taslar" id="taslar"></div>';
+  t.classList.remove('denge','egik-sol','egik-sag');
+  /* Henüz taş konmadıysa dolu taraf ağır: terazi ona yatar. */
+  if(konan==null) t.classList.add(bos==='sol' ? 'egik-sag' : 'egik-sol');
+  cizTaslar();
+}
+function kefeDolu(taraf, v){
+  if(!taraf) return '<b>'+v+'</b>';
+  var p = taraf.pre ? taraf.pre.replace('+','<span class="op">+</span>')+' ' : '';
+  var q = taraf.post ? ' '+taraf.post.replace('÷','<span class="op">÷</span>') : '';
+  return p+'<b>'+v+'</b>'+q;
+}
+function cizTaslar(){
+  var kutu=document.getElementById('taslar'); if(!kutu) return;
+  kutu.innerHTML='';
+  (Q.taslar || (Q.taslar=teraziTaslari(Q.ans))).forEach(function(v){
+    var b=document.createElement('button'); b.type='button'; b.textContent=v;
+    b.setAttribute('aria-label', v+' taşını kefeye koy');
+    b.onclick=function(){ teraziKoy(v, b); };
+    kutu.appendChild(b);
+  });
+}
+function teraziDurumYaz(m){ var e=document.getElementById('teraziDurum'); if(e) e.textContent=m; }
+
+function teraziKoy(v, btn){
+  if(locked) return;
+  var t=document.getElementById('terazi'), bos=bosTaraf();
+  Sfx.click();
+  renderTerazi(v);                       /* taşı kefeye koy, sonra tart */
+  if(v===Q.ans){
+    locked=true;
+    t.classList.remove('egik-sol','egik-sag'); t.classList.add('denge');
+    teraziDurumYaz('İki taraf da ' + Q.deger + '. Terazi dengede!');
+    kilitleTaslar();
+    dogru();
+    return;
+  }
+  /* Yanlış: hangi taraf ağır, onu söyle — cevabı verme. */
+  var agirSol = (bos==='sol') ? (v > Q.ans) : (v < Q.ans);
+  t.classList.remove('denge','egik-sol','egik-sag');
+  t.classList.add(agirSol ? 'egik-sol' : 'egik-sag');
+  teraziDurumYaz(agirSol ? 'Sol taraf daha ağır' : 'Sağ taraf daha ağır');
+  /* renderTerazi taşları baştan çizdi; elimizdeki düğme artık DOM'da
+     değil. Sallanma görünsün diye yenisini değerinden bulup işaretle. */
+  var kutu=document.getElementById('taslar');
+  var b2=kutu && Array.prototype.filter.call(kutu.querySelectorAll('button'),
+    function(x){ return +x.textContent===v; })[0];
+  if(b2){
+    b2.classList.add('wrong');
+    setTimeout(function(){ b2.classList.remove('wrong'); }, 460);
+  }
+  missedThisQ=true; Sfx.bad();
+  locked=true;
+  setTimeout(function(){
+    locked=false;
+    renderTerazi(null);                  /* taşı geri al, baştan dene */
+    teraziDurumYaz('');
+  }, 1150);
+}
+function kilitleTaslar(){
+  var kutu=document.getElementById('taslar'); if(!kutu) return;
+  Array.prototype.forEach.call(kutu.querySelectorAll('button'),
+    function(b){ b.disabled=true; });
+}
+
 function submit(){
   if(buf===''||locked) return;
   var sorun=dagitimSorunu();
@@ -789,7 +1020,11 @@ function dogru(){
   if(missedThisQ) Progress.logMiss(Q.bolen, Q.bolum); else Progress.logHit(Q.bolen, Q.bolum);
   Sfx.good();
   addStar(1); correctCount++; updateMeter(correctCount-1);
-  Celebrate.flyStar(document.getElementById('slot'), scEl, catchStar);
+  /* Terazide #slot gizli; gizli elemanın kutusu 0x0 olduğu için yıldız
+     ekranın köşesinden uçardı. Kaynağı moda göre seçiyoruz. */
+  Celebrate.flyStar(
+    Q.mode==='terazi' ? document.querySelector('#terazi .kol')
+                      : document.getElementById('slot'), scEl, catchStar);
 
   /* Müfredat çarpma–bölme bağını istiyor: ikisini birden yaz. */
   var b1 = (Q.mode==='fill') ? Q.bolum : Q.bolen;
@@ -801,7 +1036,8 @@ function dogru(){
 
   var ch=document.getElementById('cheer'); ch.style.color='';
   ch.textContent = missedThisQ ? pick(['Buldun! 👏','İşte bu!','Doğru! Vazgeçmedin.'])
-                               : pick(['Sofra hazır! 🍽️','Harika!','Bravo!','Çok iyi!']);
+    : Q.mode==='terazi' ? pick(['Terazi dengede! ⚖️','Tam eşit!','Bravo!','Çok iyi!'])
+    : pick(['Sofra hazır! 🍽️','Harika!','Bravo!','Çok iyi!']);
   if(correctCount>=GOAL){
     if(LEVELS[curLevel].endless) setTimeout(sectionDone, 1250);
     else setTimeout(winLevel, 1200);

@@ -123,6 +123,30 @@ Bunu iki oyunda da `scopeClamp()` / `makeQuestion()` içindeki kelepçe garanti 
 üretilebilen en büyük çarpım 50'dir. Yeni bir seviye eklerken bu kelepçeyi
 atlama — `zor` havuzuna 10 koyup çarpanı da 10'a çıkarırsan kapsam dışına çıkarsın.
 
+## Bölme oyunlarının bölümleri
+
+İki bölme oyunu MAT.2.2.4'ün iki anlamını taşıyor (paylaştırma ve ardışık
+çıkarma). Son iki bölüm temanın diğer iki çıktısını kapatıyor:
+
+| Bölüm | Oyun | Çıktı | Kitap |
+|---|---|---|---|
+| Kontrol Et | Geri Zıp Zıp, 6. stant | MAT.2.2.5 b — çarpma ve bölme birbirini doğrular | Ders-2 s.38, 39, **51 (değerlendirme)**; Çalışma-2 s.38, 42 |
+| Denge Terazisi | Şölen, 5. sofra | MAT.2.2.6 — eşitlik "iki taraf aynı değerde" | Ders-2 s.44, 45, 47 |
+
+**Kontrol Et** solda çarpma, sağda bölü çizgili bölme kartları verir; çocuk
+çarpmayı yapıp sonucu bölmenin üstünde arar. Bir tahtadaki çarpımlar
+birbirinden farklı seçilir — aynı çarpım iki kez olursa (12÷3 ve 12÷4) bir
+çarpmayı iki bölme birden doğrular ve eşleştirmenin tek doğru cevabı kalmaz.
+
+**Denge Terazisi**'nin dört soru tipi var, basitten karmaşığa:
+`12÷3 ⚖ ?`, `? ⚖ 12÷3`, `12÷3 ⚖ 2+?`, `? ÷ 2 ⚖ 8÷4`. Dördünde de terazinin
+dengelendiği ortak değer bölümdür; kefeye konan taş ise son ikisinde bundan
+farklıdır (`12÷3 ⚖ 2+?` için denge 4, taş 2). Kodda ilki `Q.deger`, ikincisi
+`Q.ans`.
+
+Bilinmeyenin bölen olması da 2. sınıf kapsamında (Çalışma-2 s.42 üç konumu da
+boş bırakıyor); terazide bölünen tercih edildi, `? ÷ 2` okuması daha kolay.
+
 ## Bölü çizgisi
 
 Ders Kitabı 2 bölmeyi dokuz sayfada dik düzende yazıyor (s.25-28, 33, 37-39
