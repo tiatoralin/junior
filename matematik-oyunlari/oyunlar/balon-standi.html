@@ -410,7 +410,11 @@ function makeQuestionHam(L){
        matematik satırı — bölümlerin amacı zaten bu köprü. */
     var betim = g+' grup var, her grupta '+n+' balon var.';
     if(L.mode==='count'){ q=betim; sentence='Toplam kaç balon var?'; }
-    else if(L.mode==='add'){ var add=[]; for(var k=0;k<g;k++) add.push(n); q=betim;
+    /* Toplama satırının üstünde ne sorulduğu yazsın: "4 + 4 = ?" tek
+       başına ne istendiğini söylemiyor. 1. bölümde soru alt satırda,
+       burada toplama orayı kapladığı için görev satırının sonunda. */
+    else if(L.mode==='add'){ var add=[]; for(var k=0;k<g;k++) add.push(n);
+      q=betim+' Toplam kaç balon var?';
       sentence=add.join(' <span class="op">+</span> ')+' <span class="op">=</span> ?'; }
     else { q=betim; sentence='<span>'+g+'</span> <span class="op">×</span> <span>'+n+'</span> <span class="op">=</span> ?'; }
   }
@@ -597,7 +601,8 @@ function speakText(t){ Speech.speak(t); }
 function speakQuestion(){
   if(!curQ) return; var Q=curQ, t='';
   if(Q.mode==='count'){ t=Q.g+' grup var, her grupta '+Q.n+' balon var. Toplam kaç balon var? Doğru balonu patlat.'; }
-  else if(Q.mode==='add'){ var p=[]; for(var k=0;k<Q.g;k++) p.push(Q.n); t=p.join(' artı ')+' kaç eder? Doğru balonu patlat.'; }
+  else if(Q.mode==='add'){ var p=[]; for(var k=0;k<Q.g;k++) p.push(Q.n);
+    t=Q.g+' grup var, her grupta '+Q.n+' balon var. Toplam kaç balon var? '+p.join(' artı ')+' kaç eder?'; }
   else { t=Q.g+' kere '+Q.n+' kaç eder? Doğru balonu patlat.'; }
   speakText(t);
 }
