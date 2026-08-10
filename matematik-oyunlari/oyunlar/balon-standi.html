@@ -416,7 +416,11 @@ function makeQuestionHam(L){
     else if(L.mode==='add'){ var add=[]; for(var k=0;k<g;k++) add.push(n);
       q=betim+' Toplam kaç balon var?';
       sentence=add.join(' <span class="op">+</span> ')+' <span class="op">=</span> ?'; }
-    else { q=betim; sentence='<span>'+g+'</span> <span class="op">×</span> <span>'+n+'</span> <span class="op">=</span> ?'; }
+    /* Köprü bölümünde de aynısı: "4 × 4 = ?" ne istendiğini söylemiyor.
+       Resim ve soru 2. bölümle birebir aynı kalıyor, değişen tek şey
+       alt satırın toplama yerine çarpma olması — köprünün amacı bu. */
+    else { q=betim+' Toplam kaç balon var?';
+      sentence='<span>'+g+'</span> <span class="op">×</span> <span>'+n+'</span> <span class="op">=</span> ?'; }
   }
   return {ans:ans, visual:visual, sentence:sentence, q:q, g:g, n:n, mode:L.mode};
 }
@@ -603,6 +607,9 @@ function speakQuestion(){
   if(Q.mode==='count'){ t=Q.g+' grup var, her grupta '+Q.n+' balon var. Toplam kaç balon var? Doğru balonu patlat.'; }
   else if(Q.mode==='add'){ var p=[]; for(var k=0;k<Q.g;k++) p.push(Q.n);
     t=Q.g+' grup var, her grupta '+Q.n+' balon var. Toplam kaç balon var? '+p.join(' artı ')+' kaç eder?'; }
+  else if(Q.mode==='bridge'){
+    t=Q.g+' grup var, her grupta '+Q.n+' balon var. Toplam kaç balon var? '
+     +Q.g+' kere '+Q.n+' kaç eder?'; }
   else { t=Q.g+' kere '+Q.n+' kaç eder? Doğru balonu patlat.'; }
   speakText(t);
 }
