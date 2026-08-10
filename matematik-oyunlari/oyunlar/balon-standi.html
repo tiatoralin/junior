@@ -90,6 +90,7 @@
       <button class="back" id="back">‹ Standlara dön</button>
       <button class="listen" id="listenBtn"></button>
       <span class="lvlpill" id="lvlpill"></span>
+      <span class="nasilyer" id="nasilyer"></span>
     </div>
     <div class="diffbar" id="diffbar"></div>
     <div class="board">
@@ -120,6 +121,7 @@
 <script src="../shared/storage.js"></script>
 <script src="../shared/audio.js"></script>
 <script src="../shared/celebrate.js"></script>
+<script src="../shared/nasil.js"></script>
 <script>
 /* ---------- state ---------- */
 var GAME_ID = 'balon-standi';
@@ -272,6 +274,40 @@ function starRow(n){var s='';for(var i=0;i<GOAL;i++){s+='<i class="'+(i<n?'on':'
 var curLevel=0, correctCount=0, curAnswer=0, sectionNo=1, curQ=null, autoRead=false;
 var missedThisQ=false;   /* bu soruda ilk denemede yanlış yapıldı mı */
 var justWonPrize=null;   /* haritada parlatılacak yeni ödül */
+/* ---------- Nasıl oynanır (shared/nasil.js) ----------
+   Ekrandaki görev satırı matematiği anlatıyordu, oynanışı değil:
+   "2 grup, her grupta 4 balon" bir betimleme, emir cümlesi değil.
+   Çocuk balonları görüp ne yapacağını bilemiyordu.
+   Anahtar olarak bölümün mode'u kullanılıyor: sıradan bağımsız. */
+var NASIL={
+  count:  ['Balon gruplarına bak.',
+           'Kaç balon var, hepsini say.',
+           'O sayının yazdığı balona dokun.'],
+  add:    ['Her grupta kaç balon var, bak.',
+           'Grupları toplayarak bul.',
+           'Bulduğun sayının balonuna dokun.'],
+  bridge: ['Aynı gruplar, şimdi çarpma var.',
+           'Grup sayısını balon sayısıyla çarp.',
+           'Bulduğun sayının balonuna dokun.'],
+  facts:  ['Yukarıdaki çarpmayı oku.',
+           'Takılırsan [Mathmazel göstersin] tuşuna bas.',
+           'Doğru cevabın balonuna dokun.'],
+  mixed:  ['Burada her soru tipi çıkar.',
+           'Takılırsan [Mathmazel göstersin] tuşuna bas.',
+           'Doğru cevabın balonuna dokun.']
+};
+function nasilAdimlari(){ return NASIL[(LEVELS[curLevel]||{}).mode] || NASIL.count; }
+function nasilAnahtari(){ return (LEVELS[curLevel]||{}).mode || 'count'; }
+function nasilAc(){
+  /* Başlık sade: bölümün adı zaten üstteki renkli rozette yazıyor. */
+  Nasil.ac(GAME_ID, nasilAnahtari(), nasilAdimlari());
+}
+function nasilKur(){
+  var yer=document.getElementById('nasilyer'); if(!yer) return;
+  yer.innerHTML='';
+  yer.appendChild(Nasil.soruDugmesi(function(){ Sfx.click(); nasilAc(); }));
+}
+
 function startLevel(i){
   curLevel=i; correctCount=0; sectionNo=1;
   mapEl.classList.add('hidden'); winEl.classList.add('hidden'); playEl.classList.remove('hidden'); window.scrollTo(0,0);
@@ -281,7 +317,11 @@ function startLevel(i){
   renderDiffBar();
   updateSectionBadge();
   ensureSound();
+  nasilKur();
   nextQuestion();
+  /* Bu bölüm ilk kez açılıyorsa kartı göster. Soru zaten kurulu,
+     kart kapanınca çocuk hazır bir ekrana düşüyor. */
+  Nasil.tanit(GAME_ID, nasilAnahtari(), nasilAdimlari());
 }
 function renderDiffBar(){
   var bar=document.getElementById('diffbar'); bar.innerHTML='';

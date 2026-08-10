@@ -206,6 +206,7 @@
       <button class="back" id="back">‹ Standlara dön</button>
       <button class="listen" id="listenBtn"></button>
       <span class="lvlpill" id="lvlpill"></span>
+      <span class="nasilyer" id="nasilyer"></span>
     </div>
     <div class="diffbar" id="diffbar"></div>
     <div class="board">
@@ -247,6 +248,7 @@
 <script src="../shared/audio.js"></script>
 <script src="../shared/celebrate.js"></script>
 <script src="../shared/bolme.js"></script>
+<script src="../shared/nasil.js"></script>
 <script>
 /* ---------- state ---------- */
 var GAME_ID='geri-zip-zip';
@@ -550,6 +552,46 @@ function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()
 function ensureSound(){ Sfx.unlock(); }
 function tone(n){ Sfx.tone(n); }
 
+/* ---------- Nasıl oynanır (shared/nasil.js) ----------
+   Görev satırı ne hesaplanacağını söylüyordu ama hangi düğmeye
+   basılacağını söylemiyordu: "15'ten başla, 5'er geri zıpla"
+   yazarken ekranda dört düğme duruyor ve "Vardım!"a basılacağı
+   hiçbir yerde geçmiyordu. Köşeli parantez içi düğme olarak çizilir. */
+var NASIL={
+  gerisay: ['[◀ Geri] tuşuna bas. Tavşan geri zıplar.',
+            'Tam 0\'a inince dur.',
+            '[Vardım!] tuşuna bas.'],
+  cikara:  ['[◀ Geri] tuşuna bas. Çıkarma kendi yazılır.',
+            'Tam 0\'a inince dur.',
+            '[Vardım!] tuşuna bas.'],
+  ilerisay:['[İleri ▶] tuşuna bas. Tavşan ileri zıplar.',
+            'Havuca varınca dur.',
+            '[Vardım!] tuşuna bas.'],
+  havuc:   ['Yukarıdaki bölmeyi oku.',
+            'Sonucu bul.',
+            'O sayının yazdığı havuca dokun.'],
+  kontrol: ['Soldan bir çarpmaya dokun.',
+            'Çarpmayı yap, sonucu bul.',
+            'O sonucun yazdığı bölmeye dokun.'],
+  karisik: ['Burada her görev tipi çıkar.',
+            'Ekrandaki yazıyı oku, ona göre oyna.',
+            'Sonsuz bölüm, istediğin kadar oyna.'],
+  /* Buradaki düğmenin yazısı seçilen adıma göre değişiyor ("◀ 2 geri",
+     "◀ 5 geri"). Sabit bir ad yazmak yerine değişmeyen ◀ okunu gösteriyoruz. */
+  kacar:   ['Önce zıplayışın boyunu seç.',
+            '[◀] tuşuna bas, tam 0\'a in.',
+            '[Vardım!] tuşuna bas.']
+};
+function nasilAdimlari(){ return NASIL[(LEVELS[curLevel]||{}).key] || NASIL.gerisay; }
+function nasilKur(){
+  var yer=document.getElementById('nasilyer'); if(!yer) return;
+  yer.innerHTML='';
+  yer.appendChild(Nasil.soruDugmesi(function(){
+    Sfx.click();
+    Nasil.ac(GAME_ID, LEVELS[curLevel].key, nasilAdimlari());
+  }));
+}
+
 function startLevel(i){
   curLevel=i; correctCount=0; sectionNo=1;
   mapEl.classList.add('hidden'); winEl.classList.add('hidden'); playEl.classList.remove('hidden'); window.scrollTo(0,0);
@@ -559,7 +601,11 @@ function startLevel(i){
   renderDiffBar();
   updateSectionBadge();
   ensureSound();
+  nasilKur();
   nextQuestion();
+  /* Bu bölüm ilk kez açılıyorsa kartı göster. Soru zaten kurulu,
+     kart kapanınca çocuk hazır bir ekrana düşüyor. */
+  Nasil.tanit(GAME_ID, LEVELS[i].key, nasilAdimlari());
 }
 function renderDiffBar(){
   var bar=document.getElementById('diffbar'); bar.innerHTML='';

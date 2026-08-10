@@ -25,6 +25,7 @@ shared/
   storage.js            ilerleme kaydı (localStorage)
   hud.js                oyun içi "Menü" ve "Ses" düğmeleri
   celebrate.js          kutlama efektleri (uçan yıldız, konfeti)
+  nasil.js              "Nasıl oynanır?" kartı
   bolme.js              bölmenin dik (bölü çizgili) gösterimi
 oyunlar/
   balon-standi.html            2. sınıf
@@ -92,6 +93,11 @@ Progress.logMiss(3, 4);        // ilk denemede bilemedi
 Progress.hardFacts(12);        // [{fact:'3x4', miss:2, seen:5, rate:.4}, ...]
 Progress.clearMisses();
 
+// nasıl oynanır kartı
+Nasil.tanit('balon-standi', 'count', ADIMLAR);   // ilk kez ise göster
+Nasil.ac('balon-standi', 'count', ADIMLAR);      // her hâlükârda göster
+Nasil.soruDugmesi(fn);                           // başlıktaki "?" düğmesi
+
 // bölmenin dik gösterimi (ders kitabındaki bölü çizgili düzen)
 Bolme.dik(12, 3);                    // '<div class="dikbol">…'
 Bolme.dik(12, 3, {etiket:true});     // bölünen/bölen/bölüm/kalan adlarıyla
@@ -154,6 +160,37 @@ farklıdır (`12÷3 ⚖ 2+?` için denge 4, taş 2). Kodda ilki `Q.deger`, ikinc
 
 Bilinmeyenin bölen olması da 2. sınıf kapsamında (Çalışma-2 s.42 üç konumu da
 boş bırakıyor); terazide bölünen tercih edildi, `? ÷ 2` okuması daha kolay.
+
+## Nasıl oynanır kartı
+
+`shared/nasil.js`. Çocuklar bölüme girip ne yapacaklarını anlamıyordu:
+görev satırı matematiği anlatıyor ("2 grup, her grupta 4 balon") ama
+oynanışı anlatmıyordu — hangi düğmeye basılacağı hiçbir yerde yazmıyordu.
+
+Kart **oyun başına değil bölüm başına**: bir oyunun bölümleri çok farklı
+oynanıyor (sayı doğrusu, eşleştirme tahtası, terazi), tek açıklama
+hepsini kapsamaz. İlk girişte bir kez çıkar, "Başla" ile kapanır ve bir
+daha çıkmaz; başlıktaki `?` ile her zaman geri açılır. Görüldü bilgisi
+`Settings`'te `nasilGorulen` altında, `oyunId:bolumAnahtari` biçiminde.
+
+Kaplama olarak `.board`'ın üstüne biniyor: düzeni aşağı itmez ve
+altındaki oyuna dokunulmasını engeller. "Standlara dön" ve zorluk çubuğu
+kartın dışında kalır, çocuk sıkışıp kalmaz.
+
+Adım metinlerinin kuralları:
+
+1. En çok 3 adım, her adım tek cümle, 5-8 kelime
+2. Emir kipi: Bas, Dokun, Say, Sürükle
+3. **Ekrandaki kelimenin aynısı** — düğmede "Vardım!" yazıyorsa metinde de
+   "Vardım!", eşanlamlısı değil
+4. Köşeli parantez düğme olarak çizilir: `'[Vardım!] tuşuna bas.'`
+   Okuması zayıf çocuk yazıyı sökemese de şekli ekranda eşleştirir
+5. Son adım hep cevabı verme adımı olsun
+
+Düğme yazısı değişkense (Kaçar Kaçar'da "◀ 2 geri", "◀ 5 geri") sabit ad
+yazma, değişmeyen kısmı göster: `'[◀] tuşuna bas'`.
+
+Şimdilik Balon Standı ve Geri Zıp Zıp'ta var.
 
 ## Bölüm sırasını değiştirmek
 
