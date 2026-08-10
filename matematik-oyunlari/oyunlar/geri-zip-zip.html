@@ -61,6 +61,10 @@
   /* --- KONTROL ET: eşleştirme tahtası --- */
   .eslesme{display:grid; grid-template-columns:1fr 1fr; gap:10px 12px; margin:10px 0 4px}
   .eslesme .sut{display:flex; flex-direction:column; gap:9px}
+  /* Karışıktaki tek soruluk hâl: tek sütun, şıklar yan yana */
+  .eslesme.tekli{grid-template-columns:1fr}
+  .eslesme .sut.tekSira{flex-direction:row; justify-content:center; flex-wrap:wrap; gap:10px}
+  .eslesme .sut.tekSira .kart{flex:0 1 auto; min-width:88px}
   .eslesme .sbas{font-family:var(--disp); font-weight:700; font-size:13px;
     color:var(--muted); text-align:center; margin-bottom:2px}
   .kart{display:flex; align-items:center; justify-content:center; min-height:64px;
@@ -247,26 +251,48 @@
 /* ---------- state ---------- */
 var GAME_ID='geri-zip-zip';
 var S=Progress.load(GAME_ID, {
-  stars:0, unlocked:1, prizes:[], levelStars:[0,0,0,0,0,0], animal:'rabbit', diff:'kolay',
-  tierDone:[{},{},{},{},{},{}]
+  stars:0, unlocked:1, prizes:[], levelStars:{}, animal:'rabbit', diff:'kolay',
+  tierDone:{}
 });
-/* Geri Zıpla eklenmeden önce kaydedilmiş oyunlarda diziler 5 uzunluğunda.
-   Progress.load kaydı varsayılanın üstüne yazdığı için 6. bölüm tanımsız
-   kalıyordu — burada tamamlanıyor. */
+/* İlerleme eskiden dizi indisiyle saklanıyordu; bölüm sırası her
+   değiştiğinde yıldızlar kayıyordu. Artık anahtarlı: LEVELS'ı
+   istediğin gibi sırala, kayıt yerinde kalır.
+
+   Buradaki iki liste, daha önce yayınlanmış dizi düzenleridir.
+   Eski bir kaydı okurken hangi gözün hangi standa ait olduğunu
+   bunlardan biliyoruz. Yeni düzenler için bir şey eklemeye gerek yok. */
+var ESKI_SIRA = {
+  6: ['gerisay','cikara','ilerisay','havuc','karisik','kacar'],
+  7: ['gerisay','cikara','ilerisay','havuc','karisik','kontrol','kacar']
+};
 function kayitGocu(){
-  /* "Kontrol Et" 6. sıraya girdi, "Kaçar Kaçar" 7'ye kaydı. Altı bölümlük
-     eski kayıtlarda 6. gözde Kaçar Kaçar'ın yıldızları duruyor; olduğu
-     yerde bırakılırsa çocuk hiç oynamadığı Kontrol Et'i bitmiş görür.
-     Bu yüzden önce kaydırıyor, sonra tamamlıyoruz. */
-  if(S.levelStars.length === 6){
-    S.levelStars.splice(5, 0, 0);
-    S.tierDone.splice(5, 0, {});
-    /* Açılmış bölüm sayısı da bir kayıyor ki Kaçar Kaçar kilitlenmesin. */
-    if(S.unlocked >= 6) S.unlocked = S.unlocked + 1;
+  var eskiSira = null;
+  function cevir(dizi, bos){
+    if(!dizi || typeof dizi.length !== 'number') return dizi || {};  /* zaten nesne */
+    var ad = ESKI_SIRA[dizi.length] || ESKI_SIRA[7];
+    eskiSira = ad;
+    var o = {};
+    for(var i=0;i<dizi.length;i++){ if(ad[i]) o[ad[i]] = dizi[i]; }
+    return o;
   }
-  while(S.levelStars.length < LEVELS.length) S.levelStars.push(0);
-  while(S.tierDone.length  < LEVELS.length) S.tierDone.push({});
+  S.levelStars = cevir(S.levelStars, 0);
+  S.tierDone   = cevir(S.tierDone, {});
+  LEVELS.forEach(function(L){
+    if(typeof S.levelStars[L.key] !== 'number') S.levelStars[L.key] = 0;
+    if(!S.tierDone[L.key]) S.tierDone[L.key] = {};
+  });
+  /* unlocked hâlâ konuma bağlı. Sıra değişince, eskiden açık olan son
+     stant arkaya kaydıysa kilitlenirdi — çocuktan hak geri alınmaz.
+     Eski düzende en son açık olan standın YENİ konumunu buluyor ve
+     gerekiyorsa unlocked'ı oraya kadar büyütüyoruz. Asla küçültmüyoruz. */
+  if(eskiSira && S.unlocked >= 1){
+    var sonAcik = eskiSira[Math.min(S.unlocked, eskiSira.length) - 1];
+    for(var n=0;n<LEVELS.length;n++){
+      if(LEVELS[n].key === sonAcik){ S.unlocked = Math.max(S.unlocked, n+1); break; }
+    }
+  }
   if(S.unlocked > LEVELS.length) S.unlocked = LEVELS.length;
+  if(!(S.unlocked >= 1)) S.unlocked = 1;
 }
 function persist(){ Progress.save(GAME_ID, S); }
 var totalEl=document.getElementById('starTotal');
@@ -390,16 +416,22 @@ var DIVT={
 var LEVELS=[
   /* Zıp Zıp'ın çarpma tarafının aynadaki hâli:
      eylem -> eylemin yazısı -> kısa yol.
-     "Geri Say"da sembol yok; ÷ ikinci bölümde tanıtılıyor. */
-  {name:'Geri Say',      sub:'Kaç zıplayışta sıfıra inersin?',      color:'#E8792B', prize:'kase',   mode:'back',   tiers:DIVT},
-  {name:'Çıkara Çıkara', sub:'Zıpladıkça çıkarmayı yaz',           color:'#D9455F', prize:'pusula', mode:'sub',    tiers:DIVT},
-  {name:'İleri Say',     sub:'Çarpma ile bölme aynı ailedendir',   color:'#3E97C9', prize:'harita', mode:'fwd',    tiers:DIVT},
-  {name:'Havucu Seç',    sub:'Doğru sonucu bul',                   color:'#EFB227', prize:'ribbon', mode:'choose', tiers:DIVT},
-  {name:'Karışık Yol',   sub:'Sonsuz bölüm. İstediğin kadar oyna!',color:'#8B5CD6', prize:'crown', mode:'mixed', endless:true, tiers:DIVT},
+     "Geri Say"da sembol yok; ÷ ikinci bölümde tanıtılıyor.
+
+     key: ilerleme kaydının anahtarı. Sıra değişse de yıldızlar
+     yerinde kalsın diye kayıt indise değil bu ada bağlı. ASLA
+     değiştirme — değiştirirsen o standın yıldızları sıfırlanır. */
+  {key:'gerisay', name:'Geri Say',      sub:'Kaç zıplayışta sıfıra inersin?',      color:'#E8792B', prize:'kase',   mode:'back',   tiers:DIVT},
+  {key:'cikara',  name:'Çıkara Çıkara', sub:'Zıpladıkça çıkarmayı yaz',           color:'#D9455F', prize:'pusula', mode:'sub',    tiers:DIVT},
+  {key:'ilerisay',name:'İleri Say',     sub:'Çarpma ile bölme aynı ailedendir',   color:'#3E97C9', prize:'harita', mode:'fwd',    tiers:DIVT},
+  {key:'havuc',   name:'Havucu Seç',    sub:'Doğru sonucu bul',                   color:'#EFB227', prize:'ribbon', mode:'choose', tiers:DIVT},
+  {key:'kontrol', name:'Kontrol Et',    sub:'Çarpmanı bölmeyle doğrula',          color:'#4FA03A', prize:'muhur',  mode:'check',  tiers:DIVT},
+  /* Karışık Yol hep sonda: önceki standların hepsinden soru getirir,
+     o yüzden onların arkasında durmalı. */
+  {key:'karisik', name:'Karışık Yol',   sub:'Sonsuz bölüm. İstediğin kadar oyna!',color:'#8B5CD6', prize:'crown',  mode:'mixed', endless:true, tiers:DIVT},
   /* 2. sınıf müfredatında YOK: bölmede verilmeyen sayıyı bulmak cebirsel
      düşünme işi. Silinmedi, ileri seviye olarak burada duruyor. */
-  {name:'Kontrol Et',    sub:'Çarpmanı bölmeyle doğrula',           color:'#4FA03A', prize:'muhur',  mode:'check',  tiers:DIVT},
-  {name:'Kaçar Kaçar?',  sub:'Her zıplayış kaç olmalı?',           color:'#5E7268', prize:'pusula2',mode:'step',  ileri:true, tiers:DIVT}
+  {key:'kacar',   name:'Kaçar Kaçar?',  sub:'Her zıplayış kaç olmalı?',           color:'#5E7268', prize:'pusula2',mode:'step',  ileri:true, tiers:DIVT}
 ];
 kayitGocu();   /* LEVELS tanımlandıktan sonra: göç uzunluğu ondan okuyor */
 var GOAL=5;
@@ -410,8 +442,8 @@ var PRIZES={
   pusula:{ad:'Yön Pusulası',   nasil:'2. standı bitir'},
   harita:{ad:'Yol Haritası',   nasil:'3. standı bitir'},
   ribbon:{ad:'Şeref Kurdelesi',nasil:'4. standı bitir'},
-  crown: {ad:'Geri Sayım Tacı',nasil:'5. standı bitir'},
-  muhur: {ad:'Kontrol Mührü',  nasil:'6. standı bitir'},
+  crown: {ad:'Geri Sayım Tacı',nasil:'6. standı bitir'},
+  muhur: {ad:'Kontrol Mührü',  nasil:'5. standı bitir'},
   pusula2:{ad:'Usta Pusulası', nasil:'İleri standı bitir'},
   usta:  {ad:'Usta Rozeti',    nasil:'Karışık Yol\'u üç zorlukta da bitir'}
 };
@@ -425,13 +457,13 @@ function starRow(n){var s='';for(var i=0;i<GOAL;i++)s+='<i class="'+(i<n?'on':''
 function renderMap(){
   var b=document.getElementById('booths'); b.innerHTML='';
   LEVELS.forEach(function(L,i){
-    var open=(i+1)<=S.unlocked, done=S.levelStars[i]>=GOAL;
+    var open=(i+1)<=S.unlocked, done=S.levelStars[L.key]>=GOAL;
     var bt=document.createElement('button');
     bt.className='booth'+(L.ileri?' ileriStant':''); if(!open) bt.disabled=true;
     var right = done ? '<span class="tick">'+tickIcon()+'</span>'
-      : open ? '<span class="stars">'+starRow(S.levelStars[i])+'</span>'
+      : open ? '<span class="stars">'+starRow(S.levelStars[L.key])+'</span>'
              : '<span class="lock">'+lockIcon()+'</span>';
-    var td=S.tierDone[i]||{};
+    var td=S.tierDone[L.key]||{};
     var pips = open ? '<span class="tierpips" title="Kolay / Orta / Zor">'
       +'<i class="'+(td.kolay?'on kolay':'')+'"></i><i class="'+(td.orta?'on orta':'')+'"></i><i class="'+(td.zor?'on zor':'')+'"></i></span>' : '';
     var ileriRozet = L.ileri ? '<span class="ileriRoz">İleri (3-4. sınıf)</span>' : '';
@@ -467,11 +499,12 @@ function renderMap(){
 /* Usta Rozeti "Karışık Yol"a bağlı. Geri Zıpla eklenince o artık son
    bölüm değil, bu yüzden indeks yerine bayrakla bulunuyor. */
 function endlessIndex(){ for(var i=0;i<LEVELS.length;i++) if(LEVELS[i].endless) return i; return LEVELS.length-1; }
-function masterEarned(){ var t=S.tierDone[endlessIndex()]||{}; return t.kolay&&t.orta&&t.zor; }
+function lvlKey(i){ return (LEVELS[i]||{}).key; }
+function masterEarned(){ var t=S.tierDone[lvlKey(endlessIndex())]||{}; return t.kolay&&t.orta&&t.zor; }
 function markTierAndMaster(){
   var was=masterEarned();
-  if(!S.tierDone[curLevel]) S.tierDone[curLevel]={};
-  S.tierDone[curLevel][S.diff]=true;
+  if(!S.tierDone[lvlKey(curLevel)]) S.tierDone[lvlKey(curLevel)]={};
+  S.tierDone[lvlKey(curLevel)][S.diff]=true;
   if(!was && masterEarned() && S.prizes.indexOf('usta')<0){ S.prizes.push('usta'); persist(); return true; }
   persist();
   return false;
@@ -485,7 +518,7 @@ function sectionDone(){
   var L=LEVELS[curLevel];
   var first=S.prizes.indexOf(L.prize)<0;
   if(first) S.prizes.push(L.prize);
-  if(S.levelStars[curLevel]<GOAL) S.levelStars[curLevel]=GOAL;
+  if(S.levelStars[lvlKey(curLevel)]<GOAL) S.levelStars[lvlKey(curLevel)]=GOAL;
   var gotMaster=markTierAndMaster();
   var cheer=document.getElementById('cheer'); cheer.style.color='';
   cheer.textContent = gotMaster ? 'USTA ROZETİ senin! Üç zorluğu da bitirdin!'
@@ -584,11 +617,30 @@ function makeQuestion(L){
 function makeQuestionHam(L){
   var T=(L.tiers&&L.tiers[S.diff])||DIVT.kolay;
   var mode=L.mode;
-  if(mode==='mixed') mode=pick(['back','sub','fwd','choose']);   /* step ileri seviye, karışığa girmez */
+  /* check1: Kontrol Et'in tek soruluk hâli. Standın kendisi 5 çiftlik
+     bir tahta verir (5 yıldız); karışıkta her soru bir yıldız olmalı,
+     o yüzden orada tek çarpma + üç bölme şıkkı olarak geliyor.
+     step ileri seviye, karışığa girmez. */
+  if(mode==='mixed') mode=pick(['back','sub','fwd','choose','check1']);
   /* KONTROL ET tek bir çift değil, bir tahta dolusu çift ister.
      Çarpımlar BİRBİRİNDEN FARKLI seçiliyor: aynı çarpım iki kez
      olursa (ör. 12÷3 ve 12÷4) bir çarpmayı iki bölme birden
      doğrular ve eşleştirmenin tek doğru cevabı kalmaz. */
+  /* check1 — Karışık Yol'daki tek soruluk hâli: bir çarpma, üç bölme
+     şıkkı. Şıkların bölünenleri farklı, yoksa iki şık birden doğru olur. */
+  if(mode==='check1'){
+    var hep=tumCiftler(T).slice();
+    for(var m=hep.length-1;m>0;m--){ var rr=Math.floor(Math.random()*(m+1)); var tt=hep[m]; hep[m]=hep[rr]; hep[rr]=tt; }
+    var sec=[], gor={};
+    for(var z=0; z<hep.length && sec.length<3; z++){
+      var pp=hep[z][0]*hep[z][1];
+      if(gor[pp]) continue;
+      gor[pp]=1; sec.push({bolen:hep[z][0], bolum:hep[z][1], bolunen:pp});
+    }
+    var d0=sec[0];
+    for(var y=sec.length-1;y>0;y--){ var r2=Math.floor(Math.random()*(y+1)); var t2=sec[y]; sec[y]=sec[r2]; sec[r2]=t2; }
+    return {mode:'check1', sec:sec, bolen:d0.bolen, bolum:d0.bolum, bolunen:d0.bolunen, ans:d0.bolum};
+  }
   if(mode==='check'){
     var havuz=tumCiftler(T).slice(), secili=[], gorulen={};
     for(var k=havuz.length-1;k>0;k--){ var r=Math.floor(Math.random()*(k+1)); var t=havuz[k]; havuz[k]=havuz[r]; havuz[r]=t; }
@@ -704,15 +756,45 @@ function nextQuestion(){
   /* Kontrol Et sayı doğrusu kullanmıyor: yolu gizle, tahtayı aç.
      Diğer bütün modlarda tersi. */
   var esEl=document.getElementById('eslesme'), trEl=document.getElementById('track');
-  esEl.classList.toggle('hidden', Q.mode!=='check');
-  trEl.classList.toggle('hidden', Q.mode==='check');
-  if(Q.mode!=='check') esEl.innerHTML='';
+  var kartMi = (Q.mode==='check' || Q.mode==='check1');
+  esEl.classList.toggle('hidden', !kartMi);
+  trEl.classList.toggle('hidden', kartMi);
+  if(!kartMi) esEl.innerHTML='';
+
+  /* --- KONTROL ET (karışıkta): bu çarpmayı hangi bölme doğrular? --- */
+  if(Q.mode==='check1'){
+    qEl.textContent='Bu çarpmayı hangi bölme kontrol eder?';
+    sEl.innerHTML='<span>'+Q.bolum+'</span> <span class="op">&times;</span> <span>'+Q.bolen+'</span>';
+    ctrl.innerHTML='';
+    var kutu=document.getElementById('eslesme');
+    var h='<div class="sut tekSira">';
+    Q.sec.forEach(function(c){
+      h+='<button type="button" class="kart bolme" data-p="'+c.bolunen+'" data-b="'+c.bolen+'">'
+       + Bolme.dik(c.bolunen, c.bolen, {soru:true}) + '</button>';
+    });
+    kutu.className='eslesme tekli';
+    kutu.innerHTML=h+'</div>';
+    Array.prototype.forEach.call(kutu.querySelectorAll('.kart.bolme'), function(k){
+      k.onclick=function(){ check1Sec(k); };
+    });
+    document.getElementById('hintwrap').innerHTML=
+      '<button class="hintbtn" type="button" id="hintBtn"><span class="m">'+mathmazel(22)+'</span> Nasıl kontrol edilir?</button>';
+    document.getElementById('hintBtn').onclick=function(){
+      this.style.display='none';
+      document.getElementById('hintwrap').insertAdjacentHTML('beforeend',
+        '<div class="skiphint">Önce çarpmayı yap. Bulduğun sayı hangi bölmenin en '
+        +'üstünde yazıyorsa kontrolü odur.</div>');
+    };
+    if(autoRead) speakQuestion();
+    return;
+  }
 
   /* --- KONTROL ET: çarpmayı onu doğrulayan bölmeyle eşleştir --- */
   if(Q.mode==='check'){
     qEl.textContent='Her çarpmayı, onu kontrol eden bölmeyle eşleştir.';
     sEl.innerHTML='';
     ctrl.innerHTML='';
+    document.getElementById('eslesme').className='eslesme';
     kurEslesme();
     document.getElementById('hintwrap').innerHTML=
       '<button class="hintbtn" type="button" id="hintBtn"><span class="m">'+mathmazel(22)+'</span> Kontrol nasıl yapılır?</button>';
@@ -1082,6 +1164,23 @@ function kurEslesme(){
     k.onclick=function(){ bolmeSec(k); };
   });
 }
+/* Karışıktaki tek soruluk hâl: doğru bölmeyi seç. Tek yıldızlık
+   olduğu için normal succeed() akışını kullanıyor. */
+function check1Sec(k){
+  if(cozuldu || k.disabled) return;
+  if(+k.dataset.p === Q.bolunen){
+    k.innerHTML=Bolme.dik(Q.bolunen, Q.bolen);
+    k.classList.add('esti');
+    Array.prototype.forEach.call(document.querySelectorAll('#eslesme .kart.bolme'),
+      function(x){ x.disabled=true; });
+    succeed();
+  }else{
+    missedThisQ=true; Sfx.bad();
+    k.classList.remove('yanlis'); void k.offsetWidth; k.classList.add('yanlis');
+    setTimeout(function(){ k.classList.remove('yanlis'); }, 460);
+    nudge('Bu değil. Çarpmanın sonucunu bölmenin en üstünde ara.');
+  }
+}
 function carpmaSec(k){
   if(k.disabled) return;
   Sfx.click();
@@ -1163,6 +1262,7 @@ function succeed(){
     : Q.mode==='sub' ? ['Sıfıra indi! ➖','Çıkara çıkara bitti!','Bravo!','Çok iyi!']
     : Q.mode==='fwd' ? ['Tam vardın! 🎯','Harika zıpladın!','Bravo!','Çok iyi!']
     : Q.mode==='step'? ['Doğru adım! 👣','Buldun!','Bravo!','Süper!']
+    : Q.mode==='check1'? ['Kontrol tamam! ✓','Doğru çift!','Bravo!','İşte bu!']
     : ['Havuç yakalandı! 🥕','Doğru!','Bravo!','Çok iyi!']);
   /* Müfredat çarpma–bölme bağını istiyor: ikisini birden göster. */
   document.getElementById('sentence').innerHTML=
@@ -1192,13 +1292,13 @@ function burst(){
 /* Kolay'da bir standı bitiren çocuğa Orta'yı teklif et — çocuklar
    kendiliğinden zorluk yükseltmiyor, Usta Rozeti de üç zorluğu şart koşuyor. */
 function tierSuggestion(){
-  var td=S.tierDone[curLevel]||{};
+  var td=S.tierDone[lvlKey(curLevel)]||{};
   if(S.diff==='kolay' && !td.orta) return 'Bunu bir de <b>Orta</b>\'da denemek ister misin?';
   if(S.diff==='orta'  && !td.zor)  return 'Bunu bir de <b>Zor</b>\'da denemek ister misin?';
   return '';
 }
 function winLevel(){
-  var L=LEVELS[curLevel]; S.levelStars[curLevel]=GOAL;
+  var L=LEVELS[curLevel]; S.levelStars[L.key]=GOAL;
   if(S.prizes.indexOf(L.prize)<0) S.prizes.push(L.prize);
   markTierAndMaster();
   if(curLevel+2>S.unlocked && curLevel+1<LEVELS.length) S.unlocked=curLevel+2;
@@ -1248,6 +1348,7 @@ function speakQuestion(){
      ilk çifti tutuyor, onu okumak yanıltır. Görevi okuyoruz. */
   else if(Q.mode==='check') t='Her çarpmayı, onu kontrol eden bölmeyle eşleştir. '
                              +'Çarpmayı yap, sonucu bölmenin üstünde ara.';
+  else if(Q.mode==='check1') t=Q.bolum+' kere '+Q.bolen+'. Bu çarpmayı hangi bölme kontrol eder?';
   else                     t=Q.bolunen+' bölü '+Q.bolen+' kaç eder? Doğru havuca zıpla.';
   speakText(t);
 }

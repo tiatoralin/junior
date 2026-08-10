@@ -130,8 +130,16 @@ atlama — `zor` havuzuna 10 koyup çarpanı da 10'a çıkarırsan kapsam dış�
 
 | Bölüm | Oyun | Çıktı | Kitap |
 |---|---|---|---|
-| Kontrol Et | Geri Zıp Zıp, 6. stant | MAT.2.2.5 b — çarpma ve bölme birbirini doğrular | Ders-2 s.38, 39, **51 (değerlendirme)**; Çalışma-2 s.38, 42 |
-| Denge Terazisi | Şölen, 5. sofra | MAT.2.2.6 — eşitlik "iki taraf aynı değerde" | Ders-2 s.44, 45, 47 |
+| Kontrol Et | Geri Zıp Zıp, 5. stant | MAT.2.2.5 b — çarpma ve bölme birbirini doğrular | Ders-2 s.38, 39, **51 (değerlendirme)**; Çalışma-2 s.38, 42 |
+| Denge Terazisi | Şölen, 4. sofra | MAT.2.2.6 — eşitlik "iki taraf aynı değerde" | Ders-2 s.44, 45, 47 |
+
+Karışık bölümler ("Karışık Yol", "Şölen Sofrası") her zaman **en sonda**
+durur ve kendinden önceki bütün bölümlerden soru getirir; yeni bir bölüm
+eklerken onların önüne koy.
+
+Kontrol Et'in karışıkta iki hâli var. Kendi standında 5 çiftlik bir tahta
+verir ve her eşleşme bir yıldızdır. Karışıkta her sorunun bir yıldız olması
+gerektiği için orada tek çarpma + üç bölme şıkkı olarak gelir (`check1`).
 
 **Kontrol Et** solda çarpma, sağda bölü çizgili bölme kartları verir; çocuk
 çarpmayı yapıp sonucu bölmenin üstünde arar. Bir tahtadaki çarpımlar
@@ -146,6 +154,21 @@ farklıdır (`12÷3 ⚖ 2+?` için denge 4, taş 2). Kodda ilki `Q.deger`, ikinc
 
 Bilinmeyenin bölen olması da 2. sınıf kapsamında (Çalışma-2 s.42 üç konumu da
 boş bırakıyor); terazide bölünen tercih edildi, `? ÷ 2` okuması daha kolay.
+
+## Bölüm sırasını değiştirmek
+
+`LEVELS`'taki her bölümün bir `key`'i var ve ilerleme kaydı dizi indisine
+değil bu ada bağlı. Sırayı istediğin gibi değiştirebilirsin, yıldızlar
+yerinde kalır. **`key`'i asla değiştirme** — değiştirirsen o bölümün
+yıldızları sıfırlanır.
+
+`unlocked` hâlâ konuma bağlı bir sayı. Göç kodu (`kayitGocu`) eski
+düzende açık olan son bölümün yeni konumunu bulup gerekiyorsa
+`unlocked`'ı büyütür, asla küçültmez: çocuktan açtığı bölüm geri alınmaz.
+
+`ESKI_SIRA` daha önce yayınlanmış **dizi** düzenlerini tutar; yalnızca
+anahtarlı kayda geçmeden önceki sürümlerden gelen kayıtları okumak için
+gerekli. Yeni sıralamalar için oraya bir şey eklemene gerek yok.
 
 ## Bölü çizgisi
 

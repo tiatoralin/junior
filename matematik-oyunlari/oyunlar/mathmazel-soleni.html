@@ -260,15 +260,47 @@
 /* ================= DURUM ================= */
 var GAME_ID='mathmazel-soleni';
 var S=Progress.load(GAME_ID, {
-  stars:0, unlocked:1, prizes:[], levelStars:[0,0,0,0], diff:'kolay', tierDone:[{},{},{},{}]
+  stars:0, unlocked:1, prizes:[], levelStars:{}, diff:'kolay', tierDone:{}
 });
-/* Denge Terazisi eklenince diziler 4'ten 5'e çıktı. Progress.load kaydı
-   varsayılanın üstüne yazdığı için eski kayıtlarda son bölüm tanımsız
-   kalıyordu; burada tamamlanıyor. Sona eklendiği için kaydırma gerekmiyor. */
+/* İlerleme eskiden dizi indisiyle saklanıyordu; bölüm sırası her
+   değiştiğinde yıldızlar kayıyordu. Artık anahtarlı: LEVELS'ı istediğin
+   gibi sırala, kayıt yerinde kalır.
+
+   Aşağıdaki iki liste daha önce yayınlanmış dizi düzenleri. Eski bir
+   kaydı okurken hangi gözün hangi sofraya ait olduğunu bunlardan
+   biliyoruz. Yeni düzenler için bir şey eklemeye gerek yok. */
+var ESKI_SIRA = {
+  4: ['paylastir','kactabak','tersyuz','sofra'],
+  5: ['paylastir','kactabak','tersyuz','sofra','terazi']
+};
 function kayitGocu(){
-  while(S.levelStars.length < LEVELS.length) S.levelStars.push(0);
-  while(S.tierDone.length  < LEVELS.length) S.tierDone.push({});
+  var eskiSira = null;
+  function cevir(dizi){
+    if(!dizi || typeof dizi.length !== 'number') return dizi || {};   /* zaten nesne */
+    var ad = ESKI_SIRA[dizi.length] || ESKI_SIRA[5];
+    eskiSira = ad;
+    var o = {};
+    for(var i=0;i<dizi.length;i++){ if(ad[i]) o[ad[i]] = dizi[i]; }
+    return o;
+  }
+  S.levelStars = cevir(S.levelStars);
+  S.tierDone   = cevir(S.tierDone);
+  LEVELS.forEach(function(L){
+    if(typeof S.levelStars[L.key] !== 'number') S.levelStars[L.key] = 0;
+    if(!S.tierDone[L.key]) S.tierDone[L.key] = {};
+  });
+  /* unlocked hâlâ konuma bağlı. Sıra değişince, eskiden açık olan son
+     stant arkaya kaydıysa kilitlenirdi — çocuktan hak geri alınmaz.
+     Eski düzende en son açık olan standın YENİ konumunu buluyor ve
+     gerekiyorsa unlocked'ı oraya kadar büyütüyoruz. Asla küçültmüyoruz. */
+  if(eskiSira && S.unlocked >= 1){
+    var sonAcik = eskiSira[Math.min(S.unlocked, eskiSira.length) - 1];
+    for(var n=0;n<LEVELS.length;n++){
+      if(LEVELS[n].key === sonAcik){ S.unlocked = Math.max(S.unlocked, n+1); break; }
+    }
+  }
   if(S.unlocked > LEVELS.length) S.unlocked = LEVELS.length;
+  if(!(S.unlocked >= 1)) S.unlocked = 1;
 }
 function persist(){ Progress.save(GAME_ID, S); }
 var totalEl=document.getElementById('starTotal');
@@ -317,8 +349,8 @@ var PRIZES={
   tabak:{ad:'Şölen Tabağı', nasil:'1. sofrayı bitir'},
   catal:{ad:'Gümüş Çatal',  nasil:'2. sofrayı bitir'},
   pasta:{ad:'Doğum Pastası',nasil:'3. sofrayı bitir'},
-  taci: {ad:'Şölen Tacı',   nasil:'4. sofrayı bitir'},
-  terazi:{ad:'Denge Terazisi',nasil:'5. sofrayı bitir'},
+  taci: {ad:'Şölen Tacı',   nasil:'5. sofrayı bitir'},
+  terazi:{ad:'Denge Terazisi',nasil:'4. sofrayı bitir'},
   usta: {ad:'Usta Rozeti',  nasil:'Şölen Sofrası\'nı üç zorlukta da bitir'}
 };
 function prizeAd(id){ return (PRIZES[id]||{}).ad||'Ödül'; }
@@ -385,13 +417,16 @@ var TIERS={
   zor  :{bolen:[2,3,4,5],   enCok:20}
 };
 var LEVELS=[
-  {name:'Eşit Paylaştır',  sub:'Herkese aynı sayıda ver',        color:'#E8792B', prize:'tabak', mode:'share'},
-  {name:'Kaç Tabak Gerek?',sub:'Her tabağa aynı sayıda koy',     color:'#3E8FC9', prize:'catal', mode:'fill'},
-  {name:'Ters Yüz',        sub:'Çarpma ile bölme aynı ailedir',  color:'#8B5CD6', prize:'pasta', mode:'inverse'},
-  {name:'Şölen Sofrası',   sub:'Sonsuz bölüm, karışık görevler',color:'#D9455F', prize:'taci',  mode:'mixed', endless:true},
+  /* key: ilerleme kaydının anahtarı. Sıra değişse de yıldızlar yerinde
+     kalsın diye kayıt indise değil bu ada bağlı. ASLA değiştirme. */
+  {key:'paylastir',name:'Eşit Paylaştır',  sub:'Herkese aynı sayıda ver',       color:'#E8792B', prize:'tabak', mode:'share'},
+  {key:'kactabak', name:'Kaç Tabak Gerek?',sub:'Her tabağa aynı sayıda koy',    color:'#3E8FC9', prize:'catal', mode:'fill'},
+  {key:'tersyuz',  name:'Ters Yüz',        sub:'Çarpma ile bölme aynı ailedir', color:'#8B5CD6', prize:'pasta', mode:'inverse'},
   /* MAT.2.2.6: eşitliğin "iki taraf aynı değerde" anlamı. Ders Kitabı 2
      s.44, s.45 ve s.47 bunu üç ayrı etkinlikle çalıştırıyor. */
-  {name:'Denge Terazisi',  sub:'İki taraf eşit olsun',           color:'#4FA03A', prize:'terazi',mode:'terazi'}
+  {key:'terazi',   name:'Denge Terazisi',  sub:'İki taraf eşit olsun',          color:'#4FA03A', prize:'terazi',mode:'terazi'},
+  /* Şölen Sofrası hep sonda: önceki sofraların hepsinden görev getirir. */
+  {key:'sofra',    name:'Şölen Sofrası',   sub:'Sonsuz bölüm, karışık görevler',color:'#D9455F', prize:'taci',  mode:'mixed', endless:true}
 ];
 var GOAL=5;
 kayitGocu();   /* LEVELS tanımlandıktan sonra */
@@ -409,12 +444,12 @@ function showMap(){ paintStars(); playEl.classList.add('hidden'); winEl.classLis
 function renderMap(){
   var b=document.getElementById('booths'); b.innerHTML='';
   LEVELS.forEach(function(L,i){
-    var open=(i+1)<=S.unlocked, done=S.levelStars[i]>=GOAL;
+    var open=(i+1)<=S.unlocked, done=S.levelStars[L.key]>=GOAL;
     var bt=document.createElement('button'); bt.className='booth'; if(!open) bt.disabled=true;
     var right = done ? '<span class="tick">'+tickIcon()+'</span>'
-      : open ? '<span class="stars">'+starRow(S.levelStars[i])+'</span>'
+      : open ? '<span class="stars">'+starRow(S.levelStars[L.key])+'</span>'
              : '<span class="lock">'+lockIcon()+'</span>';
-    var td=S.tierDone[i]||{};
+    var td=S.tierDone[L.key]||{};
     var pips = open ? '<span class="tierpips" title="Kolay / Orta / Zor">'
       +'<i class="'+(td.kolay?'on kolay':'')+'"></i><i class="'+(td.orta?'on orta':'')+'"></i><i class="'+(td.zor?'on zor':'')+'"></i></span>' : '';
     bt.innerHTML='<span class="badge" style="background:'+L.color+'">'+(i+1)+'</span>'
@@ -567,7 +602,7 @@ function teraziTaslari(dogruCevap){
 
 function makeTask(){
   var L=LEVELS[curLevel], mode=L.mode;
-  if(mode==='mixed') mode=pick(['share','fill','inverse']);
+  if(mode==='mixed') mode=pick(['share','fill','inverse','terazi']);
   var T=TIERS[S.diff]||TIERS.kolay;
   if(mode==='terazi') return teraziSorusu(T);
   var c=ciftSec(T), bolen=c[0], bolum=c[1], bolunen=bolen*bolum;
@@ -1046,16 +1081,17 @@ function dogru(){
 
 /* ---------- bölüm sonu ---------- */
 function endlessIndex(){ for(var i=0;i<LEVELS.length;i++) if(LEVELS[i].endless) return i; return LEVELS.length-1; }
-function masterEarned(){ var t=S.tierDone[endlessIndex()]||{}; return t.kolay&&t.orta&&t.zor; }
+function lvlKey(i){ return (LEVELS[i]||{}).key; }
+function masterEarned(){ var t=S.tierDone[lvlKey(endlessIndex())]||{}; return t.kolay&&t.orta&&t.zor; }
 function markTierAndMaster(){
   var was=masterEarned();
-  if(!S.tierDone[curLevel]) S.tierDone[curLevel]={};
-  S.tierDone[curLevel][S.diff]=true;
+  if(!S.tierDone[lvlKey(curLevel)]) S.tierDone[lvlKey(curLevel)]={};
+  S.tierDone[lvlKey(curLevel)][S.diff]=true;
   if(!was && masterEarned() && S.prizes.indexOf('usta')<0){ S.prizes.push('usta'); persist(); return true; }
   persist(); return false;
 }
 function tierSuggestion(){
-  var td=S.tierDone[curLevel]||{};
+  var td=S.tierDone[lvlKey(curLevel)]||{};
   if(S.diff==='kolay' && !td.orta) return 'Bunu bir de <b>Orta</b>\'da denemek ister misin?';
   if(S.diff==='orta'  && !td.zor)  return 'Bunu bir de <b>Zor</b>\'da denemek ister misin?';
   return '';
@@ -1064,7 +1100,7 @@ function sectionDone(){
   var L=LEVELS[curLevel];
   var first=S.prizes.indexOf(L.prize)<0;
   if(first) S.prizes.push(L.prize);
-  if(S.levelStars[curLevel]<GOAL) S.levelStars[curLevel]=GOAL;
+  if(S.levelStars[lvlKey(curLevel)]<GOAL) S.levelStars[lvlKey(curLevel)]=GOAL;
   var gotMaster=markTierAndMaster();
   var ch=document.getElementById('cheer'); ch.style.color='var(--grass-dk)';
   ch.textContent = gotMaster ? 'USTA ROZETİ senin! Üç zorluğu da bitirdin!'
@@ -1080,7 +1116,7 @@ function sectionDone(){
 }
 function winLevel(){
   var L=LEVELS[curLevel];
-  S.levelStars[curLevel]=GOAL;
+  S.levelStars[lvlKey(curLevel)]=GOAL;
   if(S.prizes.indexOf(L.prize)<0) S.prizes.push(L.prize);
   markTierAndMaster();
   if(curLevel+2>S.unlocked && curLevel+1<LEVELS.length) S.unlocked=curLevel+2;
