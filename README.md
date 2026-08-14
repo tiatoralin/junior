@@ -5,7 +5,6 @@
 ## Yerel olarak açmak
 
 ```bash
-cd matematik-oyunlari
 python3 -m http.server 8000
 ```
 
@@ -34,6 +33,10 @@ oyunlar/
   carpim-cadirlari.html        3-4. sınıf — aynı dört çadır, 10×10'a kadar
 fonts/                  Baloo 2 + Nunito (woff2, ~135 KB)
 ```
+
+Oyunlar deponun kökünde. Depo `tiatoralin.github.io` adını taşıdığı için
+site `https://tiatoralin.github.io/` adresinde yayınlanıyor: alt klasör de
+yönlendirme de yok.
 
 ## Çarpım Çadırları'nın iki sürümü
 
@@ -114,8 +117,12 @@ kendisi çözer, ek bir şey yapman gerekmez.
 
 ## Yayınlamak
 
-Klasörü olduğu gibi Netlify'a sürükle-bırak, ya da GitHub'a koyup Pages'i aç.
-Derleme ayarı gerekmez.
+Depo `tiatoralin.github.io` adını taşıyor; `main` dalına push etmek
+yayınlamak için yeterli. Derleme ayarı gerekmez — `.nojekyll` Jekyll'i
+devre dışı bırakıyor, dosyalar olduğu gibi sunuluyor.
+
+Pages CDN'i 10 dakika önbellekliyor. Telefonda yeni sürümü görmek için
+adrese `?v=1` gibi bir ek koy.
 
 ## Müfredat uyumu
 
